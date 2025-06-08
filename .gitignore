@@ -1,6 +1,6 @@
 go.sum
 project.txt
 .env
-twitter
+/twitter
 debug*
 *.sqlite
