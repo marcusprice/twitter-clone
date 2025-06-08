@@ -50,18 +50,8 @@ func (um *UserModel) New(email, userName, password, firstName, lastName, display
 }
 
 func (um *UserModel) UsernameOrEmailExists(email, username string) (bool, error) {
-	result, err := um.db.Query(checkUniqueUserQuery, email, username)
-	if err != nil {
-		if util.InDevContext() {
-			panic(err)
-		} else {
-			return false, err
-		}
-	}
-	defer result.Close()
-	result.Next()
 	var count int
-	err = result.Scan(&count)
+	err := um.db.QueryRow(checkUniqueUserQuery, email, username).Scan(&count)
 	if err != nil {
 		if util.InDevContext() {
 			panic(err)
@@ -70,11 +60,7 @@ func (um *UserModel) UsernameOrEmailExists(email, username string) (bool, error)
 		}
 	}
 
-	if count > 0 {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return count > 0, nil
 }
 
 func (um UserModel) EmailExists(email string) bool {
