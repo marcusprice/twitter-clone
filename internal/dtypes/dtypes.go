@@ -1,7 +1,6 @@
 package dtypes
 
 type UserInput struct {
-	UserID      int    `json:"userID"`
 	Email       string `json:"email"`
 	Username    string `json:"username"`
 	FirstName   string `json:"firstName"`

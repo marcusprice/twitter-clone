@@ -29,6 +29,15 @@ func (u *User) Set(userID *int, userInput dtypes.UserInput) {
 	u.DisplayName = userInput.DisplayName
 }
 
+func (u *User) setFromModel(userData model.UserData) {
+	u.userID = &userData.ID
+	u.Email = userData.Email
+	u.Username = userData.Username
+	u.FirstName = userData.FirstName
+	u.LastName = userData.LastName
+	u.DisplayName = userData.DisplayName
+}
+
 func (u User) Create(password string) (int, error) {
 	if u.userID != nil {
 		if util.InDevContext() {
@@ -69,6 +78,25 @@ func (u User) Create(password string) (int, error) {
 	}
 
 	return userID, nil
+}
+
+func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
+	userModel := u.userModel
+	userData, err := userModel.OneOrNone(u.Email, u.Username)
+	if err != nil {
+		return false, err
+	}
+
+	valid := bcrypt.CompareHashAndPassword(
+		[]byte(userData.Password), []byte(pwd)) == nil
+
+	if !valid {
+		return false, nil
+	}
+
+	u.setFromModel(userData)
+
+	return true, nil
 }
 
 func NewUserController(dbConn *sql.DB) *User {

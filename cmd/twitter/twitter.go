@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"runtime"
 	"slices"
 
 	"github.com/marcusprice/twitter-clone/internal/api"
@@ -26,8 +25,6 @@ func main() {
 	fmt.Println(os.Getenv("DB_PATH"))
 	fmt.Println(os.Getenv("ENV"))
 
-	runtime.Breakpoint()
-
 	if env == "" {
 		panic("ENV environment variable required")
 	} else if !slices.Contains(envs, env) {
@@ -39,7 +36,7 @@ func main() {
 	}
 
 	if port == "" {
-		port = "5000"
+		port = "42069"
 	}
 
 	if dbPath == "" {

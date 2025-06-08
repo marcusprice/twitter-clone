@@ -8,15 +8,12 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
-//go:embed queries/create-user.sql
-var createUserQuery string
-
-//go:embed queries/check-unique-user.sql
-var checkUniqueUserQuery string
-
 type UserModel struct {
 	db *sql.DB
 }
+
+//go:embed queries/create-user.sql
+var createUserQuery string
 
 func (um *UserModel) New(email, userName, password, firstName, lastName, displayName string) (int, error) {
 	result, err := um.db.Exec(
@@ -49,6 +46,30 @@ func (um *UserModel) New(email, userName, password, firstName, lastName, display
 	return int(userID), nil
 }
 
+//go:embed queries/select-user.sql
+var selectUserBaseQuery string
+
+func (um *UserModel) OneOrNone(email, username string) (UserData, error) {
+	if email == "" && username == "" {
+		return UserData{}, MissingRequiredFilterData{}
+	}
+
+	query := selectUserBaseQuery
+	if email != "" && username != "" {
+		query += "WHERE email = $1 AND username = $2;"
+	} else if email != "" {
+		query += "WHERE email = $1;"
+	} else {
+		query += "WHERE username = $1;"
+	}
+
+	row := um.db.QueryRow(query, email, username)
+	return parseUserQueryRow(row)
+}
+
+//go:embed queries/check-unique-user.sql
+var checkUniqueUserQuery string
+
 func (um *UserModel) UsernameOrEmailExists(email, username string) (bool, error) {
 	var count int
 	err := um.db.QueryRow(checkUniqueUserQuery, email, username).Scan(&count)
@@ -73,4 +94,31 @@ func NewUserModel(dbConn *sql.DB) *UserModel {
 	}
 
 	return &UserModel{db: dbConn}
+}
+
+func parseUserQueryRow(row *sql.Row) (UserData, error) {
+	var id int
+	var email string
+	var userName string
+	var password string
+	var firstName string
+	var lastName string
+	var displayName string
+	err := row.Scan(
+		&id, &email, &userName, &password,
+		&firstName, &lastName, &displayName)
+
+	if err != nil {
+		return UserData{}, UserNotFoundError{}
+	}
+
+	return UserData{
+		id,
+		email,
+		userName,
+		password,
+		firstName,
+		lastName,
+		displayName,
+	}, nil
 }
