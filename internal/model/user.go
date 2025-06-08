@@ -54,16 +54,19 @@ func (um *UserModel) OneOrNone(email, username string) (UserData, error) {
 		return UserData{}, MissingRequiredFilterData{}
 	}
 
+	var row *sql.Row
 	query := selectUserBaseQuery
 	if email != "" && username != "" {
-		query += "WHERE email = $1 AND username = $2;"
+		query += "WHERE email = $1 AND user_name = $2;"
+		row = um.db.QueryRow(query, email, username)
 	} else if email != "" {
 		query += "WHERE email = $1;"
+		row = um.db.QueryRow(query, email)
 	} else {
-		query += "WHERE username = $1;"
+		query += "WHERE user_name = $1;"
+		row = um.db.QueryRow(query, username)
 	}
 
-	row := um.db.QueryRow(query, email, username)
 	return parseUserQueryRow(row)
 }
 
@@ -116,9 +119,9 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		id,
 		email,
 		userName,
-		password,
 		firstName,
 		lastName,
 		displayName,
+		password,
 	}, nil
 }

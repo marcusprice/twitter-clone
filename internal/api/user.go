@@ -78,7 +78,7 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	email := userInput.Email
 	pwd := userInput.Password
 
-	if err != nil || !(pwd == "" || username == "" && email == "") {
+	if err != nil || pwd == "" || (username == "" && email == "") {
 		statusMessage := http.StatusText(http.StatusBadRequest)
 		http.Error(w, statusMessage, http.StatusBadRequest)
 		return

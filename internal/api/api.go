@@ -18,6 +18,7 @@ func RegisterHandlers(dbConn *sql.DB) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/v1/createUser", userAPI.CreateUser)
+	mux.HandleFunc("/api/v1/authenticateUser", userAPI.Authenticate)
 
 	return mux
 }

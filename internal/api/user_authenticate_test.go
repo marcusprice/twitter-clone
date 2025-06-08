@@ -2,19 +2,104 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/marcusprice/twitter-clone/internal/controller"
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
 
-// func TestAuthenticateUser(t *testing.T) {
-// 	testutil.WithTestDB(t, func(db *sql.DB) {
+func TestAuthenticateUser(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user := controller.NewUserController(db)
+		userInput := dtypes.UserInput{
+			Username:    "esteban",
+			Email:       "estecat42069@yahoo.com",
+			Password:    "password",
+			DisplayName: "yodel",
+		}
+		user.Set(nil, userInput)
+		user.Create("password")
 
-// 	})
-// }
+		authJson := `{
+			"username": "esteban",
+			"email": "estecat42069@yahoo.com",
+			"password": "password"
+		}`
+
+		authUsernameOnlyJson := `{
+			"username": "esteban",
+			"password": "password"
+		}`
+
+		authEmailOnlyJson := `{
+			"username": "esteban",
+			"password": "password"
+		}`
+
+		authReq := httptest.NewRequest(http.MethodPost,
+			"/api/v1/authenticateUser",
+			strings.NewReader(authJson))
+		authRes := httptest.NewRecorder()
+		authWithUsernameReq := httptest.NewRequest(http.MethodPost,
+			"/api/v1/authenticateUser",
+			strings.NewReader(authUsernameOnlyJson))
+		authWithUsernameRes := httptest.NewRecorder()
+		authWithEmailReq := httptest.NewRequest(http.MethodPost,
+			"/api/v1/authenticateUser",
+			strings.NewReader(authEmailOnlyJson))
+		authWithEmailRes := httptest.NewRecorder()
+		handler.ServeHTTP(authRes, authReq)
+		handler.ServeHTTP(authWithUsernameRes, authWithUsernameReq)
+		handler.ServeHTTP(authWithEmailRes, authWithEmailReq)
+
+		var userPayload UserPayload
+		json.Unmarshal(authRes.Body.Bytes(), &userPayload)
+
+		tu.AssertEqual(http.StatusOK, authRes.Code)
+		tu.AssertEqual(http.StatusOK, authWithUsernameRes.Code)
+		tu.AssertEqual(http.StatusOK, authWithEmailRes.Code)
+		tu.AssertEqual(userPayload.Username, "esteban")
+		tu.AssertEqual(userPayload.Email, "estecat42069@yahoo.com")
+		tu.AssertEqual(userPayload.DisplayName, "yodel")
+	})
+}
+
+func TestAuthenticateUserWrongPassword(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user := controller.NewUserController(db)
+		userInput := dtypes.UserInput{
+			Username:    "esteban",
+			Email:       "estecat42069@yahoo.com",
+			Password:    "password",
+			DisplayName: "yodel",
+		}
+		user.Set(nil, userInput)
+		user.Create("password")
+
+		authJson := `{
+			"username": "esteban",
+			"email": "estecat42069@yahoo.com",
+			"password": "wrong_password"
+		}`
+
+		authReq := httptest.NewRequest(http.MethodPost,
+			"/api/v1/authenticateUser",
+			strings.NewReader(authJson))
+		authRes := httptest.NewRecorder()
+		handler.ServeHTTP(authRes, authReq)
+
+		tu.AssertEqual(http.StatusUnauthorized, authRes.Code)
+	})
+}
 
 func TestAuthenticateUserMissingRequiredFields(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
