@@ -9,6 +9,21 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type TestUtil struct {
+	t *testing.T
+}
+
+func (tu TestUtil) AssertEqual(expected, actual interface{}) {
+	tu.t.Helper()
+	if expected != actual {
+		tu.t.Errorf("expected %v, instead got %v", expected, actual)
+	}
+}
+
+func NewTestUtil(t *testing.T) TestUtil {
+	return TestUtil{t}
+}
+
 func setTestEnvironment() {
 	os.Setenv("ENV", constants.TEST_ENV)
 }
