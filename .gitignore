@@ -1,1 +1,6 @@
+go.sum
 project.txt
+.env
+twitter
+debug*
+*.sqlite

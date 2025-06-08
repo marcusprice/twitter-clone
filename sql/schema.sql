@@ -32,12 +32,12 @@ DROP TABLE IF EXISTS CommentBookmarks;
 
 CREATE TABLE User (
     id INTEGER PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    user_name TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE CHECK (length(trim(email)) > 0),
+    user_name TEXT NOT NULL UNIQUE CHECK (length(trim(user_name)) > 0),
+    password TEXT NOT NULL CHECK (length(trim(password)) > 0),
     first_name TEXT,
     last_name TEXT,
-    display_name TEXT NOT NULL,
+    display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp
 );
@@ -58,7 +58,7 @@ CREATE TABLE UserFollows (
 CREATE TABLE Post (
     id INTEGER PRIMARY KEY,
     user_id INTEGER,
-    content TEXT NOT NULL,
+    content TEXT NOT NULL CHECK (length(trim(content)) > 0),
     like_count INTEGER DEFAULT 0,
     retweet_count INTEGER DEFAULT 0,
     bookmark_count INTEGER DEFAULT 0,

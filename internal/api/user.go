@@ -1,0 +1,92 @@
+package api
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+
+	"github.com/marcusprice/twitter-clone/internal/controller"
+	"github.com/marcusprice/twitter-clone/internal/db"
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
+)
+
+type UserPayload struct {
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+	FirstName   string `json:"firstName"`
+	LastName    string `json:"lastName"`
+	DisplayName string `json:"displayName"`
+}
+
+type UserAPI struct {
+	user *controller.User
+}
+
+func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var userInput controller.UserInput
+
+	if !validRequestMethod(http.MethodPost, r.Method) {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&userInput)
+
+	if err != nil || !validUserFields(userInput, true) {
+		statusMessage := http.StatusText(http.StatusBadRequest)
+		http.Error(w, statusMessage, http.StatusBadRequest)
+		return
+	}
+
+	user := userAPI.user
+	user.Set(nil, userInput)
+
+	_, err = user.Create(userInput.Password)
+	if err != nil {
+		var identifierError dtypes.IdentifierAlreadyExistsError
+
+		if errors.As(err, &identifierError) {
+			http.Error(w, err.Error(), http.StatusConflict)
+		} else if db.IsConstraintError(err) {
+			statusText := http.StatusText(http.StatusBadRequest)
+			http.Error(w, statusText, http.StatusBadRequest)
+		} else {
+			statusText := http.StatusText(http.StatusInternalServerError)
+			http.Error(w, statusText, http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	payload := UserPayload{
+		user.Email, user.Username,
+		user.FirstName, user.LastName, user.DisplayName}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(payload)
+}
+
+func NewUserAPI(user *controller.User) UserAPI {
+	return UserAPI{user}
+}
+
+func validUserFields(userInput controller.UserInput, createUser bool) bool {
+	if createUser && userInput.Password == "" {
+		return false
+	}
+
+	if userInput.Username == "" {
+		return false
+	}
+
+	if userInput.Email == "" {
+		return false
+	}
+
+	if userInput.DisplayName == "" {
+		return false
+	}
+
+	return true
+}
