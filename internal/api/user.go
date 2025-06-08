@@ -23,7 +23,7 @@ type UserAPI struct {
 }
 
 func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var userInput controller.UserInput
+	var userInput dtypes.UserInput
 
 	if !validRequestMethod(http.MethodPost, r.Method) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -71,7 +71,7 @@ func NewUserAPI(user *controller.User) UserAPI {
 	return UserAPI{user}
 }
 
-func validUserFields(userInput controller.UserInput, createUser bool) bool {
+func validUserFields(userInput dtypes.UserInput, createUser bool) bool {
 	if createUser && userInput.Password == "" {
 		return false
 	}

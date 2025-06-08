@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
 
@@ -107,7 +108,7 @@ func TestCreateUserAlreadyExists(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		handler := RegisterHandlers(db)
 		user := controller.NewUserController(db)
-		existingUser := controller.UserInput{
+		existingUser := dtypes.UserInput{
 			Email:       "estecat42069@yahoo.com",
 			Username:    "estecat",
 			DisplayName: "estecat",

@@ -10,16 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserInput struct {
-	UserID      int    `json:"userID"`
-	Email       string `json:"email"`
-	Username    string `json:"username"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	DisplayName string `json:"displayName"`
-	Password    string `json:"password"`
-}
-
 type User struct {
 	userModel   *model.UserModel
 	userID      *int
@@ -30,7 +20,7 @@ type User struct {
 	DisplayName string
 }
 
-func (u *User) Set(userID *int, userInput UserInput) {
+func (u *User) Set(userID *int, userInput dtypes.UserInput) {
 	u.userID = userID
 	u.Email = userInput.Email
 	u.Username = userInput.Username
@@ -51,7 +41,11 @@ func (u User) Create(password string) (int, error) {
 	userModel := u.userModel
 	userExists, err := userModel.UsernameOrEmailExists(u.Email, u.Username)
 	if err != nil {
-		return -1, err
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			return -1, err
+		}
 	}
 
 	if userExists {
@@ -60,7 +54,11 @@ func (u User) Create(password string) (int, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return -1, err
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			return -1, err
+		}
 	}
 
 	userID, err := userModel.New(
