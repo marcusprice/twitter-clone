@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
@@ -55,7 +56,11 @@ func TestAuthenticateUser(t *testing.T) {
 			"/api/v1/authenticateUser",
 			strings.NewReader(authEmailOnlyJson))
 		authWithEmailRes := httptest.NewRecorder()
+
+		beforeRequest := time.Now().UTC().Add(-1 * time.Minute)
 		handler.ServeHTTP(authRes, authReq)
+		afterRequest := time.Now().UTC().Add(time.Minute)
+
 		handler.ServeHTTP(authWithUsernameRes, authWithUsernameReq)
 		handler.ServeHTTP(authWithEmailRes, authWithEmailReq)
 
@@ -83,6 +88,10 @@ func TestAuthenticateUser(t *testing.T) {
 		}
 
 		userID := int(claims["sub"].(float64))
+		user.ByID(userID)
+
+		tu.AssertTrue(user.LastLogin.After(beforeRequest))
+		tu.AssertTrue(user.LastLogin.Before(afterRequest))
 		tu.AssertTrue(token.Valid)
 		tu.AssertEqual(1, userID)
 	})

@@ -107,6 +107,12 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := user.SetLastLogin(); err != nil {
+		statusText := http.StatusText(http.StatusInternalServerError)
+		http.Error(w, statusText, http.StatusInternalServerError)
+		return
+	}
+
 	payload := generateUserPayload(user)
 	token, err := GenerateJWT(*user.UserID)
 	if err != nil {

@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
@@ -18,6 +19,9 @@ type User struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
+	LastLogin   time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (u *User) Set(userID *int, userInput dtypes.UserInput) {
@@ -36,6 +40,37 @@ func (u *User) setFromModel(userData model.UserData) {
 	u.FirstName = userData.FirstName
 	u.LastName = userData.LastName
 	u.DisplayName = userData.DisplayName
+
+	lastLogin, err := time.Parse(TIME_LAYOUT, userData.LastLogin)
+	if err != nil {
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			u.LastLogin = time.Time{}
+		}
+	}
+
+	createdAt, err := time.Parse(TIME_LAYOUT, userData.CreatedAt)
+	if err != nil {
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			u.CreatedAt = time.Time{}
+		}
+	}
+
+	updatedAt, err := time.Parse(TIME_LAYOUT, userData.UpdatedAt)
+	if err != nil {
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			u.UpdatedAt = time.Time{}
+		}
+	}
+
+	u.LastLogin = lastLogin
+	u.CreatedAt = createdAt
+	u.UpdatedAt = updatedAt
 }
 
 func (u User) Create(password string) (int, error) {
@@ -97,6 +132,30 @@ func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
 	u.setFromModel(userData)
 
 	return true, nil
+}
+
+func (u *User) SetLastLogin() error {
+	if u.UserID == nil {
+		err := errors.New("trying to update a user login without ID")
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			return (err)
+		}
+	}
+
+	return u.userModel.SetLastLogin(*u.UserID)
+}
+
+func (u *User) ByID(userID int) error {
+	userData, err := u.userModel.GetByID(userID)
+	if err != nil {
+		return err
+	}
+
+	u.setFromModel(userData)
+
+	return nil
 }
 
 func NewUserController(dbConn *sql.DB) *User {

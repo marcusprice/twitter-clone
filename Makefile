@@ -15,3 +15,6 @@ run:
 
 debug:
 	set -a; source .env; set +a; dlv debug ./cmd/twitter/twitter.go
+
+run-tests:
+	set -a; source .env; set +a; go test -v ./...

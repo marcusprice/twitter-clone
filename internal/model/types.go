@@ -8,4 +8,7 @@ type UserData struct {
 	LastName    string
 	DisplayName string
 	Password    string
+	LastLogin   string
+	CreatedAt   string
+	UpdatedAt   string
 }

@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	_ "embed"
+	"errors"
 
 	"github.com/marcusprice/twitter-clone/internal/db"
 	"github.com/marcusprice/twitter-clone/internal/util"
@@ -46,8 +47,19 @@ func (um *UserModel) New(email, userName, password, firstName, lastName, display
 	return int(userID), nil
 }
 
-//go:embed queries/select-user.sql
+//go:embed queries/select-user-base-query.sql
 var selectUserBaseQuery string
+
+func (um *UserModel) GetByID(userID int) (UserData, error) {
+	if userID == 0 {
+		return UserData{}, errors.New("userID required")
+	}
+
+	query := selectUserBaseQuery + "WHERE id = $1;"
+	row := um.db.QueryRow(query, userID)
+
+	return parseUserQueryRow(row)
+}
 
 func (um *UserModel) OneOrNone(email, username string) (UserData, error) {
 	if email == "" && username == "" {
@@ -68,6 +80,31 @@ func (um *UserModel) OneOrNone(email, username string) (UserData, error) {
 	}
 
 	return parseUserQueryRow(row)
+}
+
+//go:embed queries/update-last-login.sql
+var updateLastLoginQuery string
+
+func (um *UserModel) SetLastLogin(userID int) error {
+	if userID == 0 {
+		err := errors.New("Missing user ID")
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			return err
+		}
+	}
+
+	result, err := um.db.Exec(updateLastLoginQuery, userID)
+	if err != nil {
+		return err
+	}
+	rowsUpdated, err := result.RowsAffected()
+	if int(rowsUpdated) == 0 {
+		return UserNotFoundError{}
+	}
+
+	return err
 }
 
 //go:embed queries/check-unique-user.sql
@@ -107,9 +144,13 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 	var firstName string
 	var lastName string
 	var displayName string
+	var lastLogin string
+	var createdAt string
+	var updatedAt string
+
 	err := row.Scan(
-		&id, &email, &userName, &password,
-		&firstName, &lastName, &displayName)
+		&id, &email, &userName, &password, &firstName, &lastName, &displayName,
+		&lastLogin, &createdAt, &updatedAt)
 
 	if err != nil {
 		return UserData{}, UserNotFoundError{}
@@ -123,5 +164,8 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		lastName,
 		displayName,
 		password,
+		lastLogin,
+		createdAt,
+		updatedAt,
 	}, nil
 }
