@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
@@ -107,7 +108,14 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := generateUserPayload(user)
+	token, err := GenerateJWT(*user.UserID)
+	if err != nil {
+		statusText := http.StatusText(http.StatusInternalServerError)
+		http.Error(w, statusText, http.StatusInternalServerError)
+		return
+	}
 
+	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(payload)

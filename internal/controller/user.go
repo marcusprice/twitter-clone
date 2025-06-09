@@ -12,7 +12,7 @@ import (
 
 type User struct {
 	userModel   *model.UserModel
-	userID      *int
+	UserID      *int
 	Email       string
 	Username    string
 	FirstName   string
@@ -21,7 +21,7 @@ type User struct {
 }
 
 func (u *User) Set(userID *int, userInput dtypes.UserInput) {
-	u.userID = userID
+	u.UserID = userID
 	u.Email = userInput.Email
 	u.Username = userInput.Username
 	u.FirstName = userInput.FirstName
@@ -30,7 +30,7 @@ func (u *User) Set(userID *int, userInput dtypes.UserInput) {
 }
 
 func (u *User) setFromModel(userData model.UserData) {
-	u.userID = &userData.ID
+	u.UserID = &userData.ID
 	u.Email = userData.Email
 	u.Username = userData.Username
 	u.FirstName = userData.FirstName
@@ -39,7 +39,7 @@ func (u *User) setFromModel(userData model.UserData) {
 }
 
 func (u User) Create(password string) (int, error) {
-	if u.userID != nil {
+	if u.UserID != nil {
 		if util.InDevContext() {
 			panic("userID should not exist while creating a user")
 		} else {

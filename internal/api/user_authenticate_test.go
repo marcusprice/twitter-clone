@@ -68,6 +68,23 @@ func TestAuthenticateUser(t *testing.T) {
 		tu.AssertEqual(userPayload.Username, "esteban")
 		tu.AssertEqual(userPayload.Email, "estecat42069@yahoo.com")
 		tu.AssertEqual(userPayload.DisplayName, "yodel")
+
+		authHeader := authRes.Header().Get("Authorization")
+		tokenString := strings.Split(authHeader, " ")[1]
+
+		token, err := ParseJWT(tokenString)
+		if err != nil {
+			panic(err)
+		}
+
+		claims, err := GetTokenClaims(token)
+		if err != nil {
+			panic(err)
+		}
+
+		userID := int(claims["sub"].(float64))
+		tu.AssertTrue(token.Valid)
+		tu.AssertEqual(1, userID)
 	})
 }
 

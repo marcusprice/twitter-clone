@@ -20,6 +20,13 @@ func (tu TestUtil) AssertEqual(expected, actual interface{}) {
 	}
 }
 
+func (tu TestUtil) AssertTrue(value bool) {
+	tu.t.Helper()
+	if !value {
+		tu.t.Error("expected value to be true, instead it was false")
+	}
+}
+
 func NewTestUtil(t *testing.T) TestUtil {
 	return TestUtil{t}
 }
