@@ -117,7 +117,7 @@ func (u User) Create(password string) (int, error) {
 
 func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
 	userModel := u.userModel
-	userData, err := userModel.OneOrNone(u.Email, u.Username)
+	userData, err := userModel.GetByIdentifier(u.Email, u.Username)
 	if err != nil {
 		return false, err
 	}

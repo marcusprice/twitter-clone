@@ -61,24 +61,22 @@ func (um *UserModel) GetByID(userID int) (UserData, error) {
 	return parseUserQueryRow(row)
 }
 
-func (um *UserModel) OneOrNone(email, username string) (UserData, error) {
+func (um *UserModel) GetByIdentifier(email, username string) (UserData, error) {
 	if email == "" && username == "" {
 		return UserData{}, MissingRequiredFilterData{}
 	}
 
-	var row *sql.Row
+	filterValue := ""
 	query := selectUserBaseQuery
-	if email != "" && username != "" {
-		query += "WHERE email = $1 AND user_name = $2;"
-		row = um.db.QueryRow(query, email, username)
-	} else if email != "" {
+	if email != "" {
 		query += "WHERE email = $1;"
-		row = um.db.QueryRow(query, email)
+		filterValue = email
 	} else {
 		query += "WHERE user_name = $1;"
-		row = um.db.QueryRow(query, username)
+		filterValue = username
 	}
 
+	row := um.db.QueryRow(query, filterValue)
 	return parseUserQueryRow(row)
 }
 

@@ -127,6 +127,64 @@ func TestAuthenticateUserWrongPassword(t *testing.T) {
 	})
 }
 
+func TestAuthenticateUserWrongUsernmae(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user := controller.NewUserController(db)
+		userInput := dtypes.UserInput{
+			Username:    "esteban",
+			Email:       "estecat42069@yahoo.com",
+			Password:    "password",
+			DisplayName: "yodel",
+		}
+		user.Set(nil, userInput)
+		user.Create("password")
+
+		authJson := `{
+			"username": "esteba",
+			"password": "password"
+		}`
+
+		authReq := httptest.NewRequest(http.MethodPost,
+			"/api/v1/authenticateUser",
+			strings.NewReader(authJson))
+		authRes := httptest.NewRecorder()
+		handler.ServeHTTP(authRes, authReq)
+
+		tu.AssertEqual(http.StatusUnauthorized, authRes.Code)
+	})
+}
+
+func TestAuthenticateUserWrongEmail(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user := controller.NewUserController(db)
+		userInput := dtypes.UserInput{
+			Username:    "esteban",
+			Email:       "estecat42069@yahoo.com",
+			Password:    "password",
+			DisplayName: "yodel",
+		}
+		user.Set(nil, userInput)
+		user.Create("password")
+
+		authJson := `{
+			"email": "whispers_from_wallface@freakseasy.com",
+			"password": "password"
+		}`
+
+		authReq := httptest.NewRequest(http.MethodPost,
+			"/api/v1/authenticateUser",
+			strings.NewReader(authJson))
+		authRes := httptest.NewRecorder()
+		handler.ServeHTTP(authRes, authReq)
+
+		tu.AssertEqual(http.StatusUnauthorized, authRes.Code)
+	})
+}
+
 func TestAuthenticateUserMissingRequiredFields(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
