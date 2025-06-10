@@ -16,6 +16,9 @@ func TestNewUserController(t *testing.T) {
 		user := NewUserController(db)
 		tu.AssertNotNil(user)
 		tu.AssertNil(user.id)
+
+		defer tu.ShouldPanic()
+		NewUserController(nil)
 	})
 }
 
@@ -37,7 +40,7 @@ func TestUserSet(t *testing.T) {
 	tu.AssertEqual("hungry boy", user.DisplayName)
 }
 
-func TestSetFromModel(t *testing.T) {
+func TestUserSetFromModel(t *testing.T) {
 	tu := testutil.NewTestUtil(t)
 	user := User{}
 	userDbData := model.UserData{
@@ -61,25 +64,17 @@ func TestSetFromModel(t *testing.T) {
 	tu.AssertEqual("2024-04-12 11:37:46", user.UpdatedAt.Format(TIME_LAYOUT))
 }
 
-func TestCreate(t *testing.T) {
+func TestUserCreate(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
-		userModel := model.NewUserModel(db)
-		user := User{
-			model:       userModel,
-			Email:       "estecat42069@yahoo.com",
-			Username:    "estecat",
-			FirstName:   "Esteban",
-			LastName:    "Price",
-			DisplayName: "hungry boy",
-		}
+		user := initTestUser(db)
 		user.Create("password")
 		storedPassword := queryUserPassword(user.ID(), db)
 		tu.AssertTrue(validPasswordHash(storedPassword, "password"))
 		tu.AssertEqual(1, user.ID())
 
 		// query the user just created to verify it was recorded in the db
-		queriedUser := User{model: userModel}
+		queriedUser := initTestUser(db)
 		queriedUser.ByID(user.ID())
 		tu.AssertEqual(user.Email, queriedUser.Email)
 		tu.AssertEqual(user.Username, queriedUser.Username)
@@ -87,23 +82,17 @@ func TestCreate(t *testing.T) {
 		tu.AssertEqual(user.LastName, queriedUser.LastName)
 		tu.AssertEqual(user.DisplayName, queriedUser.DisplayName)
 
-		duplicateUser := User{
-			model:     userModel,
-			Email:     user.Email,
-			Username:  user.Username,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-		}
-
+		duplicateUser := initTestUser(db)
 		_, err := duplicateUser.Create("password")
 		tu.AssertErrorNotNil(err)
-		// verify that panic is called when user.id set (returns error in prod)
+		// verify that panic is called when user.id set (returns error in non
+		// dev/test env)
 		defer tu.ShouldPanic()
 		user.Create("password")
 	})
 }
 
-func TestAuthenticateAndSet(t *testing.T) {
+func TestUserAuthenticateAndSet(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
 		userModel := model.NewUserModel(db)
@@ -141,19 +130,10 @@ func TestAuthenticateAndSet(t *testing.T) {
 	})
 }
 
-func TestSetLastLogin(t *testing.T) {
+func TestUserSetLastLogin(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
-		userModel := model.NewUserModel(db)
-		user := User{
-			model:       userModel,
-			Username:    "estecat",
-			Email:       "estecat42069@yahoo.com",
-			FirstName:   "Esteban",
-			LastName:    "Price",
-			DisplayName: "hungry cat",
-		}
-
+		user := initTestUser(db)
 		user.Create("password")
 		err := user.SetLastLogin()
 		tu.AssertErrorNil(err)
@@ -165,10 +145,31 @@ func TestSetLastLogin(t *testing.T) {
 	})
 }
 
-func TestPanicOnNewUserNilDB(t *testing.T) {
-	tu := testutil.NewTestUtil(t)
-	defer tu.ShouldPanic()
-	NewUserController(nil)
+func TestUserByID(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		user := initTestUser(db)
+		user.Create("password")
+		newUserID := user.ID()
+
+		userByID := &User{model: model.NewUserModel(db)}
+		err := userByID.ByID(newUserID)
+
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(user.Email, userByID.Email)
+		tu.AssertEqual(user.Username, userByID.Username)
+		tu.AssertEqual(user.FirstName, userByID.FirstName)
+		tu.AssertEqual(user.LastName, userByID.LastName)
+		tu.AssertEqual(user.DisplayName, userByID.DisplayName)
+
+		errUser := &User{model: model.NewUserModel(db)}
+		err = errUser.ByID(42069)
+		tu.AssertErrorNotNil(err)
+		err = errUser.ByID(0)
+		tu.AssertErrorNotNil(err)
+		err = errUser.ByID(-20)
+		tu.AssertErrorNotNil(err)
+	})
 }
 
 func queryUserPassword(userID int, db *sql.DB) string {
@@ -188,4 +189,15 @@ func validPasswordHash(storedPassword, password string) bool {
 		[]byte(storedPassword), []byte(password)) == nil
 
 	return valid
+}
+
+func initTestUser(db *sql.DB) *User {
+	return &User{
+		model:       model.NewUserModel(db),
+		Username:    "estecat",
+		Email:       "estecat42069@yahoo.com",
+		FirstName:   "Esteban",
+		LastName:    "Price",
+		DisplayName: "hungry cat",
+	}
 }
