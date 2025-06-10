@@ -3,6 +3,7 @@ package testutil
 import (
 	"database/sql"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/marcusprice/twitter-clone/internal/constants"
@@ -29,8 +30,15 @@ func (tu TestUtil) AssertTrue(value bool) {
 
 func (tu TestUtil) AssertNotNil(value interface{}) {
 	tu.t.Helper()
-	if value == nil {
-		tu.t.Error("expected value to be true, instead it was false")
+	if isNil(value) {
+		tu.t.Errorf("expected non-nil value, it was nil: %v", value)
+	}
+}
+
+func (tu TestUtil) AssertNil(value interface{}) {
+	tu.t.Helper()
+	if !isNil(value) {
+		tu.t.Errorf("expected nil value, it was not nil: %v", value)
 	}
 }
 
@@ -78,4 +86,17 @@ func WithTestDB(t *testing.T, testFunc func(db *sql.DB)) {
 	db := setupTestDB(t)
 	defer db.Close()
 	testFunc(db)
+}
+
+func isNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	v := reflect.ValueOf(i)
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Slice, reflect.Map, reflect.Func, reflect.Chan:
+		return v.IsNil()
+	default:
+		return false
+	}
 }

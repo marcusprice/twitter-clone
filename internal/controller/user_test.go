@@ -15,7 +15,7 @@ func TestNewUserController(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		user := NewUserController(db)
 		tu.AssertNotNil(user)
-		tu.AssertNotNil(user.ID)
+		tu.AssertNil(user.id)
 	})
 }
 
