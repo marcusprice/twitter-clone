@@ -28,6 +28,13 @@ func (tu TestUtil) AssertTrue(value bool) {
 	}
 }
 
+func (tu TestUtil) AssertFalse(value bool) {
+	tu.t.Helper()
+	if value {
+		tu.t.Error("expected value to be false, instead it was true")
+	}
+}
+
 func (tu TestUtil) AssertNotNil(value interface{}) {
 	tu.t.Helper()
 	if isNil(value) {
@@ -46,6 +53,13 @@ func (tu TestUtil) AssertErrorNotNil(err error) {
 	tu.t.Helper()
 	if err == nil {
 		tu.t.Error("expected error to not be nil, instead it was nil")
+	}
+}
+
+func (tu TestUtil) AssertErrorNil(err error) {
+	tu.t.Helper()
+	if err != nil {
+		tu.t.Error("expected error to be nil, instead it was not nil")
 	}
 }
 

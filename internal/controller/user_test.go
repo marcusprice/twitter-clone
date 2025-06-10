@@ -88,9 +88,11 @@ func TestCreate(t *testing.T) {
 		tu.AssertEqual(user.DisplayName, queriedUser.DisplayName)
 
 		duplicateUser := User{
-			model:    userModel,
-			Email:    user.Email,
-			Username: user.Username,
+			model:     userModel,
+			Email:     user.Email,
+			Username:  user.Username,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
 		}
 
 		_, err := duplicateUser.Create("password")
@@ -99,6 +101,45 @@ func TestCreate(t *testing.T) {
 		defer tu.ShouldPanic()
 		user.Create("password")
 	})
+}
+
+func TestAuthenticateAndSet(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		userModel := model.NewUserModel(db)
+		user := User{
+			model:       userModel,
+			Username:    "estecat",
+			Email:       "estecat42069@yahoo.com",
+			FirstName:   "Esteban",
+			LastName:    "Price",
+			DisplayName: "hungry cat",
+		}
+
+		user.Create("password")
+		authenticatedUser := User{
+			model: userModel,
+			Email: "estecat42069@yahoo.com",
+		}
+		valid, err := authenticatedUser.AuthenticateAndSet("password")
+		tu.AssertTrue(valid)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, authenticatedUser.ID())
+		tu.AssertEqual("estecat", authenticatedUser.Username)
+		tu.AssertEqual("estecat42069@yahoo.com", authenticatedUser.Email)
+		tu.AssertEqual("Esteban", authenticatedUser.FirstName)
+		tu.AssertEqual("Price", authenticatedUser.LastName)
+		tu.AssertEqual("hungry cat", authenticatedUser.DisplayName)
+
+		wrongPwdUser := User{
+			model: userModel,
+			Email: "estecat42069@yahoo.com",
+		}
+		authenticated, err := wrongPwdUser.AuthenticateAndSet("wrong_password")
+		tu.AssertErrorNil(err)
+		tu.AssertFalse(authenticated)
+	})
+
 }
 
 func TestPanicOnNewUserNilDB(t *testing.T) {
