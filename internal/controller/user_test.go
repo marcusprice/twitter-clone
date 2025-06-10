@@ -121,8 +121,8 @@ func TestAuthenticateAndSet(t *testing.T) {
 			model: userModel,
 			Email: "estecat42069@yahoo.com",
 		}
-		valid, err := authenticatedUser.AuthenticateAndSet("password")
-		tu.AssertTrue(valid)
+		authenticated, err := authenticatedUser.AuthenticateAndSet("password")
+		tu.AssertTrue(authenticated)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(1, authenticatedUser.ID())
 		tu.AssertEqual("estecat", authenticatedUser.Username)
@@ -135,7 +135,7 @@ func TestAuthenticateAndSet(t *testing.T) {
 			model: userModel,
 			Email: "estecat42069@yahoo.com",
 		}
-		authenticated, err := wrongPwdUser.AuthenticateAndSet("wrong_password")
+		authenticated, err = wrongPwdUser.AuthenticateAndSet("wrong_password")
 		tu.AssertErrorNil(err)
 		tu.AssertFalse(authenticated)
 	})
