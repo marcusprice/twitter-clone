@@ -85,10 +85,9 @@ func TestUserCreate(t *testing.T) {
 		duplicateUser := initTestUser(db)
 		err := duplicateUser.Create("password")
 		tu.AssertErrorNotNil(err)
-		// verify that panic is called when user.id set (returns error in non
-		// dev/test env)
-		defer tu.ShouldPanic()
-		user.Create("password")
+
+		err = user.Create("password")
+		tu.AssertErrorNotNil(err)
 	})
 }
 
@@ -125,8 +124,16 @@ func TestUserAuthenticateAndSet(t *testing.T) {
 			Email: "estecat42069@yahoo.com",
 		}
 		authenticated, err = wrongPwdUser.AuthenticateAndSet("wrong_password")
-		tu.AssertErrorNil(err)
 		tu.AssertFalse(authenticated)
+		tu.AssertErrorNil(err)
+
+		unknownIdentifierUser := User{
+			model: userModel,
+			Email: "whispers_from_wallphace@gobblegobble.com",
+		}
+		authenticated, err = unknownIdentifierUser.AuthenticateAndSet("wrong_password")
+		tu.AssertFalse(authenticated)
+		tu.AssertErrorNotNil(err)
 	})
 }
 
@@ -138,10 +145,9 @@ func TestUserSetLastLogin(t *testing.T) {
 		err := user.SetLastLogin()
 		tu.AssertErrorNil(err)
 
-		// should panic when user id not set
 		user.id = nil
-		defer tu.ShouldPanic()
-		user.SetLastLogin()
+		err = user.SetLastLogin()
+		tu.AssertErrorNotNil(err)
 	})
 }
 

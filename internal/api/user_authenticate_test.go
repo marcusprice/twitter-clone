@@ -70,9 +70,9 @@ func TestAuthenticateUser(t *testing.T) {
 		tu.AssertEqual(http.StatusOK, authRes.Code)
 		tu.AssertEqual(http.StatusOK, authWithUsernameRes.Code)
 		tu.AssertEqual(http.StatusOK, authWithEmailRes.Code)
-		tu.AssertEqual(userPayload.Username, "esteban")
-		tu.AssertEqual(userPayload.Email, "estecat42069@yahoo.com")
-		tu.AssertEqual(userPayload.DisplayName, "yodel")
+		tu.AssertEqual("esteban", userPayload.Username)
+		tu.AssertEqual("estecat42069@yahoo.com", userPayload.Email)
+		tu.AssertEqual("yodel", userPayload.DisplayName)
 
 		authHeader := authRes.Header().Get("Authorization")
 		tokenString := strings.Split(authHeader, " ")[1]
