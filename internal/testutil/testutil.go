@@ -27,6 +27,27 @@ func (tu TestUtil) AssertTrue(value bool) {
 	}
 }
 
+func (tu TestUtil) AssertNotNil(value interface{}) {
+	tu.t.Helper()
+	if value == nil {
+		tu.t.Error("expected value to be true, instead it was false")
+	}
+}
+
+func (tu TestUtil) AssertErrorNotNil(err error) {
+	tu.t.Helper()
+	if err == nil {
+		tu.t.Error("expected error to not be nil, instead it was nil")
+	}
+}
+
+func (tu TestUtil) ShouldPanic() {
+	tu.t.Helper()
+	if r := recover(); r == nil {
+		tu.t.Errorf("expected panic, but function did not panic")
+	}
+}
+
 func NewTestUtil(t *testing.T) TestUtil {
 	return TestUtil{t}
 }

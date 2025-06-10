@@ -114,7 +114,7 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload := generateUserPayload(user)
-	token, err := GenerateJWT(*user.UserID)
+	token, err := GenerateJWT(user.ID())
 	if err != nil {
 		statusText := http.StatusText(http.StatusInternalServerError)
 		http.Error(w, statusText, http.StatusInternalServerError)

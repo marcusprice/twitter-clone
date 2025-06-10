@@ -12,8 +12,8 @@ import (
 )
 
 type User struct {
-	userModel   *model.UserModel
-	UserID      *int
+	model       *model.UserModel
+	id          *int
 	Email       string
 	Username    string
 	FirstName   string
@@ -24,8 +24,12 @@ type User struct {
 	UpdatedAt   time.Time
 }
 
+func (u User) ID() int {
+	return *u.id
+}
+
 func (u *User) Set(userID *int, userInput dtypes.UserInput) {
-	u.UserID = userID
+	u.id = userID
 	u.Email = userInput.Email
 	u.Username = userInput.Username
 	u.FirstName = userInput.FirstName
@@ -34,7 +38,7 @@ func (u *User) Set(userID *int, userInput dtypes.UserInput) {
 }
 
 func (u *User) setFromModel(userData model.UserData) {
-	u.UserID = &userData.ID
+	u.id = &userData.ID
 	u.Email = userData.Email
 	u.Username = userData.Username
 	u.FirstName = userData.FirstName
@@ -46,6 +50,7 @@ func (u *User) setFromModel(userData model.UserData) {
 		if util.InDevContext() {
 			panic(err)
 		} else {
+			// TODO: perhaps handle this with logging
 			u.LastLogin = time.Time{}
 		}
 	}
@@ -55,6 +60,7 @@ func (u *User) setFromModel(userData model.UserData) {
 		if util.InDevContext() {
 			panic(err)
 		} else {
+			// TODO: perhaps handle this with logging
 			u.CreatedAt = time.Time{}
 		}
 	}
@@ -64,6 +70,7 @@ func (u *User) setFromModel(userData model.UserData) {
 		if util.InDevContext() {
 			panic(err)
 		} else {
+			// TODO: perhaps handle this with logging
 			u.UpdatedAt = time.Time{}
 		}
 	}
@@ -73,17 +80,17 @@ func (u *User) setFromModel(userData model.UserData) {
 	u.UpdatedAt = updatedAt
 }
 
-func (u User) Create(password string) (int, error) {
-	if u.UserID != nil {
+func (u *User) Create(password string) (int, error) {
+	if u.id != nil {
 		if util.InDevContext() {
-			panic("userID should not exist while creating a user")
+			panic("User.id should not exist while creating a user")
 		} else {
-			return -1, errors.New("UserID present on User.Create, should be nil")
+			return -1, errors.New("User.id present on User.Create, should be nil")
 		}
 	}
 
-	userModel := u.userModel
-	userExists, err := userModel.UsernameOrEmailExists(u.Email, u.Username)
+	model := u.model
+	userExists, err := model.UsernameOrEmailExists(u.Email, u.Username)
 	if err != nil {
 		if util.InDevContext() {
 			panic(err)
@@ -105,19 +112,21 @@ func (u User) Create(password string) (int, error) {
 		}
 	}
 
-	userID, err := userModel.New(
+	userID, err := model.New(
 		u.Email, u.Username, string(hashedPassword),
 		u.FirstName, u.LastName, u.DisplayName)
 	if err != nil {
 		return -1, err
 	}
 
+	u.id = &userID
+
 	return userID, nil
 }
 
 func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
-	userModel := u.userModel
-	userData, err := userModel.GetByIdentifier(u.Email, u.Username)
+	model := u.model
+	userData, err := model.GetByIdentifier(u.Email, u.Username)
 	if err != nil {
 		return false, err
 	}
@@ -134,8 +143,8 @@ func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
 	return true, nil
 }
 
-func (u *User) SetLastLogin() error {
-	if u.UserID == nil {
+func (user *User) SetLastLogin() error {
+	if user.id == nil {
 		err := errors.New("trying to update a user login without ID")
 		if util.InDevContext() {
 			panic(err)
@@ -144,11 +153,11 @@ func (u *User) SetLastLogin() error {
 		}
 	}
 
-	return u.userModel.SetLastLogin(*u.UserID)
+	return user.model.SetLastLogin(*user.id)
 }
 
 func (u *User) ByID(userID int) error {
-	userData, err := u.userModel.GetByID(userID)
+	userData, err := u.model.GetByID(userID)
 	if err != nil {
 		return err
 	}
@@ -163,8 +172,8 @@ func NewUserController(dbConn *sql.DB) *User {
 		panic("db conn cannot be nil")
 	}
 
-	userModel := model.NewUserModel(dbConn)
+	model := model.NewUserModel(dbConn)
 	return &User{
-		userModel: userModel,
+		model: model,
 	}
 }
