@@ -139,7 +139,30 @@ func TestAuthenticateAndSet(t *testing.T) {
 		tu.AssertErrorNil(err)
 		tu.AssertFalse(authenticated)
 	})
+}
 
+func TestSetLastLogin(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		userModel := model.NewUserModel(db)
+		user := User{
+			model:       userModel,
+			Username:    "estecat",
+			Email:       "estecat42069@yahoo.com",
+			FirstName:   "Esteban",
+			LastName:    "Price",
+			DisplayName: "hungry cat",
+		}
+
+		user.Create("password")
+		err := user.SetLastLogin()
+		tu.AssertErrorNil(err)
+
+		// should panic when user id not set
+		user.id = nil
+		defer tu.ShouldPanic()
+		user.SetLastLogin()
+	})
 }
 
 func TestPanicOnNewUserNilDB(t *testing.T) {

@@ -143,6 +143,7 @@ func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
 	return true, nil
 }
 
+// TODO: this should update object's last login time
 func (user *User) SetLastLogin() error {
 	if user.id == nil {
 		err := errors.New("trying to update a user login without ID")
@@ -153,7 +154,7 @@ func (user *User) SetLastLogin() error {
 		}
 	}
 
-	return user.model.SetLastLogin(*user.id)
+	return user.model.SetLastLogin(user.ID())
 }
 
 func (u *User) ByID(userID int) error {
