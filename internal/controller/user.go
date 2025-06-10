@@ -44,48 +44,17 @@ func (u *User) setFromModel(userData model.UserData) {
 	u.FirstName = userData.FirstName
 	u.LastName = userData.LastName
 	u.DisplayName = userData.DisplayName
-
-	lastLogin, err := time.Parse(TIME_LAYOUT, userData.LastLogin)
-	if err != nil {
-		if util.InDevContext() {
-			panic(err)
-		} else {
-			// TODO: perhaps handle this with logging
-			u.LastLogin = time.Time{}
-		}
-	}
-
-	createdAt, err := time.Parse(TIME_LAYOUT, userData.CreatedAt)
-	if err != nil {
-		if util.InDevContext() {
-			panic(err)
-		} else {
-			// TODO: perhaps handle this with logging
-			u.CreatedAt = time.Time{}
-		}
-	}
-
-	updatedAt, err := time.Parse(TIME_LAYOUT, userData.UpdatedAt)
-	if err != nil {
-		if util.InDevContext() {
-			panic(err)
-		} else {
-			// TODO: perhaps handle this with logging
-			u.UpdatedAt = time.Time{}
-		}
-	}
-
-	u.LastLogin = lastLogin
-	u.CreatedAt = createdAt
-	u.UpdatedAt = updatedAt
+	u.LastLogin = parseTime(userData.LastLogin)
+	u.CreatedAt = parseTime(userData.CreatedAt)
+	u.UpdatedAt = parseTime(userData.UpdatedAt)
 }
 
-func (u *User) Create(password string) (int, error) {
+func (u *User) Create(password string) error {
 	if u.id != nil {
 		if util.InDevContext() {
 			panic("User.id should not exist while creating a user")
 		} else {
-			return -1, errors.New("User.id present on User.Create, should be nil")
+			return errors.New("User.id present on User.Create, should be nil")
 		}
 	}
 
@@ -95,12 +64,12 @@ func (u *User) Create(password string) (int, error) {
 		if util.InDevContext() {
 			panic(err)
 		} else {
-			return -1, err
+			return err
 		}
 	}
 
 	if userExists {
-		return -1, dtypes.IdentifierAlreadyExistsError{}
+		return dtypes.IdentifierAlreadyExistsError{}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -108,20 +77,20 @@ func (u *User) Create(password string) (int, error) {
 		if util.InDevContext() {
 			panic(err)
 		} else {
-			return -1, err
+			return err
 		}
 	}
 
-	userID, err := model.New(
+	userData, err := model.New(
 		u.Email, u.Username, string(hashedPassword),
 		u.FirstName, u.LastName, u.DisplayName)
+
 	if err != nil {
-		return -1, err
+		return err
 	}
 
-	u.id = &userID
-
-	return userID, nil
+	u.setFromModel(userData)
+	return nil
 }
 
 func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
@@ -143,7 +112,6 @@ func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
 	return true, nil
 }
 
-// TODO: this should update object's last login time
 func (user *User) SetLastLogin() error {
 	if user.id == nil {
 		err := errors.New("trying to update a user login without ID")
@@ -153,8 +121,9 @@ func (user *User) SetLastLogin() error {
 			return (err)
 		}
 	}
-
-	return user.model.SetLastLogin(user.ID())
+	lastLoginTime, err := user.model.SetLastLogin(user.ID())
+	user.LastLogin = parseTime(lastLoginTime)
+	return err
 }
 
 func (u *User) ByID(userID int) error {
@@ -166,6 +135,16 @@ func (u *User) ByID(userID int) error {
 	u.setFromModel(userData)
 
 	return nil
+}
+
+func parseTime(timestamp string) time.Time {
+	lastLogin, err := time.Parse(TIME_LAYOUT, timestamp)
+	if err != nil {
+		// likely a null/empty value
+		return time.Time{}
+	}
+
+	return lastLogin
 }
 
 func NewUserController(dbConn *sql.DB) *User {

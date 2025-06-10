@@ -16,8 +16,13 @@ type UserModel struct {
 //go:embed queries/create-user.sql
 var createUserQuery string
 
-func (um *UserModel) New(email, userName, password, firstName, lastName, displayName string) (int, error) {
-	result, err := um.db.Exec(
+func (um *UserModel) New(email, userName, password, firstName, lastName, displayName string) (UserData, error) {
+	var userID int
+	var lastLogin sql.NullString
+	var createdAt string
+	var updatedAt string
+
+	err := um.db.QueryRow(
 		createUserQuery,
 		email,
 		userName,
@@ -25,26 +30,29 @@ func (um *UserModel) New(email, userName, password, firstName, lastName, display
 		firstName,
 		lastName,
 		displayName,
-	)
+	).Scan(&userID, &lastLogin, &createdAt, &updatedAt)
 
 	if err != nil {
 		if db.ConstraintFailed(err) {
-			return -1, db.WrapConstraintError(err)
+			return UserData{}, db.WrapConstraintError(err)
 		}
 
-		return -1, err
+		return UserData{}, err
 	}
 
-	userID, err := result.LastInsertId()
-	if err != nil {
-		if util.InDevContext() {
-			panic(err)
-		} else {
-			return -1, err
-		}
+	out := UserData{
+		ID:          userID,
+		Email:       email,
+		Username:    userName,
+		FirstName:   firstName,
+		LastName:    lastName,
+		DisplayName: displayName,
+		LastLogin:   "", // last login null in the db
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}
 
-	return int(userID), nil
+	return out, nil
 }
 
 //go:embed queries/select-user-base-query.sql
@@ -83,26 +91,30 @@ func (um *UserModel) GetByIdentifier(email, username string) (UserData, error) {
 //go:embed queries/update-last-login.sql
 var updateLastLoginQuery string
 
-func (um *UserModel) SetLastLogin(userID int) error {
+func (um *UserModel) SetLastLogin(userID int) (lastLoginTime string, err error) {
 	if userID == 0 {
 		err := errors.New("Missing user ID")
 		if util.InDevContext() {
 			panic(err)
 		} else {
-			return err
+			return "", err
 		}
 	}
 
-	result, err := um.db.Exec(updateLastLoginQuery, userID)
+	err = um.db.QueryRow(updateLastLoginQuery, userID).Scan(&lastLoginTime)
 	if err != nil {
-		return err
-	}
-	rowsUpdated, err := result.RowsAffected()
-	if int(rowsUpdated) == 0 {
-		return UserNotFoundError{}
+		if util.InDevContext() {
+			panic(err)
+		}
+
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", UserNotFoundError{}
+		} else {
+			return "", err
+		}
 	}
 
-	return err
+	return lastLoginTime, err
 }
 
 //go:embed queries/check-unique-user.sql
@@ -142,7 +154,7 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 	var firstName string
 	var lastName string
 	var displayName string
-	var lastLogin string
+	var lastLogin sql.NullString
 	var createdAt string
 	var updatedAt string
 
@@ -154,6 +166,11 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		return UserData{}, UserNotFoundError{}
 	}
 
+	lastLoginString := ""
+	if lastLogin.Valid {
+		lastLoginString = lastLogin.String
+	}
+
 	return UserData{
 		id,
 		email,
@@ -162,7 +179,7 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		lastName,
 		displayName,
 		password,
-		lastLogin,
+		lastLoginString,
 		createdAt,
 		updatedAt,
 	}, nil

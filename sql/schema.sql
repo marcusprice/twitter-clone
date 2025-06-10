@@ -38,7 +38,7 @@ CREATE TABLE User (
     first_name TEXT,
     last_name TEXT,
     display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
-    last_login TEXT NOT NULL DEFAULT current_timestamp,
+    last_login TEXT,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp
 );

@@ -83,7 +83,7 @@ func TestUserCreate(t *testing.T) {
 		tu.AssertEqual(user.DisplayName, queriedUser.DisplayName)
 
 		duplicateUser := initTestUser(db)
-		_, err := duplicateUser.Create("password")
+		err := duplicateUser.Create("password")
 		tu.AssertErrorNotNil(err)
 		// verify that panic is called when user.id set (returns error in non
 		// dev/test env)

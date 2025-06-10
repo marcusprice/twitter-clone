@@ -43,7 +43,7 @@ func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := userAPI.user
 	user.Set(nil, userInput)
 
-	_, err = user.Create(userInput.Password)
+	err = user.Create(userInput.Password)
 	if err != nil {
 		var identifierError dtypes.IdentifierAlreadyExistsError
 
