@@ -5,7 +5,8 @@ import (
 	_ "embed"
 	"errors"
 
-	"github.com/marcusprice/twitter-clone/internal/db"
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
@@ -16,7 +17,7 @@ type UserModel struct {
 //go:embed queries/create-user.sql
 var createUserQuery string
 
-func (um *UserModel) New(email, userName, password, firstName, lastName, displayName string) (UserData, error) {
+func (um *UserModel) New(userInput dtypes.UserInput) (UserData, error) {
 	var userID int
 	var lastLogin sql.NullString
 	var createdAt string
@@ -24,17 +25,17 @@ func (um *UserModel) New(email, userName, password, firstName, lastName, display
 
 	err := um.db.QueryRow(
 		createUserQuery,
-		email,
-		userName,
-		password,
-		firstName,
-		lastName,
-		displayName,
+		userInput.Email,
+		userInput.Username,
+		userInput.Password,
+		userInput.FirstName,
+		userInput.LastName,
+		userInput.DisplayName,
 	).Scan(&userID, &lastLogin, &createdAt, &updatedAt)
 
 	if err != nil {
-		if db.ConstraintFailed(err) {
-			return UserData{}, db.WrapConstraintError(err)
+		if dbutils.ConstraintFailed(err) {
+			return UserData{}, dbutils.WrapConstraintError(err)
 		}
 
 		return UserData{}, err
@@ -42,11 +43,11 @@ func (um *UserModel) New(email, userName, password, firstName, lastName, display
 
 	out := UserData{
 		ID:          userID,
-		Email:       email,
-		Username:    userName,
-		FirstName:   firstName,
-		LastName:    lastName,
-		DisplayName: displayName,
+		Email:       userInput.Email,
+		Username:    userInput.Username,
+		FirstName:   userInput.FirstName,
+		LastName:    userInput.LastName,
+		DisplayName: userInput.DisplayName,
 		LastLogin:   "", // last login null in the db
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
@@ -132,10 +133,6 @@ func (um *UserModel) UsernameOrEmailExists(email, username string) (bool, error)
 	}
 
 	return count > 0, nil
-}
-
-func (um UserModel) EmailExists(email string) bool {
-	return false
 }
 
 func NewUserModel(dbConn *sql.DB) *UserModel {

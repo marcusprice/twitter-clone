@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"testing"
 
+	"github.com/marcusprice/twitter-clone/internal/constants"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
@@ -59,9 +60,9 @@ func TestUserSetFromModel(t *testing.T) {
 	tu.AssertEqual("Esteban", user.FirstName)
 	tu.AssertEqual("Price", user.LastName)
 	tu.AssertEqual("hungry boy", user.DisplayName)
-	tu.AssertEqual("2024-04-12 11:37:46", user.LastLogin.Format(TIME_LAYOUT))
-	tu.AssertEqual("2024-04-12 11:37:46", user.CreatedAt.Format(TIME_LAYOUT))
-	tu.AssertEqual("2024-04-12 11:37:46", user.UpdatedAt.Format(TIME_LAYOUT))
+	tu.AssertEqual("2024-04-12 11:37:46", user.LastLogin.Format(constants.TIME_LAYOUT))
+	tu.AssertEqual("2024-04-12 11:37:46", user.CreatedAt.Format(constants.TIME_LAYOUT))
+	tu.AssertEqual("2024-04-12 11:37:46", user.UpdatedAt.Format(constants.TIME_LAYOUT))
 }
 
 func TestUserCreate(t *testing.T) {
@@ -69,7 +70,7 @@ func TestUserCreate(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		user := initTestUser(db)
 		user.Create("password")
-		storedPassword := queryUserPassword(user.ID(), db)
+		storedPassword := testutil.QueryUserPassword(user.ID(), db)
 		tu.AssertTrue(validPasswordHash(storedPassword, "password"))
 		tu.AssertEqual(1, user.ID())
 
@@ -176,18 +177,6 @@ func TestUserByID(t *testing.T) {
 		err = errUser.ByID(-20)
 		tu.AssertErrorNotNil(err)
 	})
-}
-
-func queryUserPassword(userID int, db *sql.DB) string {
-	query := `SELECT password FROM User WHERE id = $1;`
-
-	var password string
-	err := db.QueryRow(query, userID).Scan(&password)
-	if err != nil {
-		panic(err)
-	}
-
-	return password
 }
 
 func validPasswordHash(storedPassword, password string) bool {

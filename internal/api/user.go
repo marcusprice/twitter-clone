@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
-	"github.com/marcusprice/twitter-clone/internal/db"
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
 )
@@ -49,7 +49,7 @@ func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 		if errors.As(err, &identifierError) {
 			http.Error(w, err.Error(), http.StatusConflict)
-		} else if db.IsConstraintError(err) {
+		} else if dbutils.IsConstraintError(err) {
 			statusText := http.StatusText(http.StatusBadRequest)
 			http.Error(w, statusText, http.StatusBadRequest)
 		} else {

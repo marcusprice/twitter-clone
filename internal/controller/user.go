@@ -44,9 +44,9 @@ func (u *User) setFromModel(userData model.UserData) {
 	u.FirstName = userData.FirstName
 	u.LastName = userData.LastName
 	u.DisplayName = userData.DisplayName
-	u.LastLogin = parseTime(userData.LastLogin)
-	u.CreatedAt = parseTime(userData.CreatedAt)
-	u.UpdatedAt = parseTime(userData.UpdatedAt)
+	u.LastLogin = util.ParseTime(userData.LastLogin)
+	u.CreatedAt = util.ParseTime(userData.CreatedAt)
+	u.UpdatedAt = util.ParseTime(userData.UpdatedAt)
 }
 
 func (u *User) Create(password string) error {
@@ -81,9 +81,16 @@ func (u *User) Create(password string) error {
 		}
 	}
 
-	userData, err := model.New(
-		u.Email, u.Username, string(hashedPassword),
-		u.FirstName, u.LastName, u.DisplayName)
+	userInput := dtypes.UserInput{
+		Email:       u.Email,
+		Username:    u.Username,
+		FirstName:   u.FirstName,
+		LastName:    u.LastName,
+		DisplayName: u.DisplayName,
+		Password:    string(hashedPassword),
+	}
+
+	userData, err := model.New(userInput)
 
 	if err != nil {
 		return err
@@ -122,7 +129,7 @@ func (user *User) SetLastLogin() error {
 		}
 	}
 	lastLoginTime, err := user.model.SetLastLogin(user.ID())
-	user.LastLogin = parseTime(lastLoginTime)
+	user.LastLogin = util.ParseTime(lastLoginTime)
 	return err
 }
 
@@ -135,16 +142,6 @@ func (u *User) ByID(userID int) error {
 	u.setFromModel(userData)
 
 	return nil
-}
-
-func parseTime(timestamp string) time.Time {
-	lastLogin, err := time.Parse(TIME_LAYOUT, timestamp)
-	if err != nil {
-		// likely a null/empty value
-		return time.Time{}
-	}
-
-	return lastLogin
 }
 
 func NewUserController(dbConn *sql.DB) *User {

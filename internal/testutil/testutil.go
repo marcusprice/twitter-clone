@@ -114,3 +114,15 @@ func isNil(i interface{}) bool {
 		return false
 	}
 }
+
+func QueryUserPassword(userID int, db *sql.DB) string {
+	query := `SELECT password FROM User WHERE id = $1;`
+
+	var password string
+	err := db.QueryRow(query, userID).Scan(&password)
+	if err != nil {
+		panic(err)
+	}
+
+	return password
+}

@@ -7,9 +7,20 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/constants"
 )
+
+func ParseTime(timestamp string) time.Time {
+	parsedTime, err := time.Parse(constants.TIME_LAYOUT, timestamp)
+	if err != nil {
+		// likely a null/empty value
+		return time.Time{}
+	}
+
+	return parsedTime
+}
 
 func projectRoot() string {
 	dir, _ := os.Getwd()
