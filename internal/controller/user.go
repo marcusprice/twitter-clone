@@ -19,6 +19,7 @@ type User struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
+	IsActive    bool
 	LastLogin   time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -44,6 +45,7 @@ func (u *User) setFromModel(userData model.UserData) {
 	u.FirstName = userData.FirstName
 	u.LastName = userData.LastName
 	u.DisplayName = userData.DisplayName
+	u.IsActive = userData.IsActive != 0
 	u.LastLogin = util.ParseTime(userData.LastLogin)
 	u.CreatedAt = util.ParseTime(userData.CreatedAt)
 	u.UpdatedAt = util.ParseTime(userData.UpdatedAt)
@@ -119,7 +121,7 @@ func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {
 	return true, nil
 }
 
-func (user *User) SetLastLogin() error {
+func (user *User) Login() error {
 	if user.id == nil {
 		err := errors.New("trying to update a user login without ID")
 		if util.InDevContext() {
@@ -128,8 +130,9 @@ func (user *User) SetLastLogin() error {
 			return (err)
 		}
 	}
-	lastLoginTime, err := user.model.SetLastLogin(user.ID())
+	lastLoginTime, isActive, err := user.model.Login(user.ID())
 	user.LastLogin = util.ParseTime(lastLoginTime)
+	user.IsActive = isActive != 0
 	return err
 }
 

@@ -227,7 +227,7 @@ func TestUserUsernameOrEmailExists(t *testing.T) {
 	})
 }
 
-func TestUserSetLastLogin(t *testing.T) {
+func TestUserLogin(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
 		userModel := UserModel{db}
@@ -242,7 +242,7 @@ func TestUserSetLastLogin(t *testing.T) {
 
 		userID := insertUser(user, db)
 		beforeUpdate := time.Now().UTC().Add(-1 * time.Minute)
-		methodReturnTimestamp, err := userModel.SetLastLogin(userID)
+		methodReturnTimestamp, isActive, err := userModel.Login(userID)
 		afterUpdate := time.Now().UTC().Add(time.Minute)
 
 		userData := queryUser(userID, db)
@@ -252,12 +252,13 @@ func TestUserSetLastLogin(t *testing.T) {
 		tu.AssertTrue(timestamp.Before(afterUpdate))
 		tu.AssertTrue(lastLogin.After(beforeUpdate))
 		tu.AssertTrue(lastLogin.Before(afterUpdate))
+		tu.AssertEqual(1, isActive)
 
 		var unsetID int
-		_, err = userModel.SetLastLogin(unsetID)
+		_, _, err = userModel.Login(unsetID)
 		tu.AssertErrorNotNil(err)
 
-		_, err = userModel.SetLastLogin(42069)
+		_, _, err = userModel.Login(42069)
 		var userNotFoundError UserNotFoundError
 		tu.AssertTrue(errors.As(err, &userNotFoundError))
 		tu.AssertErrorNotNil(err)
@@ -325,9 +326,9 @@ func queryUser(userID int, db *sql.DB) UserData {
 func insertUser(userInput dtypes.UserInput, db *sql.DB) int {
 	query := `
 	INSERT INTO User 
-		(email, user_name, first_name, last_name, display_name, password)
+		(email, user_name, first_name, last_name, display_name, password, is_active)
 	Values
-		($1, $2, $3, $4, $5, $6)
+		($1, $2, $3, $4, $5, $6, 0)
 	RETURNING id;
 	`
 

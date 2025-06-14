@@ -1,0 +1,2 @@
+SELECT COUNT(*) FROM User
+WHERE id = $1;

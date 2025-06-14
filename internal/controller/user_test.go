@@ -143,11 +143,11 @@ func TestUserSetLastLogin(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		user := initTestUser(db)
 		user.Create("password")
-		err := user.SetLastLogin()
+		err := user.Login()
 		tu.AssertErrorNil(err)
 
 		user.id = nil
-		err = user.SetLastLogin()
+		err = user.Login()
 		tu.AssertErrorNotNil(err)
 	})
 }

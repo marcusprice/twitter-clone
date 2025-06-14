@@ -12,26 +12,12 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/model"
 )
 
-type UserPayload struct {
-	Email       string `json:"email"`
-	Username    string `json:"username"`
-	FirstName   string `json:"firstName"`
-	LastName    string `json:"lastName"`
-	DisplayName string `json:"displayName"`
-}
-
 type UserAPI struct {
 	user *controller.User
 }
 
 func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var userInput dtypes.UserInput
-
-	if !validRequestMethod(http.MethodPost, r.Method) {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	err := json.NewDecoder(r.Body).Decode(&userInput)
 
 	if err != nil || !validUserFields(userInput, true) {
@@ -68,11 +54,6 @@ func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
-	if !validRequestMethod(http.MethodPost, r.Method) {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var userInput dtypes.UserInput
 	err := json.NewDecoder(r.Body).Decode(&userInput)
 	username := userInput.Username
@@ -107,7 +88,7 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := user.SetLastLogin(); err != nil {
+	if err := user.Login(); err != nil {
 		statusText := http.StatusText(http.StatusInternalServerError)
 		http.Error(w, statusText, http.StatusInternalServerError)
 		return
@@ -127,8 +108,8 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(payload)
 }
 
-func NewUserAPI(user *controller.User) UserAPI {
-	return UserAPI{user}
+func NewUserAPI(user *controller.User) *UserAPI {
+	return &UserAPI{user}
 }
 
 func validUserFields(userInput dtypes.UserInput, pwdRequired bool) bool {

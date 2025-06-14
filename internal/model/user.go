@@ -89,33 +89,33 @@ func (um *UserModel) GetByIdentifier(email, username string) (UserData, error) {
 	return parseUserQueryRow(row)
 }
 
-//go:embed queries/update-last-login.sql
-var updateLastLoginQuery string
+//go:embed queries/user-login.sql
+var userLoginQuery string
 
-func (um *UserModel) SetLastLogin(userID int) (lastLoginTime string, err error) {
+func (um *UserModel) Login(userID int) (lastLoginTime string, isActive int, err error) {
 	if userID == 0 {
 		err := errors.New("Missing user ID")
 		if util.InDevContext() {
 			panic(err)
 		} else {
-			return "", err
+			return "", 0, err
 		}
 	}
 
-	err = um.db.QueryRow(updateLastLoginQuery, userID).Scan(&lastLoginTime)
+	err = um.db.QueryRow(userLoginQuery, userID).Scan(&lastLoginTime, &isActive)
 	if err != nil {
 		if util.InDevContext() {
 			panic(err)
 		}
 
 		if errors.Is(err, sql.ErrNoRows) {
-			return "", UserNotFoundError{}
+			return "", 0, UserNotFoundError{}
 		} else {
-			return "", err
+			return "", 0, err
 		}
 	}
 
-	return lastLoginTime, err
+	return lastLoginTime, isActive, err
 }
 
 //go:embed queries/check-unique-user.sql
@@ -124,6 +124,23 @@ var checkUniqueUserQuery string
 func (um *UserModel) UsernameOrEmailExists(email, username string) (bool, error) {
 	var count int
 	err := um.db.QueryRow(checkUniqueUserQuery, email, username).Scan(&count)
+	if err != nil {
+		if util.InDevContext() {
+			panic(err)
+		} else {
+			return false, err
+		}
+	}
+
+	return count > 0, nil
+}
+
+//go:embed queries/check-user-exists.sql
+var checkUserExistsQuery string
+
+func (um *UserModel) Exists(userID int) (bool, error) {
+	var count int
+	err := um.db.QueryRow(checkUserExistsQuery, userID).Scan(&count)
 	if err != nil {
 		if util.InDevContext() {
 			panic(err)
@@ -152,12 +169,13 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 	var lastName string
 	var displayName string
 	var lastLogin sql.NullString
+	var isActive int
 	var createdAt string
 	var updatedAt string
 
 	err := row.Scan(
 		&id, &email, &userName, &password, &firstName, &lastName, &displayName,
-		&lastLogin, &createdAt, &updatedAt)
+		&lastLogin, &isActive, &createdAt, &updatedAt)
 
 	if err != nil {
 		return UserData{}, UserNotFoundError{}
@@ -177,6 +195,7 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		displayName,
 		password,
 		lastLoginString,
+		isActive,
 		createdAt,
 		updatedAt,
 	}, nil

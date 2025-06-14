@@ -38,6 +38,8 @@ CREATE TABLE User (
     first_name TEXT,
     last_name TEXT,
     display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
+    avatar TEXT DEFAULT '',
+    is_active INTEGER NOT NULL CHECK (is_active IN(0, 1)),
     last_login TEXT,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp
@@ -59,17 +61,18 @@ CREATE TABLE UserFollows (
 CREATE TABLE Post (
     id INTEGER PRIMARY KEY,
     user_id INTEGER,
-    content TEXT NOT NULL CHECK (length(trim(content)) > 0),
+    content TEXT NOT NULL,
     like_count INTEGER DEFAULT 0,
     retweet_count INTEGER DEFAULT 0,
     bookmark_count INTEGER DEFAULT 0,
     impressions INTEGER DEFAULT 0,
-    image_url TEXT,
+    image TEXT DEFAULT '',
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp,
 
-    FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE,
 
+    CHECK (content != '' OR image != ''),
     CHECK (like_count >= 0),
     CHECK (retweet_count >= 0),
     CHECK (bookmark_count >= 0)

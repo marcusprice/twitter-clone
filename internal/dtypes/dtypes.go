@@ -9,6 +9,12 @@ type UserInput struct {
 	Password    string `json:"password"`
 }
 
+type PostInput struct {
+	UserID  int
+	Content string
+	Image   string
+}
+
 type IdentifierAlreadyExistsError struct{}
 
 func (_ IdentifierAlreadyExistsError) Error() string {

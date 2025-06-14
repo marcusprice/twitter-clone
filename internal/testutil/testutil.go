@@ -2,7 +2,9 @@ package testutil
 
 import (
 	"database/sql"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -70,6 +72,12 @@ func (tu TestUtil) ShouldPanic() {
 	}
 }
 
+func (tu TestUtil) CleanTestUploads() {
+	tu.t.Cleanup(func() {
+		cleanDir(os.Getenv("TEST_IMAGE_STORAGE_PATH"))
+	})
+}
+
 func NewTestUtil(t *testing.T) TestUtil {
 	return TestUtil{t}
 }
@@ -125,4 +133,27 @@ func QueryUserPassword(userID int, db *sql.DB) string {
 	}
 
 	return password
+}
+
+func cleanDir(path string) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, file := range entries {
+		err = os.RemoveAll(filepath.Join(path, file.Name()))
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func GetTestUploads() []fs.DirEntry {
+	files, err := os.ReadDir(os.Getenv("TEST_IMAGE_STORAGE_PATH"))
+	if err != nil {
+		panic(err)
+	}
+
+	return files
 }

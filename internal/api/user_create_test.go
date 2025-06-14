@@ -196,53 +196,57 @@ func TestCreateUserMissingRequiredFields(t *testing.T) {
 }
 
 func TestCreateUserMalformedJSON(t *testing.T) {
-	tu := testutil.NewTestUtil(t)
-	UserAPI := UserAPI{}
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
 
-	malformedJSON := "alkj}"
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/createUser", strings.NewReader(malformedJSON))
-	res := httptest.NewRecorder()
-	UserAPI.CreateUser(res, req)
+		malformedJSON := "alkj}"
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/createUser", strings.NewReader(malformedJSON))
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
 
-	tu.AssertEqual(http.StatusBadRequest, res.Code)
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
+	})
 }
 
 func TestCreateUserWrongMethod(t *testing.T) {
-	tu := testutil.NewTestUtil(t)
-	UserAPI := UserAPI{}
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
 
-	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/createUser", nil)
-	getRes := httptest.NewRecorder()
-	putReq := httptest.NewRequest(http.MethodPut, "/api/v1/createUser", nil)
-	putRes := httptest.NewRecorder()
-	patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/createUser", nil)
-	patchRes := httptest.NewRecorder()
-	deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/createUser", nil)
-	deleteRes := httptest.NewRecorder()
-	headReq := httptest.NewRequest(http.MethodHead, "/api/v1/createUser", nil)
-	headRes := httptest.NewRecorder()
-	optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/createUser", nil)
-	optionRes := httptest.NewRecorder()
-	traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/createUser", nil)
-	traceRes := httptest.NewRecorder()
-	connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/createUser", nil)
-	connectRes := httptest.NewRecorder()
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/createUser", nil)
+		getRes := httptest.NewRecorder()
+		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/createUser", nil)
+		putRes := httptest.NewRecorder()
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/createUser", nil)
+		patchRes := httptest.NewRecorder()
+		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/createUser", nil)
+		deleteRes := httptest.NewRecorder()
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/createUser", nil)
+		headRes := httptest.NewRecorder()
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/createUser", nil)
+		optionRes := httptest.NewRecorder()
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/createUser", nil)
+		traceRes := httptest.NewRecorder()
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/createUser", nil)
+		connectRes := httptest.NewRecorder()
 
-	UserAPI.CreateUser(getRes, getReq)
-	UserAPI.CreateUser(putRes, putReq)
-	UserAPI.CreateUser(patchRes, patchReq)
-	UserAPI.CreateUser(deleteRes, deleteReq)
-	UserAPI.CreateUser(headRes, headReq)
-	UserAPI.CreateUser(optionRes, optionReq)
-	UserAPI.CreateUser(traceRes, traceReq)
-	UserAPI.CreateUser(connectRes, connectReq)
+		handler.ServeHTTP(getRes, getReq)
+		handler.ServeHTTP(putRes, putReq)
+		handler.ServeHTTP(patchRes, patchReq)
+		handler.ServeHTTP(deleteRes, deleteReq)
+		handler.ServeHTTP(headRes, headReq)
+		handler.ServeHTTP(optionRes, optionReq)
+		handler.ServeHTTP(traceRes, traceReq)
+		handler.ServeHTTP(connectRes, connectReq)
 
-	tu.AssertEqual(http.StatusMethodNotAllowed, getRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, putRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, patchRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, deleteRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, headRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, optionRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, traceRes.Code)
-	tu.AssertEqual(http.StatusMethodNotAllowed, connectRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, getRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, putRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, patchRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, deleteRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, headRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, optionRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, traceRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, connectRes.Code)
+	})
 }

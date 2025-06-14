@@ -1,6 +1,8 @@
 package model
 
-import "github.com/marcusprice/twitter-clone/internal/util"
+import (
+	"github.com/marcusprice/twitter-clone/internal/util"
+)
 
 func init() {
 	util.LoadEnvVariables()

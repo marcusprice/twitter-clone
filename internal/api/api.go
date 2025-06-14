@@ -12,24 +12,38 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
-func RegisterHandlers(dbConn *sql.DB) http.Handler {
-	if dbConn == nil {
+func RegisterHandlers(db *sql.DB) http.Handler {
+	if db == nil {
 		panic("db conn cannot be nil")
 	}
 
-	user := controller.NewUserController(dbConn)
+	user := controller.NewUserController(db)
+	post := controller.NewPostController(db)
 	userAPI := NewUserAPI(user)
+	postAPI := NewPostAPI(post)
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/v1/createUser", userAPI.CreateUser)
-	mux.HandleFunc("/api/v1/authenticateUser", userAPI.Authenticate)
+	mux.Handle(
+		"/api/v1/createUser",
+		VerifyPostRequest(
+			http.HandlerFunc(userAPI.CreateUser)),
+	)
+
+	mux.Handle(
+		"/api/v1/authenticateUser",
+		VerifyPostRequest(
+			http.HandlerFunc(userAPI.Authenticate)),
+	)
+
+	mux.Handle(
+		"/api/v1/createPost",
+		VerifyPostRequest(
+			Authenticate(
+				user,
+				http.HandlerFunc(postAPI.CreatePost))))
 
 	return mux
-}
-
-func validRequestMethod(expectedMethod, actualMethod string) bool {
-	return expectedMethod == actualMethod
 }
 
 func GenerateJWT(userID int) (string, error) {

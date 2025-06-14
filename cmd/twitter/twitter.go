@@ -10,20 +10,18 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/api"
 	"github.com/marcusprice/twitter-clone/internal/constants"
+	"github.com/marcusprice/twitter-clone/internal/util"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
+	util.LoadEnvVariables()
+
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
 	dbPath := os.Getenv("DB_PATH")
 	env := os.Getenv("ENV")
 	envs := []string{constants.DEV_ENV, constants.PROD_ENV}
-
-	fmt.Println(os.Getenv("HOST"))
-	fmt.Println(os.Getenv("PORT"))
-	fmt.Println(os.Getenv("DB_PATH"))
-	fmt.Println(os.Getenv("ENV"))
 
 	if env == "" {
 		panic("ENV environment variable required")
