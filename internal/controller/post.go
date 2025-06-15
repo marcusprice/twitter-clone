@@ -11,7 +11,6 @@ import (
 
 type Post struct {
 	model         *model.PostModel
-	userModel     *model.UserModel
 	ID            int
 	UserID        int
 	Content       string
@@ -46,15 +45,6 @@ func (p *Post) setFromModel(postData model.PostData) {
 }
 
 func (post *Post) New(postInput dtypes.PostInput) error {
-	userExists, err := post.userModel.Exists(postInput.UserID)
-	if err != nil {
-		return (err)
-	}
-
-	if !userExists {
-		return model.UserNotFoundError{}
-	}
-
 	postID, err := post.model.Create(postInput)
 	if err != nil {
 		return err
@@ -72,7 +62,6 @@ func (post *Post) New(postInput dtypes.PostInput) error {
 
 func NewPostController(db *sql.DB) *Post {
 	return &Post{
-		model:     model.NewPostModel(db),
-		userModel: model.NewUserModel(db),
+		model: model.NewPostModel(db),
 	}
 }
