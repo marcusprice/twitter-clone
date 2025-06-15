@@ -45,6 +45,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	_, err = conn.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		log.Fatal("could not enable foreign keys:", err)
+	}
 	handler := api.RegisterHandlers(conn)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), handler))

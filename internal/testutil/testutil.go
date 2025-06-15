@@ -101,6 +101,10 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatal("failed to execute schema sql", err)
 	}
 
+	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
+		t.Fatal("could not enable foreign keys:", err)
+	}
+
 	return db
 }
 

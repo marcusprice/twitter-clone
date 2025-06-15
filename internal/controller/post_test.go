@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
@@ -51,5 +52,21 @@ func TestPostNew(t *testing.T) {
 		tu.AssertTrue(post.CreatedAt.Before(afterAction))
 		tu.AssertTrue(post.UpdatedAt.After(beforeAction))
 		tu.AssertTrue(post.UpdatedAt.Before(afterAction))
+	})
+}
+
+func TestPostNewUserDoesNotExist(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		post := NewPostController(db)
+		postInput := dtypes.PostInput{
+			UserID:  42069,
+			Content: "Some content",
+			Image:   "dags.jpg",
+		}
+
+		err := post.New(postInput)
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(dbutils.IsConstraintError(err))
 	})
 }

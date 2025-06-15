@@ -1,3 +1,4 @@
+
 DROP TRIGGER IF EXISTS update_user_timestamp;
 DROP TRIGGER IF EXISTS update_post_timestamp;
 DROP TRIGGER IF EXISTS update_comment_timestamp;
@@ -60,7 +61,7 @@ CREATE TABLE UserFollows (
 
 CREATE TABLE Post (
     id INTEGER PRIMARY KEY,
-    user_id INTEGER,
+    user_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     like_count INTEGER DEFAULT 0,
     retweet_count INTEGER DEFAULT 0,
