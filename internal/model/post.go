@@ -7,6 +7,7 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 type PostModel struct {
@@ -26,6 +27,11 @@ func (pm PostModel) Create(postInput dtypes.PostInput) (int, error) {
 		if dbutils.ConstraintFailed(err) {
 			return -1, dbutils.WrapConstraintError(err)
 		}
+
+		if util.InDevContext() {
+			panic(err)
+		}
+
 		return -1, err
 	}
 
@@ -61,6 +67,9 @@ func (pm PostModel) GetByPostID(id int) (PostData, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return PostData{}, PostNotFoundError{}
 		} else {
+			if util.InDevContext() {
+				panic(err)
+			}
 			return PostData{}, err
 		}
 	}
