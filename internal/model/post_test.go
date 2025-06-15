@@ -2,9 +2,11 @@ package model
 
 import (
 	"database/sql"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 	"github.com/marcusprice/twitter-clone/internal/util"
@@ -52,6 +54,23 @@ func TestPostCreate(t *testing.T) {
 		tu.AssertTrue(createdAt.Before(afterAction))
 		tu.AssertTrue(updatedAt.After(beforeAction))
 		tu.AssertTrue(updatedAt.Before(afterAction))
+	})
+}
+
+func TestPostCreateUserDoesNotExist(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		postModel := NewPostModel(db)
+		postInput := dtypes.PostInput{
+			UserID:  42069,
+			Content: "Some content",
+			Image:   "image.png",
+		}
+		postID, err := postModel.Create(postInput)
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(dbutils.IsConstraintError(err))
+		tu.AssertTrue(strings.Contains(err.Error(), "FOREIGN KEY constraint failed"))
+		tu.AssertEqual(-1, postID)
 	})
 }
 
