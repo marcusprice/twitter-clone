@@ -38,9 +38,9 @@ func TestPostCreate(t *testing.T) {
 		createdAt := util.ParseTime(postData.CreatedAt)
 		updatedAt := util.ParseTime(postData.UpdatedAt)
 
+		tu.AssertErrorNil(err)
 		tu.AssertEqual("Cats are cool", postData.Content)
 		tu.AssertEqual("cool-cats.png", postData.Image)
-		tu.AssertErrorNil(err)
 		tu.AssertEqual(1, postID)
 		tu.AssertEqual(postID, postData.ID)
 		tu.AssertEqual(userID, postData.UserID)
