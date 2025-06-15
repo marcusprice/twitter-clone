@@ -113,6 +113,56 @@ func TestCreatePostImageOnly(t *testing.T) {
 	})
 }
 
+func TestCreatePostContentAndImage(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		defer tu.CleanTestUploads()
+		handler := RegisterHandlers(db)
+		testUser := createTestUser(db)
+		testUser.Login()
+		token, _ := GenerateJWT(testUser.ID())
+
+		var b bytes.Buffer
+		imgData := generateLargeString(5)
+		writer := multipart.NewWriter(&b)
+		contentField, _ := writer.CreateFormField("content")
+		io.Copy(contentField, strings.NewReader("Check out this gorgeous sunset"))
+		imgField, _ := writer.CreateFormFile("image", "sunset.jpeg")
+		io.Copy(imgField, strings.NewReader(imgData))
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		res := httptest.NewRecorder()
+
+		beforeRequest := time.Now().UTC().Add(-1 * time.Minute)
+		handler.ServeHTTP(res, req)
+		afterRequest := time.Now().UTC().Add(time.Minute)
+
+		uploads := testutil.GetTestUploads()
+		fileWritten := len(uploads) == 1
+		uploadedFileName := uploads[0].Name()
+		var postPayload PostPayload
+		json.Unmarshal(res.Body.Bytes(), &postPayload)
+		tu.AssertEqual(http.StatusOK, res.Code)
+		tu.AssertEqual("Check out this gorgeous sunset", postPayload.Content)
+		tu.AssertEqual(0, postPayload.LikeCount)
+		tu.AssertEqual(0, postPayload.RetweetCount)
+		tu.AssertEqual(0, postPayload.BookmarkCount)
+		tu.AssertEqual(0, postPayload.Impressions)
+		tu.AssertEqual("esteban", postPayload.Author.Username)
+		tu.AssertEqual("Bubba", postPayload.Author.DisplayName)
+		tu.AssertEqual("", postPayload.Author.Avatar)
+		tu.AssertEqual(postPayload.Image, uploadedFileName)
+		tu.AssertTrue(fileWritten)
+		tu.AssertTrue(strings.Contains(uploadedFileName, "sunset.jpeg"))
+		tu.AssertTrue(strings.Contains(postPayload.Image, "sunset.jpeg"))
+		tu.AssertTrue(postPayload.CreatedAt.After(beforeRequest))
+		tu.AssertTrue(postPayload.CreatedAt.Before(afterRequest))
+	})
+}
+
 func TestCreatePostInvalidFileType(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
