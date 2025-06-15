@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -10,12 +11,57 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
+
+func TestCreatePostContentOnly(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		defer tu.CleanTestUploads()
+		handler := RegisterHandlers(db)
+
+		testUser := createTestUser(db)
+		testUser.Login()
+		token, _ := GenerateJWT(testUser.ID())
+
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+		contenfPart, _ := writer.CreateFormField("content")
+		io.Copy(contenfPart, strings.NewReader("Cats are awesome"))
+		writer.Close()
+
+		req := httptest.NewRequest(
+			http.MethodPost, "/api/v1/createPost", &b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		res := httptest.NewRecorder()
+
+		beforeRequest := time.Now().UTC().Add(-1 * time.Minute)
+		handler.ServeHTTP(res, req)
+		afterRequest := time.Now().UTC().Add(time.Minute)
+
+		var postPayload PostPayload
+		json.Unmarshal(res.Body.Bytes(), &postPayload)
+
+		tu.AssertEqual(http.StatusOK, res.Code)
+		tu.AssertEqual("Cats are awesome", postPayload.Content)
+		tu.AssertEqual("", postPayload.Image)
+		tu.AssertEqual(0, postPayload.LikeCount)
+		tu.AssertEqual(0, postPayload.RetweetCount)
+		tu.AssertEqual(0, postPayload.BookmarkCount)
+		tu.AssertEqual(0, postPayload.Impressions)
+		tu.AssertEqual("esteban", postPayload.Author.Username)
+		tu.AssertEqual("yodel", postPayload.Author.DisplayName)
+		tu.AssertEqual("", postPayload.Author.Avatar)
+		tu.AssertTrue(postPayload.CreatedAt.After(beforeRequest))
+		tu.AssertTrue(postPayload.CreatedAt.Before(afterRequest))
+	})
+}
 
 func TestCreatePostInvalidFileType(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
