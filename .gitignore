@@ -4,3 +4,5 @@ project.txt
 /twitter
 debug*
 *.sqlite
+upload/*
+test-upload/*
