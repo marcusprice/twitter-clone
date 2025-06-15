@@ -87,16 +87,17 @@ func TestPostGetByID(t *testing.T) {
 			DisplayName: "Bubba",
 			Password:    "password",
 		}
-		beforeAction := time.Now().UTC().Add(-1 * time.Minute)
 		userID := insertUser(userInput, db)
-		afterAction := time.Now().UTC().Add(time.Minute)
 
 		postInput := dtypes.PostInput{
 			UserID:  userID,
 			Content: "Cats are cool",
 			Image:   "cool-cats.png",
 		}
+		beforeAction := time.Now().UTC().Add(-1 * time.Minute)
 		postID := insertPost(postInput, db)
+		afterAction := time.Now().UTC().Add(time.Minute)
+
 		postData, err := postModel.GetByID(postID)
 		createdAt := util.ParseTime(postData.CreatedAt)
 		updatedAt := util.ParseTime(postData.UpdatedAt)
