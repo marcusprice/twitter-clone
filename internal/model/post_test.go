@@ -12,7 +12,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
-func TestPostCreate(t *testing.T) {
+func TestPostNew(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
 		postModel := NewPostModel(db)
@@ -33,7 +33,7 @@ func TestPostCreate(t *testing.T) {
 		}
 
 		beforeAction := time.Now().UTC().Add(-1 * time.Minute)
-		postID, err := postModel.Create(postInput)
+		postID, err := postModel.New(postInput)
 		afterAction := time.Now().UTC().Add(time.Minute)
 
 		postData := queryPost(postID, db)
@@ -57,7 +57,7 @@ func TestPostCreate(t *testing.T) {
 	})
 }
 
-func TestPostCreateUserDoesNotExist(t *testing.T) {
+func TestPostNewUserDoesNotExist(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
 		postModel := NewPostModel(db)
@@ -66,7 +66,7 @@ func TestPostCreateUserDoesNotExist(t *testing.T) {
 			Content: "Some content",
 			Image:   "image.png",
 		}
-		postID, err := postModel.Create(postInput)
+		postID, err := postModel.New(postInput)
 		tu.AssertErrorNotNil(err)
 		tu.AssertTrue(dbutils.IsConstraintError(err))
 		tu.AssertTrue(strings.Contains(err.Error(), "FOREIGN KEY constraint failed"))

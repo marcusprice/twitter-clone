@@ -17,7 +17,7 @@ type PostModel struct {
 //go:embed queries/create-post.sql
 var createPostQuery string
 
-func (pm PostModel) Create(postInput dtypes.PostInput) (int, error) {
+func (pm PostModel) New(postInput dtypes.PostInput) (int, error) {
 	var postID int
 	err := pm.db.QueryRow(
 		createPostQuery, postInput.UserID,
@@ -41,7 +41,7 @@ func (pm PostModel) Create(postInput dtypes.PostInput) (int, error) {
 //go:embed queries/select-post-by-id.sql
 var selectPostByIdQuery string
 
-func (pm PostModel) GetByPostID(id int) (PostData, error) {
+func (pm PostModel) GetByID(id int) (PostData, error) {
 	var username string
 	var displayName string
 	var avatar string

@@ -45,12 +45,12 @@ func (p *Post) setFromModel(postData model.PostData) {
 }
 
 func (post *Post) New(postInput dtypes.PostInput) error {
-	postID, err := post.model.Create(postInput)
+	postID, err := post.model.New(postInput)
 	if err != nil {
 		return err
 	}
 
-	postData, err := post.model.GetByPostID(postID)
+	postData, err := post.model.GetByID(postID)
 	if err != nil {
 		return err
 	}
