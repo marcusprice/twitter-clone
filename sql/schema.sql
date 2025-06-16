@@ -225,7 +225,7 @@ END;
 CREATE TRIGGER decrement_post_like_count
 AFTER DELETE ON PostLike
 BEGIN
-    UPDATE Post SET like_count = like_count - 1 WHERE id = NEW.post_id;
+    UPDATE Post SET like_count = like_count - 1 WHERE id = OLD.post_id;
 END;
 
 CREATE TRIGGER increment_post_retweet_count
@@ -237,7 +237,7 @@ END;
 CREATE TRIGGER decrement_post_retweet_count
 AFTER DELETE ON PostRetweet
 BEGIN
-    UPDATE Post SET retweet_count = retweet_count - 1 WHERE id = NEW.post_id;
+    UPDATE Post SET retweet_count = retweet_count - 1 WHERE id = OLD.post_id;
 END;
 
 CREATE TRIGGER increment_post_bookmark_count
@@ -249,7 +249,7 @@ END;
 CREATE TRIGGER decrement_post_bookmark_count
 AFTER DELETE ON PostBookmark
 BEGIN
-    UPDATE Post SET bookmark_count = bookmark_count - 1 WHERE id = NEW.post_id;
+    UPDATE Post SET bookmark_count = bookmark_count - 1 WHERE id = OLD.post_id;
 END;
 
 CREATE TRIGGER increment_comment_like_count
@@ -261,7 +261,7 @@ END;
 CREATE TRIGGER decrement_comment_like_count
 AFTER DELETE ON CommentLike
 BEGIN
-    UPDATE Comment SET like_count = like_count - 1 WHERE id = NEW.comment_id;
+    UPDATE Comment SET like_count = like_count - 1 WHERE id = OLD.comment_id;
 END;
 
 CREATE TRIGGER increment_comment_retweet_count
@@ -273,7 +273,7 @@ END;
 CREATE TRIGGER decrement_comment_retweet_count
 AFTER DELETE ON CommentRetweet
 BEGIN
-    UPDATE Comment SET retweet_count = retweet_count - 1 WHERE id = NEW.comment_id;
+    UPDATE Comment SET retweet_count = retweet_count - 1 WHERE id = OLD.comment_id;
 END;
 
 CREATE TRIGGER increment_comment_bookmark_count
@@ -285,7 +285,7 @@ END;
 CREATE TRIGGER decrement_comment_bookmark_count
 AFTER DELETE ON CommentBookmark
 BEGIN
-    UPDATE Comment SET bookmark_count = bookmark_count - 1 WHERE id = NEW.comment_id;
+    UPDATE Comment SET bookmark_count = bookmark_count - 1 WHERE id = OLD.comment_id;
 END;
 
 

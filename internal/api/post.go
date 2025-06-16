@@ -117,7 +117,7 @@ func (postAPI *PostAPI) Like(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if r.Method == http.MethodPost {
+	if r.Method == http.MethodPut {
 		err = post.Like(userID)
 	} else {
 		err = post.Unlike(userID)

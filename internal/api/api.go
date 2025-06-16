@@ -44,9 +44,9 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 				http.HandlerFunc(postAPI.CreatePost))))
 
 	mux.Handle(
-		"api/v1/post/{id}/toggle-like",
+		"/api/v1/post/{id}/like",
 		AllowMethods(
-			[]string{http.MethodPost, http.MethodDelete},
+			[]string{http.MethodPut, http.MethodDelete},
 			Authenticate(
 				user,
 				http.HandlerFunc(postAPI.Like))))

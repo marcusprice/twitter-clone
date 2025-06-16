@@ -64,7 +64,7 @@ func (post *Post) New(postInput dtypes.PostInput) error {
 }
 
 func (post *Post) ByID(postID int) error {
-	postData, err := post.model.GetByID(post.ID)
+	postData, err := post.model.GetByID(postID)
 	if err != nil {
 		return err
 	}
@@ -106,6 +106,19 @@ func (post *Post) Unlike(likerUserID int) error {
 		return err
 	}
 
+	return nil
+}
+
+func (post *Post) Sync() error {
+	if post.ID == 0 {
+		return fmt.Errorf("Post.Sync(): required postID not set in post controller")
+	}
+
+	postData, err := post.model.GetByID(post.ID)
+	if err != nil {
+		return err
+	}
+	post.setFromModel(postData)
 	return nil
 }
 
