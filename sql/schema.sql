@@ -85,6 +85,7 @@ CREATE TABLE PostLike (
     user_id INTEGER NOT NULL,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
 
+    UNIQUE (post_id, user_id),
     FOREIGN KEY (post_id) REFERENCES Post (id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE
 );

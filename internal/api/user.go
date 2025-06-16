@@ -21,8 +21,7 @@ func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&userInput)
 
 	if err != nil || !validUserFields(userInput, true) {
-		statusMessage := http.StatusText(http.StatusBadRequest)
-		http.Error(w, statusMessage, http.StatusBadRequest)
+		http.Error(w, BadRequest, http.StatusBadRequest)
 		return
 	}
 
@@ -34,13 +33,11 @@ func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 		var identifierError dtypes.IdentifierAlreadyExistsError
 
 		if errors.As(err, &identifierError) {
-			http.Error(w, err.Error(), http.StatusConflict)
+			http.Error(w, Conflict, http.StatusConflict)
 		} else if dbutils.IsConstraintError(err) {
-			statusText := http.StatusText(http.StatusBadRequest)
-			http.Error(w, statusText, http.StatusBadRequest)
+			http.Error(w, BadRequest, http.StatusBadRequest)
 		} else {
-			statusText := http.StatusText(http.StatusInternalServerError)
-			http.Error(w, statusText, http.StatusInternalServerError)
+			http.Error(w, InternalServerError, http.StatusInternalServerError)
 		}
 
 		return
@@ -61,8 +58,7 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	pwd := userInput.Password
 
 	if err != nil || pwd == "" || (username == "" && email == "") {
-		statusMessage := http.StatusText(http.StatusBadRequest)
-		http.Error(w, statusMessage, http.StatusBadRequest)
+		http.Error(w, BadRequest, http.StatusBadRequest)
 		return
 	}
 
@@ -72,33 +68,28 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var notFoundError model.UserNotFoundError
 		if errors.As(err, &notFoundError) {
-			statusText := http.StatusText(http.StatusUnauthorized)
-			http.Error(w, statusText, http.StatusUnauthorized)
+			http.Error(w, Unauthorized, http.StatusUnauthorized)
 		} else {
-			statusText := http.StatusText(http.StatusInternalServerError)
-			http.Error(w, statusText, http.StatusInternalServerError)
+			http.Error(w, InternalServerError, http.StatusInternalServerError)
 		}
 
 		return
 	}
 
 	if !authenticated {
-		statusText := http.StatusText(http.StatusUnauthorized)
-		http.Error(w, statusText, http.StatusUnauthorized)
+		http.Error(w, Unauthorized, http.StatusUnauthorized)
 		return
 	}
 
 	if err := user.Login(); err != nil {
-		statusText := http.StatusText(http.StatusInternalServerError)
-		http.Error(w, statusText, http.StatusInternalServerError)
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
 
 	payload := generateUserPayload(user)
 	token, err := GenerateJWT(user.ID())
 	if err != nil {
-		statusText := http.StatusText(http.StatusInternalServerError)
-		http.Error(w, statusText, http.StatusInternalServerError)
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
 

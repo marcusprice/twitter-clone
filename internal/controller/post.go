@@ -2,6 +2,8 @@ package controller
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
@@ -11,6 +13,7 @@ import (
 
 type Post struct {
 	model         *model.PostModel
+	postAction    *model.PostAction
 	ID            int
 	UserID        int
 	Content       string
@@ -60,8 +63,55 @@ func (post *Post) New(postInput dtypes.PostInput) error {
 	return nil
 }
 
+func (post *Post) ByID(postID int) error {
+	postData, err := post.model.GetByID(post.ID)
+	if err != nil {
+		return err
+	}
+
+	post.setFromModel(postData)
+
+	return nil
+}
+
+func (post *Post) Like(likerUserID int) error {
+	if post.ID == 0 {
+		err := fmt.Errorf("Post.Like(): missing required postID in post controller")
+		if util.InDevContext() {
+			log.Panicf("Like failed: %v", err)
+		}
+
+		return err
+	}
+
+	err := post.postAction.Like(post.ID, likerUserID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (post *Post) Unlike(likerUserID int) error {
+	if post.ID == 0 {
+		err := fmt.Errorf("Post.Unlike(): missing required postID in post controller")
+		if util.InDevContext() {
+			log.Panicf("Unlike failed: %v", err)
+		}
+
+		return err
+	}
+
+	err := post.postAction.Unlike(post.ID, likerUserID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewPostController(db *sql.DB) *Post {
 	return &Post{
-		model: model.NewPostModel(db),
+		model:      model.NewPostModel(db),
+		postAction: model.NewPostActionModel(db),
 	}
 }

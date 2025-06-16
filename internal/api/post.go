@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/model"
 )
 
 const MAX_POST_UPLOAD_BYTES int64 = 1024 * 1024 * 10 // 10 mb
@@ -19,8 +21,7 @@ type PostAPI struct {
 func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
-		statusText := http.StatusText(http.StatusInternalServerError)
-		http.Error(w, statusText, http.StatusInternalServerError)
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
 
@@ -31,11 +32,9 @@ func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(getMaxUploadMemory())
 	if err != nil {
 		if requestBodyTooLarge(err) {
-			statusText := http.StatusText(http.StatusRequestEntityTooLarge)
-			http.Error(w, statusText, http.StatusRequestEntityTooLarge)
+			http.Error(w, RequestEntityTooLarge, http.StatusRequestEntityTooLarge)
 		} else {
-			statusText := http.StatusText(http.StatusInternalServerError)
-			http.Error(w, statusText, http.StatusInternalServerError)
+			http.Error(w, InternalServerError, http.StatusInternalServerError)
 		}
 
 		return
@@ -52,8 +51,7 @@ func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
 	if err == http.ErrMissingFile {
 		// no file upload, content required
 		if content == "" {
-			statusText := http.StatusText(http.StatusBadRequest)
-			http.Error(w, statusText, http.StatusBadRequest)
+			http.Error(w, BadRequest, http.StatusBadRequest)
 			return
 		}
 	} else {
@@ -64,11 +62,9 @@ func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			var invalidFileTypeError InvalidFileTypeError
 			if errors.As(err, &invalidFileTypeError) {
-				statusText := http.StatusText(http.StatusUnsupportedMediaType)
-				http.Error(w, statusText, http.StatusUnsupportedMediaType)
+				http.Error(w, UnsupportedMediaType, http.StatusUnsupportedMediaType)
 			} else {
-				statusText := http.StatusText(http.StatusInternalServerError)
-				http.Error(w, statusText, http.StatusInternalServerError)
+				http.Error(w, InternalServerError, http.StatusInternalServerError)
 			}
 
 			return
@@ -84,11 +80,9 @@ func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
 	err = postAPI.post.New(postInput)
 	if err != nil {
 		if dbutils.IsConstraintError(err) {
-			statusText := http.StatusText(http.StatusBadRequest)
-			http.Error(w, statusText, http.StatusBadRequest)
+			http.Error(w, BadRequest, http.StatusBadRequest)
 		} else {
-			statusText := http.StatusText(http.StatusInternalServerError)
-			http.Error(w, statusText, http.StatusInternalServerError)
+			http.Error(w, InternalServerError, http.StatusInternalServerError)
 		}
 
 		return
@@ -98,6 +92,42 @@ func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(payload)
+}
+
+func (postAPI *PostAPI) Like(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, BadRequest, http.StatusBadRequest)
+	}
+
+	post := postAPI.post
+	err = post.ByID(postID)
+	if err != nil {
+		var postNotFoundError model.PostNotFoundError
+		if errors.As(err, &postNotFoundError) {
+			http.Error(w, NotFound, http.StatusNotFound)
+		} else {
+			http.Error(w, InternalServerError, http.StatusInternalServerError)
+		}
+	}
+
+	if r.Method == http.MethodPost {
+		err = post.Like(userID)
+	} else {
+		err = post.Unlike(userID)
+	}
+
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func generatePostPayload(post *controller.Post) PostPayload {
