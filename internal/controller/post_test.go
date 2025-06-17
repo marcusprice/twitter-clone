@@ -113,3 +113,56 @@ func TestPostLike(t *testing.T) {
 		tu.AssertEqual(4, post.LikeCount)
 	})
 }
+
+func TestPostUnlike(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		post := NewPostController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
+
+		err := post.Unlike(user1.ID())
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.Unlike(): missing required postID in post controller",
+			err.Error(),
+		)
+
+		post.ByID(1)
+		post.Like(user1.ID())
+		post.Like(user2.ID())
+		post.Like(user3.ID())
+		post.Like(user4.ID())
+
+		err = post.Unlike(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.LikeCount)
+
+		err = post.Unlike(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.LikeCount)
+
+		err = post.Unlike(user3.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, post.LikeCount)
+
+		err = post.Unlike(user2.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, post.LikeCount)
+
+		err = post.Unlike(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, post.LikeCount)
+
+		err = post.Unlike(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, post.LikeCount)
+	})
+
+}

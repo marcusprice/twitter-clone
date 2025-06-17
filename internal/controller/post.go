@@ -112,6 +112,11 @@ func (post *Post) Unlike(likerUserID int) error {
 		return err
 	}
 
+	err = post.Sync()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
