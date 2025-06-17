@@ -138,6 +138,44 @@ func TestLikePostMissingPost(t *testing.T) {
 	})
 }
 
+func TestCreatePostLikeWrongMethod(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/post/1/like", nil)
+		getRes := httptest.NewRecorder()
+		postReq := httptest.NewRequest(http.MethodPost, "/api/v1/post/1/like", nil)
+		postRes := httptest.NewRecorder()
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/post/1/like", nil)
+		patchRes := httptest.NewRecorder()
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/post/1/like", nil)
+		headRes := httptest.NewRecorder()
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/post/1/like", nil)
+		optionRes := httptest.NewRecorder()
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/post/1/like", nil)
+		traceRes := httptest.NewRecorder()
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/post/1/like", nil)
+		connectRes := httptest.NewRecorder()
+
+		handler.ServeHTTP(getRes, getReq)
+		handler.ServeHTTP(postRes, postReq)
+		handler.ServeHTTP(patchRes, patchReq)
+		handler.ServeHTTP(headRes, headReq)
+		handler.ServeHTTP(optionRes, optionReq)
+		handler.ServeHTTP(traceRes, traceReq)
+		handler.ServeHTTP(connectRes, connectReq)
+
+		tu.AssertEqual(http.StatusMethodNotAllowed, getRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, postRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, patchRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, headRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, optionRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, traceRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, connectRes.Code)
+	})
+}
+
 func createTestPost(userID int, db *sql.DB) *controller.Post {
 	post := controller.NewPostController(db)
 	postInput := dtypes.PostInput{
