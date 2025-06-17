@@ -36,6 +36,10 @@ func IsConstraintError(err error) bool {
 	return errors.As(err, &constraintError)
 }
 
+func IsUniqueConstraintError(err error) bool {
+	return strings.Contains(err.Error(), "UNIQUE constraint failed")
+}
+
 func WrapConstraintError(err error) ConstraintError {
 	if strings.Contains(err.Error(), "CHECK constraint failed") {
 		return ConstraintError{CHECK_ERROR, err.Error()}

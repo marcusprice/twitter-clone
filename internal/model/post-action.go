@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"log"
 
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
@@ -21,6 +22,11 @@ var createPostLikeQuery string
 func (pa *PostAction) Like(postID, userID int) error {
 	result, err := pa.db.Exec(createPostLikeQuery, postID, userID)
 	if err != nil {
+		if dbutils.IsUniqueConstraintError(err) {
+			// user already likes this post, likely a duplicate request
+			return nil
+		}
+
 		if util.InDevContext() {
 			log.Panicf("Like db transaction failed: %v", err)
 		}
@@ -46,9 +52,9 @@ func (pa *PostAction) Unlike(postID, userID int) error {
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil || int(rowsAffected) == 0 {
-		return (err)
+	_, err = result.RowsAffected()
+	if err != nil {
+		return err
 	}
 
 	return nil

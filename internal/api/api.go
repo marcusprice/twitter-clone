@@ -26,19 +26,19 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 	mux.Handle(
 		"/api/v1/createUser",
-		VerifyPostRequest(
+		VerifyPostMethod(
 			http.HandlerFunc(userAPI.CreateUser)),
 	)
 
 	mux.Handle(
 		"/api/v1/authenticateUser",
-		VerifyPostRequest(
+		VerifyPostMethod(
 			http.HandlerFunc(userAPI.Authenticate)),
 	)
 
 	mux.Handle(
 		"/api/v1/createPost",
-		VerifyPostRequest(
+		VerifyPostMethod(
 			Authenticate(
 				user,
 				http.HandlerFunc(postAPI.CreatePost))))

@@ -114,6 +114,21 @@ func WithTestDB(t *testing.T, testFunc func(db *sql.DB)) {
 	testFunc(db)
 }
 
+func WithTestData(t *testing.T, testFunc func(db *sql.DB)) {
+	db := setupTestDB(t)
+	defer db.Close()
+	seedDataQuery, err := os.ReadFile("../../sql/seed-test-data.sql")
+	if err != nil {
+		t.Fatal("error reading test seed data file: ", err)
+	}
+	_, err = db.Exec(string(seedDataQuery))
+	if err != nil {
+		t.Fatal("error executing test seed data query: ", err)
+	}
+
+	testFunc(db)
+}
+
 func isNil(i interface{}) bool {
 	if i == nil {
 		return true

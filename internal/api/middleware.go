@@ -58,7 +58,7 @@ func Authenticate(user *controller.User, next http.Handler) http.Handler {
 	})
 }
 
-func VerifyPostRequest(next http.Handler) http.Handler {
+func VerifyPostMethod(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, MethodNotAllowed, http.StatusMethodNotAllowed)
