@@ -6,11 +6,54 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/constants"
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
+
+func TestSetFromModel(t *testing.T) {
+	tu := testutil.NewTestUtil(t)
+	post := &Post{}
+	postAuthor := model.PostAuthor{
+		Username:    "estecat",
+		DisplayName: "Bubba",
+		Avatar:      "lazy-cat.png",
+	}
+	postData := model.PostData{
+		ID:            42069,
+		UserID:        69,
+		Content:       "Is it time for dinner yet?",
+		Image:         "empty-dish.png",
+		Author:        postAuthor,
+		LikeCount:     1200,
+		RetweetCount:  80,
+		BookmarkCount: 12,
+		Impressions:   10000,
+		CreatedAt:     "2024-04-12 11:37:46",
+		UpdatedAt:     "2024-05-18 08:02:13",
+	}
+
+	post.setFromModel(postData)
+	tu.AssertEqual(42069, post.ID)
+	tu.AssertEqual(69, post.UserID)
+	tu.AssertEqual("estecat", post.Author.Username)
+	tu.AssertEqual("Bubba", post.Author.DisplayName)
+	tu.AssertEqual("lazy-cat.png", post.Author.Avatar)
+	tu.AssertEqual("Is it time for dinner yet?", post.Content)
+	tu.AssertEqual("empty-dish.png", post.Image)
+	tu.AssertEqual(1200, post.LikeCount)
+	tu.AssertEqual(80, post.RetweetCount)
+	tu.AssertEqual(12, post.BookmarkCount)
+	tu.AssertEqual(10000, post.Impressions)
+	tu.AssertEqual(
+		"2024-04-12 11:37:46",
+		post.CreatedAt.Format(constants.TIME_LAYOUT))
+	tu.AssertEqual(
+		"2024-05-18 08:02:13",
+		post.UpdatedAt.Format(constants.TIME_LAYOUT))
+}
 
 func TestPostNew(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
