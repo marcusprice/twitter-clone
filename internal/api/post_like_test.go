@@ -176,6 +176,38 @@ func TestCreatePostLikeWrongMethod(t *testing.T) {
 	})
 }
 
+func TestPostLikeUnauthorized(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+
+		noAuthHeaderReq := httptest.NewRequest(http.MethodPut, "/api/v1/post/1/like", nil)
+		noAuthHeaderRes := httptest.NewRecorder()
+		handler.ServeHTTP(noAuthHeaderRes, noAuthHeaderReq)
+
+		headerNoTokenReq := httptest.NewRequest(http.MethodDelete, "/api/v1/post/1/like", nil)
+		headerNoTokenReq.Header.Set("Authorization", "Bearer ")
+		headerNoTokenRes := httptest.NewRecorder()
+		handler.ServeHTTP(headerNoTokenRes, headerNoTokenReq)
+
+		headerWrongKeywordReq := httptest.NewRequest(http.MethodPut, "/api/v1/post/1/like", nil)
+		headerWrongKeywordReq.Header.Set("Authorization", "Esteban ")
+		headerWrongKeywordRes := httptest.NewRecorder()
+		handler.ServeHTTP(headerWrongKeywordRes, headerWrongKeywordReq)
+
+		badToken := generateBadToken()
+		badTokenReq := httptest.NewRequest(http.MethodDelete, "/api/v1/post/1/like", nil)
+		badTokenReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", badToken))
+		badTokenRes := httptest.NewRecorder()
+		handler.ServeHTTP(badTokenRes, badTokenReq)
+
+		tu.AssertEqual(http.StatusUnauthorized, noAuthHeaderRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, headerNoTokenRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, headerWrongKeywordRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, badTokenRes.Code)
+	})
+}
+
 func createTestPost(userID int, db *sql.DB) *controller.Post {
 	post := controller.NewPostController(db)
 	postInput := dtypes.PostInput{
