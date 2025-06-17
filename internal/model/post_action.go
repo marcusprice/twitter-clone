@@ -3,10 +3,8 @@ package model
 import (
 	"database/sql"
 	_ "embed"
-	"log"
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
-	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 type PostAction struct {
@@ -27,8 +25,8 @@ func (pa *PostAction) Like(postID, userID int) error {
 			return nil
 		}
 
-		if util.InDevContext() {
-			log.Panicf("Like db transaction failed: %v", err)
+		if dbutils.ConstraintFailed(err) {
+			return dbutils.WrapConstraintError(err)
 		}
 
 		return err
@@ -45,10 +43,6 @@ func (pa *PostAction) Like(postID, userID int) error {
 func (pa *PostAction) Unlike(postID, userID int) error {
 	result, err := pa.db.Exec(deletePostLikeQuery, postID, userID)
 	if err != nil {
-		if util.InDevContext() {
-			panic(err)
-		}
-
 		return err
 	}
 
