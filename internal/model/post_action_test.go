@@ -59,6 +59,11 @@ func TestPostActionUnlike(t *testing.T) {
 		tu.AssertErrorNil(err)
 		postData = queryPost(1, db)
 		tu.AssertEqual(0, postData.LikeCount)
+
+		err = postAction.Unlike(1, 1)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(0, postData.LikeCount)
 	})
 }
 
