@@ -245,3 +245,34 @@ func TestPostUnlike(t *testing.T) {
 		tu.AssertEqual(0, post.LikeCount)
 	})
 }
+
+func TestPostSync(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		post := NewPostController(db)
+
+		err := post.Sync()
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.Sync(): required postID not set in post controller",
+			err.Error(),
+		)
+
+		post.ID = -1
+		err = post.Sync()
+		var postNotFoundErr model.PostNotFoundError
+		tu.AssertTrue(errors.As(err, &postNotFoundErr))
+		tu.AssertErrorNotNil(err)
+
+		post.ByID(4)
+		db.Exec("UPDATE Post SET content = 'wazzup!!!' WHERE id = 4;")
+		tu.AssertEqual(
+			"Nothing beats a damn fine cup of coffee in the morning.",
+			post.Content,
+		)
+
+		err = post.Sync()
+		tu.AssertErrorNil(err)
+		tu.AssertEqual("wazzup!!!", post.Content)
+	})
+}
