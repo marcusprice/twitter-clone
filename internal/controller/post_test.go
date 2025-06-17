@@ -261,8 +261,8 @@ func TestPostSync(t *testing.T) {
 		post.ID = -1
 		err = post.Sync()
 		var postNotFoundErr model.PostNotFoundError
-		tu.AssertTrue(errors.As(err, &postNotFoundErr))
 		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &postNotFoundErr))
 
 		post.ByID(4)
 		db.Exec("UPDATE Post SET content = 'wazzup!!!' WHERE id = 4;")
