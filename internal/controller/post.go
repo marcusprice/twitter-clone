@@ -88,6 +88,12 @@ func (post *Post) Like(likerUserID int) error {
 	if err != nil {
 		return err
 	}
+
+	err = post.Sync()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

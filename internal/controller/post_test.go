@@ -70,3 +70,46 @@ func TestPostNewUserDoesNotExist(t *testing.T) {
 		tu.AssertTrue(dbutils.IsConstraintError(err))
 	})
 }
+
+func TestPostLike(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		post := NewPostController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
+
+		err := post.Like(user1.ID())
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.Like(): missing required postID in post controller",
+			err.Error(),
+		)
+
+		post.ByID(1)
+
+		err = post.Like(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, post.LikeCount)
+
+		err = post.Like(user2.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, post.LikeCount)
+
+		err = post.Like(user3.ID())
+		tu.AssertErrorNil(err)
+		err = post.Like(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(4, post.LikeCount)
+
+		// user4 likes again, no error expected and count stays the same
+		err = post.Like(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(4, post.LikeCount)
+	})
+}

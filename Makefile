@@ -18,3 +18,6 @@ debug:
 
 run-tests:
 	go test -v ./...
+
+loc:
+	find . \( -name '*.go' -o -name '*.sql' \) -type f | xargs wc -l
