@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/constants"
 	_ "github.com/mattn/go-sqlite3"
@@ -114,19 +115,20 @@ func WithTestDB(t *testing.T, testFunc func(db *sql.DB)) {
 	testFunc(db)
 }
 
-func WithTestData(t *testing.T, testFunc func(db *sql.DB)) {
+func WithTestData(t *testing.T, testFunc func(db *sql.DB, timestamp time.Time)) {
 	db := setupTestDB(t)
 	defer db.Close()
 	seedDataQuery, err := os.ReadFile("../../sql/seed-test-data.sql")
 	if err != nil {
 		t.Fatal("error reading test seed data file: ", err)
 	}
+	timestamp := time.Now()
 	_, err = db.Exec(string(seedDataQuery))
 	if err != nil {
 		t.Fatal("error executing test seed data query: ", err)
 	}
 
-	testFunc(db)
+	testFunc(db, timestamp)
 }
 
 func isNil(i interface{}) bool {

@@ -2,11 +2,13 @@ package controller
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/model"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
 
@@ -55,6 +57,41 @@ func TestPostNew(t *testing.T) {
 	})
 }
 
+func TestPostByID(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		before := timestamp.Add(-1 * time.Minute)
+		after := timestamp.Add(time.Minute)
+		post := NewPostController(db)
+
+		// unknown ID
+		err := post.ByID(-1)
+		var postNotFoundErr model.PostNotFoundError
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &postNotFoundErr))
+
+		err = post.ByID(1)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.UserID)
+		tu.AssertEqual(
+			"Diane! I'm holding in my hand a small box of chocolate bunnies.",
+			post.Content,
+		)
+		tu.AssertEqual("chocolate-bunnies.png", post.Image)
+		tu.AssertEqual(0, post.LikeCount)
+		tu.AssertEqual(0, post.RetweetCount)
+		tu.AssertEqual(0, post.BookmarkCount)
+		tu.AssertEqual(0, post.Impressions)
+		tu.AssertTrue(post.CreatedAt.After(before))
+		tu.AssertTrue(post.CreatedAt.Before(after))
+		tu.AssertTrue(post.UpdatedAt.After(before))
+		tu.AssertTrue(post.UpdatedAt.Before(after))
+		tu.AssertEqual("dalecooper", post.Author.Username)
+		tu.AssertEqual("Coffee Fre@k", post.Author.DisplayName)
+		tu.AssertEqual("", post.Author.Avatar)
+	})
+}
+
 func TestPostNewUserDoesNotExist(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
@@ -72,7 +109,7 @@ func TestPostNewUserDoesNotExist(t *testing.T) {
 }
 
 func TestPostLike(t *testing.T) {
-	testutil.WithTestData(t, func(db *sql.DB) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)
 		user1 := NewUserController(db)
 		user2 := NewUserController(db)
@@ -115,7 +152,7 @@ func TestPostLike(t *testing.T) {
 }
 
 func TestPostUnlike(t *testing.T) {
-	testutil.WithTestData(t, func(db *sql.DB) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)
 		user1 := NewUserController(db)
 		user2 := NewUserController(db)
@@ -164,5 +201,4 @@ func TestPostUnlike(t *testing.T) {
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(0, post.LikeCount)
 	})
-
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
@@ -50,7 +51,7 @@ func TestPostLikeSimple(t *testing.T) {
 }
 
 func TestPostLikeComprehensive(t *testing.T) {
-	testutil.WithTestData(t, func(db *sql.DB) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		endpoint := "/api/v1/post/%d/like"
 		tu := testutil.NewTestUtil(t)
 		handler := RegisterHandlers(db)
