@@ -25,6 +25,43 @@ func TestPostActionLike(t *testing.T) {
 	})
 }
 
+func TestPostActionUnlike(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		postAction := NewPostActionModel(db)
+
+		insertPostLikeRow(1, 1, db, t)
+		insertPostLikeRow(1, 2, db, t)
+		insertPostLikeRow(1, 3, db, t)
+		insertPostLikeRow(1, 4, db, t)
+
+		err := postAction.Unlike(1, 4)
+		tu.AssertErrorNil(err)
+		postData := queryPost(1, db)
+		tu.AssertEqual(3, postData.LikeCount)
+
+		err = postAction.Unlike(1, 3)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(2, postData.LikeCount)
+
+		err = postAction.Unlike(1, 2)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(1, postData.LikeCount)
+
+		err = postAction.Unlike(1, 2)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(1, postData.LikeCount)
+
+		err = postAction.Unlike(1, 1)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(0, postData.LikeCount)
+	})
+}
+
 func TestPostActionConstraintError(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)
@@ -59,4 +96,17 @@ func queryPostLikeRowByID(id int, db *sql.DB) (int, int) {
 		Scan(&postID, &userID)
 
 	return postID, userID
+}
+
+func insertPostLikeRow(postID, userID int, db *sql.DB, t *testing.T) {
+	_, err := db.Exec(`
+		INSERT INTO PostLike 
+			(post_id, user_id)
+		VALUES
+			($1, $2);
+	`, postID, userID)
+
+	if err != nil {
+		t.Fatal("Error inserting PostLike row", err.Error())
+	}
 }
