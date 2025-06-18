@@ -279,23 +279,57 @@ func TestUserFollow(t *testing.T) {
 		tu.AssertEqual(user1.ID, followerID)
 		tu.AssertEqual(user4.ID, followeeID)
 
-		err = UserModel.Follow(user4.ID, user2.ID)
+		// mutual follow
+		err = UserModel.Follow(user4.ID, user1.ID)
 		followerID, followeeID = queryUserFollowRow(2, db)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(user4.ID, followerID)
+		tu.AssertEqual(user1.ID, followeeID)
+
+		err = UserModel.Follow(user4.ID, user2.ID)
+		followerID, followeeID = queryUserFollowRow(3, db)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(user4.ID, followerID)
 		tu.AssertEqual(user2.ID, followeeID)
 
 		// no error returned for double follow, also no rows inserted
 		err = UserModel.Follow(user4.ID, user2.ID)
-		numRows := queryUserFollowCount(db)
+		numRows := queryUserFollowTableCount(db)
 		tu.AssertErrorNil(err)
-		tu.AssertEqual(2, numRows)
+		tu.AssertEqual(3, numRows)
 
 		err = UserModel.Follow(user4.ID, user4.ID)
 		var constraintError dbutils.ConstraintError
 		tu.AssertErrorNotNil(err)
 		tu.AssertTrue(errors.As(err, &constraintError))
 		tu.AssertEqual(dbutils.CHECK_ERROR, constraintError.Constraint)
+	})
+}
+
+func TestUserUnFollow(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		UserModel := UserModel{db}
+		user1 := queryUser(1, db)
+		user2 := queryUser(2, db)
+		user3 := queryUser(3, db)
+		user1FollowsUser2RowID := insertUserFollow(user1.ID, user2.ID, db)
+		insertUserFollow(user2.ID, user1.ID, db)
+		insertUserFollow(user2.ID, user3.ID, db)
+
+		err := UserModel.UnFollow(user1.ID, user2.ID)
+		rowDeleted := verifyUserFollowsRowDeleted(user1FollowsUser2RowID, db)
+		tu.AssertErrorNil(err)
+		tu.AssertTrue(rowDeleted)
+		tu.AssertEqual(2, queryUserFollowTableCount(db))
+
+		err = UserModel.UnFollow(user1.ID, user2.ID)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, queryUserFollowTableCount(db))
+
+		err = UserModel.UnFollow(user1.ID, user2.ID)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, queryUserFollowTableCount(db))
 	})
 }
 
@@ -391,6 +425,22 @@ func updateLastLogin(userID int, db *sql.DB) {
 	}
 }
 
+func insertUserFollow(followerID, followeeID int, db *sql.DB) (rowID int) {
+	query := `
+		INSERT INTO UserFollows
+			(follower_id, followee_id)
+		VALUES ($1, $2)
+		RETURNING id;
+	`
+
+	err := db.QueryRow(query, followerID, followeeID).Scan(&rowID)
+	if err != nil {
+		panic(err)
+	}
+
+	return rowID
+}
+
 func queryUserFollowRow(rowID int, db *sql.DB) (followerID, followeeID int) {
 	query := `
 		SELECT follower_id, followee_id
@@ -406,7 +456,7 @@ func queryUserFollowRow(rowID int, db *sql.DB) (followerID, followeeID int) {
 	return followerID, followeeID
 }
 
-func queryUserFollowCount(db *sql.DB) (count int) {
+func queryUserFollowTableCount(db *sql.DB) (count int) {
 	query := `
 		SELECT COUNT(*)
 		FROM UserFollows;
@@ -415,4 +465,20 @@ func queryUserFollowCount(db *sql.DB) (count int) {
 	db.QueryRow(query).Scan(&count)
 
 	return count
+}
+
+func verifyUserFollowsRowDeleted(rowID int, db *sql.DB) bool {
+	query := `
+		SELECT COUNT(*)
+		FROM UserFollows
+		WHERE id = $1;
+	`
+	var count int
+
+	err := db.QueryRow(query, rowID).Scan(&count)
+	if err != nil {
+		panic(err)
+	}
+
+	return count == 0
 }

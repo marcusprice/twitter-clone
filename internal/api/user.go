@@ -62,12 +62,12 @@ func (userAPI UserAPI) Follow(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, BadRequest, http.StatusBadRequest)
 	}
 
-	follower := userAPI.user
-	err := follower.ByID(followerID)
+	err := userAPI.user.ByID(followerID)
 	if err != nil {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
+	follower := userAPI.user
 
 	if r.Method == http.MethodPut {
 		err = follower.Follow(followeeUsername)
