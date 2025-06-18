@@ -60,7 +60,8 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 	mux.Handle(
 		"/api/v1/user/{username}/follow",
 		Logger(
-			VerifyPostMethod(
+			AllowMethods(
+				[]string{http.MethodPut, http.MethodDelete},
 				ValidateUser(
 					user,
 					http.HandlerFunc(userAPI.Follow)))),
