@@ -3,15 +3,18 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
+	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/model"
 )
 
-func Authenticate(user *controller.User, next http.Handler) http.Handler {
+func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
@@ -22,18 +25,21 @@ func Authenticate(user *controller.User, next http.Handler) http.Handler {
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := ParseJWT(tokenString)
 		if err != nil || !token.Valid {
+			logger.LogWarn("failed authenticating user")
 			http.Error(w, Unauthorized, http.StatusUnauthorized)
 			return
 		}
 
 		claims, err := GetTokenClaims(token)
 		if err != nil {
+			logger.LogError("failed processing claims")
 			http.Error(w, InternalServerError, http.StatusInternalServerError)
 			return
 		}
 
 		sub, ok := claims["sub"].(float64)
 		if !ok {
+			logger.LogWarn("failed processing sub claim")
 			http.Error(w, Unauthorized, http.StatusUnauthorized)
 			return
 		}
@@ -51,6 +57,7 @@ func Authenticate(user *controller.User, next http.Handler) http.Handler {
 			return
 		}
 
+		logger.LogInfo(fmt.Sprintf("user authenticated, request userID: %d", userID))
 		ctx := context.WithValue(
 			r.Context(), "userID", userID)
 
@@ -78,4 +85,38 @@ func AllowMethods(methods []string, next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func Logger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		ww := &responseWriterWrapper{
+			ResponseWriter: w, statusCode: http.StatusOK}
+
+		next.ServeHTTP(ww, r)
+
+		msg := fmt.Sprintf(
+			"%s %s | status=%d | %v\n",
+			r.Method, r.URL.Path, ww.statusCode, time.Since(start),
+		)
+
+		switch {
+		case ww.statusCode >= 500:
+			logger.LogError(msg)
+		case ww.statusCode >= 400:
+			logger.LogWarn(msg)
+		default:
+			logger.LogInfo(msg)
+		}
+	})
+}
+
+type responseWriterWrapper struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriterWrapper) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
 }
