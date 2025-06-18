@@ -8,6 +8,7 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/testhelpers"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
@@ -294,7 +295,7 @@ func TestUserFollow(t *testing.T) {
 
 		// no error returned for double follow, also no rows inserted
 		err = UserModel.Follow(user4.ID, user2.ID)
-		numRows := QueryUserFollowTableCount(db)
+		numRows := testhelpers.QueryUserFollowTableCount(db)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(3, numRows)
 
@@ -321,15 +322,15 @@ func TestUserUnFollow(t *testing.T) {
 		rowDeleted := verifyUserFollowsRowDeleted(user1FollowsUser2RowID, db)
 		tu.AssertErrorNil(err)
 		tu.AssertTrue(rowDeleted)
-		tu.AssertEqual(2, QueryUserFollowTableCount(db))
+		tu.AssertEqual(2, testhelpers.QueryUserFollowTableCount(db))
 
 		err = UserModel.UnFollow(user1.ID, user2.ID)
 		tu.AssertErrorNil(err)
-		tu.AssertEqual(2, QueryUserFollowTableCount(db))
+		tu.AssertEqual(2, testhelpers.QueryUserFollowTableCount(db))
 
 		err = UserModel.UnFollow(user1.ID, user2.ID)
 		tu.AssertErrorNil(err)
-		tu.AssertEqual(2, QueryUserFollowTableCount(db))
+		tu.AssertEqual(2, testhelpers.QueryUserFollowTableCount(db))
 	})
 }
 

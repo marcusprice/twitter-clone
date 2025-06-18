@@ -10,6 +10,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
+	"github.com/marcusprice/twitter-clone/internal/testhelpers"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -208,14 +209,20 @@ func TestUserFollow(t *testing.T) {
 		tu.AssertTrue(errors.As(err, &constraintError))
 		tu.AssertEqual(dbutils.CHECK_ERROR, constraintError.Constraint)
 
-		userFollowNumRows := model.QueryUserFollowTableCount(db)
+		userFollowNumRows := testhelpers.QueryUserFollowTableCount(db)
 		tu.AssertEqual(2, userFollowNumRows)
 
 		err = user3.Follow(user2.Username)
 		tu.AssertErrorNil(err)
 
-		userFollowNumRows = model.QueryUserFollowTableCount(db)
+		userFollowNumRows = testhelpers.QueryUserFollowTableCount(db)
 		tu.AssertEqual(3, userFollowNumRows)
+	})
+}
+
+func TestUserUnFollow(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+
 	})
 }
 

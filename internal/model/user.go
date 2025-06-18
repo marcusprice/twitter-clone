@@ -7,6 +7,7 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
@@ -38,6 +39,7 @@ func (um *UserModel) New(userInput dtypes.UserInput) (UserData, error) {
 			return UserData{}, dbutils.WrapConstraintError(err)
 		}
 
+		logger.LogError("error creating user: " + err.Error())
 		return UserData{}, err
 	}
 

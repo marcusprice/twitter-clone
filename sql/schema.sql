@@ -40,7 +40,7 @@ CREATE TABLE User (
     last_name TEXT,
     display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
     avatar TEXT DEFAULT '',
-    is_active INTEGER NOT NULL CHECK (is_active IN(0, 1)),
+    is_active INTEGER NOT NULL CHECK (is_active IN(0, 1)) DEFAULT 0,
     last_login TEXT,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp
