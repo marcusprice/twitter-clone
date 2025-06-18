@@ -183,6 +183,129 @@ paths:
                         type: string
                       avatar:
                         type: string
+  /post/{id}/like:
+    put:
+      security:
+        - bearerAuth: []
+      description: likes post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: post id to like
+          schema:
+            type: string
+      responses:
+        "500":
+          description: internal server error
+        "401":
+          description: unauthorized
+        "400":
+          description: bad request
+        "204":
+          description: post successfully liked
+    delete:
+      security:
+        - bearerAuth: []
+      description: likes post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: post id to unlike
+          schema:
+            type: string
+      responses:
+        "500":
+          description: internal server error
+        "401":
+          description: unauthorized
+        "400":
+          description: bad request
+        "204":
+          description: post successfully unliked
+  /post/{id}/retweet:
+    put:
+      security:
+        - bearerAuth: []
+      description: retweets post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: post id to retweet
+          schema:
+            type: string
+      responses:
+        "500":
+          description: internal server error
+        "401":
+          description: unauthorized
+        "400":
+          description: bad request
+        "204":
+          description: post successfully retweetd
+    delete:
+      security:
+        - bearerAuth: []
+      description: retweets post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: post id to unretweet
+          schema:
+            type: string
+      responses:
+        "500":
+          description: internal server error
+        "401":
+          description: unauthorized
+        "400":
+          description: bad request
+        "204":
+          description: post successfully unretweeted
+  /post/{id}/bookmark:
+    put:
+      security:
+        - bearerAuth: []
+      description: bookmarks post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: post id to bookmark
+          schema:
+            type: string
+      responses:
+        "500":
+          description: internal server error
+        "401":
+          description: unauthorized
+        "400":
+          description: bad request
+        "204":
+          description: post successfully bookmarked
+    delete:
+      security:
+        - bearerAuth: []
+      description: bookmarks post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: post id to unbookmark
+          schema:
+            type: string
+      responses:
+        "500":
+          description: internal server error
+        "401":
+          description: unauthorized
+        "400":
+          description: bad request
+        "204":
+          description: post successfully unbookmarked
 components:
   securitySchemes:
     bearerAuth:
