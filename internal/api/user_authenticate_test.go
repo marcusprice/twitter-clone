@@ -45,15 +45,15 @@ func TestAuthenticateUser(t *testing.T) {
 		}`
 
 		authReq := httptest.NewRequest(http.MethodPost,
-			"/api/v1/authenticateUser",
+			"/api/v1/user/authenticate",
 			strings.NewReader(authJson))
 		authRes := httptest.NewRecorder()
 		authWithUsernameReq := httptest.NewRequest(http.MethodPost,
-			"/api/v1/authenticateUser",
+			"/api/v1/user/authenticate",
 			strings.NewReader(authUsernameOnlyJson))
 		authWithUsernameRes := httptest.NewRecorder()
 		authWithEmailReq := httptest.NewRequest(http.MethodPost,
-			"/api/v1/authenticateUser",
+			"/api/v1/user/authenticate",
 			strings.NewReader(authEmailOnlyJson))
 		authWithEmailRes := httptest.NewRecorder()
 
@@ -118,7 +118,7 @@ func TestAuthenticateUserWrongPassword(t *testing.T) {
 		}`
 
 		authReq := httptest.NewRequest(http.MethodPost,
-			"/api/v1/authenticateUser",
+			"/api/v1/user/authenticate",
 			strings.NewReader(authJson))
 		authRes := httptest.NewRecorder()
 		handler.ServeHTTP(authRes, authReq)
@@ -147,7 +147,7 @@ func TestAuthenticateUserWrongUsernmae(t *testing.T) {
 		}`
 
 		authReq := httptest.NewRequest(http.MethodPost,
-			"/api/v1/authenticateUser",
+			"/api/v1/user/authenticate",
 			strings.NewReader(authJson))
 		authRes := httptest.NewRecorder()
 		handler.ServeHTTP(authRes, authReq)
@@ -176,7 +176,7 @@ func TestAuthenticateUserWrongEmail(t *testing.T) {
 		}`
 
 		authReq := httptest.NewRequest(http.MethodPost,
-			"/api/v1/authenticateUser",
+			"/api/v1/user/authenticate",
 			strings.NewReader(authJson))
 		authRes := httptest.NewRecorder()
 		handler.ServeHTTP(authRes, authReq)
@@ -202,12 +202,12 @@ func TestAuthenticateUserMissingRequiredFields(t *testing.T) {
 		}`
 
 		missingUsernameAndEmailRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/authenticateUser",
+			http.MethodPost, "/api/v1/user/authenticate",
 			strings.NewReader(missingUsernameAndEmail))
 		missingUsernameAndEmailResponse := httptest.NewRecorder()
 
 		missingPasswordRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/authenticateUser",
+			http.MethodPost, "/api/v1/user/authenticate",
 			strings.NewReader(missingPassword))
 		missingPasswordResponse := httptest.NewRecorder()
 
@@ -224,7 +224,7 @@ func TestAuthenticateUserMalformedJSON(t *testing.T) {
 	UserAPI := UserAPI{}
 
 	malformedJSON := "alkj}"
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/authenticateUser", strings.NewReader(malformedJSON))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/authenticate", strings.NewReader(malformedJSON))
 	res := httptest.NewRecorder()
 	UserAPI.Authenticate(res, req)
 
@@ -236,21 +236,21 @@ func TestAuthenticateUserWrongMethod(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		handler := RegisterHandlers(db)
 
-		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/authenticateUser", nil)
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/user/authenticate", nil)
 		getRes := httptest.NewRecorder()
-		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/authenticateUser", nil)
+		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/user/authenticate", nil)
 		putRes := httptest.NewRecorder()
-		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/authenticateUser", nil)
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/user/authenticate", nil)
 		patchRes := httptest.NewRecorder()
-		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/authenticateUser", nil)
+		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/user/authenticate", nil)
 		deleteRes := httptest.NewRecorder()
-		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/authenticateUser", nil)
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/user/authenticate", nil)
 		headRes := httptest.NewRecorder()
-		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/authenticateUser", nil)
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/user/authenticate", nil)
 		optionRes := httptest.NewRecorder()
-		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/authenticateUser", nil)
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/user/authenticate", nil)
 		traceRes := httptest.NewRecorder()
-		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/authenticateUser", nil)
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/user/authenticate", nil)
 		connectRes := httptest.NewRecorder()
 
 		handler.ServeHTTP(getRes, getReq)

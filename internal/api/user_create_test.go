@@ -27,7 +27,7 @@ func TestCreateUser(t *testing.T) {
 		}`
 
 		newUserRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(newUserJson))
 		newUserResponse := httptest.NewRecorder()
 
@@ -53,7 +53,7 @@ func TestCreateUser(t *testing.T) {
 		}`
 
 		newHumanRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(newHumanJson))
 		newHumanResponse := httptest.NewRecorder()
 
@@ -110,17 +110,17 @@ func TestCreateUserAlreadyExists(t *testing.T) {
 		}`
 
 		duplicateUserRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(duplicateUserJson))
 		duplicateUserResponse := httptest.NewRecorder()
 
 		duplicateEmailRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(duplicateUserJsonSameEmail))
 		duplicateEmailResponse := httptest.NewRecorder()
 
 		duplicateUsernameRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(duplicateUserJsonSameUsername))
 		duplicateUsernameResponse := httptest.NewRecorder()
 
@@ -164,22 +164,22 @@ func TestCreateUserMissingRequiredFields(t *testing.T) {
 		}`
 
 		missingUsernameRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(missingUsername))
 		missingUsernameResponse := httptest.NewRecorder()
 
 		missingEmailRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(missingEmail))
 		missingEmailResponse := httptest.NewRecorder()
 
 		missingDisplayNameRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(missingDisplayName))
 		missingDisplayNameResponse := httptest.NewRecorder()
 
 		missingPasswordRequest := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createUser",
+			http.MethodPost, "/api/v1/user/create",
 			strings.NewReader(missingPassword))
 		missingPasswordResponse := httptest.NewRecorder()
 
@@ -201,7 +201,7 @@ func TestCreateUserMalformedJSON(t *testing.T) {
 		handler := RegisterHandlers(db)
 
 		malformedJSON := "alkj}"
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/createUser", strings.NewReader(malformedJSON))
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/user/create", strings.NewReader(malformedJSON))
 		res := httptest.NewRecorder()
 		handler.ServeHTTP(res, req)
 
@@ -214,21 +214,21 @@ func TestCreateUserWrongMethod(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		handler := RegisterHandlers(db)
 
-		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/createUser", nil)
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/user/create", nil)
 		getRes := httptest.NewRecorder()
-		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/createUser", nil)
+		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/user/create", nil)
 		putRes := httptest.NewRecorder()
-		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/createUser", nil)
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/user/create", nil)
 		patchRes := httptest.NewRecorder()
-		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/createUser", nil)
+		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/user/create", nil)
 		deleteRes := httptest.NewRecorder()
-		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/createUser", nil)
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/user/create", nil)
 		headRes := httptest.NewRecorder()
-		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/createUser", nil)
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/user/create", nil)
 		optionRes := httptest.NewRecorder()
-		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/createUser", nil)
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/user/create", nil)
 		traceRes := httptest.NewRecorder()
-		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/createUser", nil)
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/user/create", nil)
 		connectRes := httptest.NewRecorder()
 
 		handler.ServeHTTP(getRes, getReq)

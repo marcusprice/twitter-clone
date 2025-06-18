@@ -36,7 +36,7 @@ func TestCreatePostContentOnly(t *testing.T) {
 		writer.Close()
 
 		req := httptest.NewRequest(
-			http.MethodPost, "/api/v1/createPost", &b)
+			http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res := httptest.NewRecorder()
@@ -80,7 +80,7 @@ func TestCreatePostImageOnly(t *testing.T) {
 		io.Copy(imgField, strings.NewReader(imgData))
 		writer.Close()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res := httptest.NewRecorder()
@@ -131,7 +131,7 @@ func TestCreatePostContentAndImage(t *testing.T) {
 		io.Copy(imgField, strings.NewReader(imgData))
 		writer.Close()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res := httptest.NewRecorder()
@@ -179,7 +179,7 @@ func TestCreatePostInvalidFileType(t *testing.T) {
 		io.Copy(imgPart, strings.NewReader(fileString))
 		writer.Close()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res := httptest.NewRecorder()
@@ -195,7 +195,7 @@ func TestCreatePostInvalidFileType(t *testing.T) {
 		io.Copy(imgPart, strings.NewReader(fileString))
 		writer.Close()
 
-		req = httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res = httptest.NewRecorder()
@@ -225,7 +225,7 @@ func TestCreatePostNoContentOrImage(t *testing.T) {
 		io.Copy(image, strings.NewReader(""))
 		writer.Close()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res := httptest.NewRecorder()
@@ -244,7 +244,7 @@ func TestCreatePostNoContentOrImage(t *testing.T) {
 		io.Copy(image, strings.NewReader("data but not image"))
 		writer.Close()
 
-		req = httptest.NewRequest(http.MethodPost, "/api/v1/createPost", &b)
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 		res = httptest.NewRecorder()
@@ -268,7 +268,7 @@ func TestCreatePostUploadSizeTooLarge(t *testing.T) {
 		handler := RegisterHandlers(db)
 		b, contentType := createLargeImgMultipartFormBody(0)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", b)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", contentType)
 		res := httptest.NewRecorder()
@@ -281,7 +281,7 @@ func TestCreatePostUploadSizeTooLarge(t *testing.T) {
 
 		b, contentType = createLargeImgMultipartFormBody(0.5)
 
-		req = httptest.NewRequest(http.MethodPost, "/api/v1/createPost", b)
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", contentType)
 		res = httptest.NewRecorder()
@@ -294,7 +294,7 @@ func TestCreatePostUploadSizeTooLarge(t *testing.T) {
 
 		b, contentType = createLargeImgMultipartFormBody(5)
 
-		req = httptest.NewRequest(http.MethodPost, "/api/v1/createPost", b)
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", contentType)
 		res = httptest.NewRecorder()
@@ -312,22 +312,22 @@ func TestCreatePostUnauthorized(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		handler := RegisterHandlers(db)
 
-		noAuthHeaderReq := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", nil)
+		noAuthHeaderReq := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", nil)
 		noAuthHeaderRes := httptest.NewRecorder()
 		handler.ServeHTTP(noAuthHeaderRes, noAuthHeaderReq)
 
-		headerNoTokenReq := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", nil)
+		headerNoTokenReq := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", nil)
 		headerNoTokenReq.Header.Set("Authorization", "Bearer ")
 		headerNoTokenRes := httptest.NewRecorder()
 		handler.ServeHTTP(headerNoTokenRes, headerNoTokenReq)
 
-		headerWrongKeywordReq := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", nil)
+		headerWrongKeywordReq := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", nil)
 		headerWrongKeywordReq.Header.Set("Authorization", "Esteban ")
 		headerWrongKeywordRes := httptest.NewRecorder()
 		handler.ServeHTTP(headerWrongKeywordRes, headerWrongKeywordReq)
 
 		badToken := generateBadToken()
-		badTokenReq := httptest.NewRequest(http.MethodPost, "/api/v1/createPost", nil)
+		badTokenReq := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", nil)
 		badTokenReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", badToken))
 		badTokenRes := httptest.NewRecorder()
 		handler.ServeHTTP(badTokenRes, badTokenReq)
@@ -344,21 +344,21 @@ func TestCreatePostWrongMethod(t *testing.T) {
 		tu := testutil.NewTestUtil(t)
 		handler := RegisterHandlers(db)
 
-		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/createPost", nil)
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/post/create", nil)
 		getRes := httptest.NewRecorder()
-		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/createPost", nil)
+		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/post/create", nil)
 		putRes := httptest.NewRecorder()
-		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/createPost", nil)
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/post/create", nil)
 		patchRes := httptest.NewRecorder()
-		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/createPost", nil)
+		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/post/create", nil)
 		deleteRes := httptest.NewRecorder()
-		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/createPost", nil)
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/post/create", nil)
 		headRes := httptest.NewRecorder()
-		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/createPost", nil)
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/post/create", nil)
 		optionRes := httptest.NewRecorder()
-		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/createPost", nil)
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/post/create", nil)
 		traceRes := httptest.NewRecorder()
-		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/createPost", nil)
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/post/create", nil)
 		connectRes := httptest.NewRecorder()
 
 		handler.ServeHTTP(getRes, getReq)
