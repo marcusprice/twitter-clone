@@ -222,7 +222,44 @@ func TestUserFollow(t *testing.T) {
 
 func TestUserUnFollow(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
 
+		user1.Follow(user2.Username)
+		user1.Follow(user3.Username)
+		user1.Follow(user4.Username)
+		tu.AssertEqual(3, testhelpers.QueryUserFollowTableCount(db))
+
+		err := user1.UnFollow(user4.Username)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, testhelpers.QueryUserFollowTableCount(db))
+
+		err = user1.UnFollow(user3.Username)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, testhelpers.QueryUserFollowTableCount(db))
+
+		err = user1.UnFollow(user3.Username)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, testhelpers.QueryUserFollowTableCount(db))
+
+		err = user1.UnFollow(user2.Username)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, testhelpers.QueryUserFollowTableCount(db))
+
+		err = user1.UnFollow(user2.Username)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, testhelpers.QueryUserFollowTableCount(db))
+
+		err = user1.UnFollow(user1.Username)
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual("cannot unfollow yourself", err.Error())
 	})
 }
 

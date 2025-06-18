@@ -117,6 +117,10 @@ func (u *User) Follow(followeeUsername string) error {
 }
 
 func (u *User) UnFollow(followeeUsername string) error {
+	if u.Username == followeeUsername {
+		return errors.New("cannot unfollow yourself")
+	}
+
 	followeeData, err := u.model.GetByIdentifier("", followeeUsername)
 	if err != nil {
 		return err

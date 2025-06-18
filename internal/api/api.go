@@ -32,11 +32,13 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 		fs := http.FileServer(http.Dir(projectRoot + "/static/swagger-ui/"))
 
-		mux.Handle("/docs/",
+		mux.Handle(
+			"/docs/",
 			Logger(
 				http.StripPrefix("/docs/", fs)))
 
-		mux.Handle("/swagger.yaml",
+		mux.Handle(
+			"/swagger.yaml",
 			Logger(
 				http.FileServer(http.Dir("."))))
 	}
