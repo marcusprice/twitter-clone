@@ -24,6 +24,23 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 	mux := http.NewServeMux()
 
+	if util.InDevContext() {
+		projectRoot, err := util.ProjectRoot()
+		if err != nil {
+			panic(err)
+		}
+
+		fs := http.FileServer(http.Dir(projectRoot + "/static/swagger-ui/"))
+
+		mux.Handle("/docs/",
+			Logger(
+				http.StripPrefix("/docs/", fs)))
+
+		mux.Handle("/swagger.yaml",
+			Logger(
+				http.FileServer(http.Dir("."))))
+	}
+
 	mux.Handle(
 		"/api/v1/user/create",
 		Logger(
