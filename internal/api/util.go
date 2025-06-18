@@ -3,12 +3,14 @@ package api
 import (
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/google/uuid"
 	"github.com/marcusprice/twitter-clone/internal/util"
@@ -29,8 +31,7 @@ func handleImageUpload(file multipart.File, header *multipart.FileHeader) (filen
 		return "", InvalidFileTypeError{header.Filename}
 	}
 
-	var fileBytes []byte
-	_, err = file.Read(fileBytes)
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		return "", err
 	}
@@ -78,7 +79,9 @@ func generateUniqueFilename(filename string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s-%s", id, filename), nil
+	newFilename := santizeFilename(fmt.Sprintf("%s-%s", id, filename))
+
+	return newFilename, nil
 }
 
 func getMaxUploadMemory() int64 {
@@ -106,4 +109,14 @@ func validImageFormat(filename string) bool {
 func requestBodyTooLarge(err error) bool {
 	return (errors.Is(err, http.ErrBodyReadAfterClose) ||
 		strings.Contains(err.Error(), "http: request body too large"))
+}
+
+func santizeFilename(str string) (sanitized string) {
+	return strings.Map(func(char rune) rune {
+		if unicode.IsSpace(char) {
+			return '-'
+		}
+
+		return char
+	}, str)
 }
