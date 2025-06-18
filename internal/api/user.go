@@ -50,6 +50,43 @@ func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(payload)
 }
 
+func (userAPI UserAPI) Follow(w http.ResponseWriter, r *http.Request) {
+	followerID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	followeeUsername := r.PathValue("username")
+	if followeeUsername == "" {
+		http.Error(w, BadRequest, http.StatusBadRequest)
+	}
+
+	follower := userAPI.user
+	err := follower.ByID(followerID)
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	if r.Method == http.MethodPut {
+		err = follower.Follow(followeeUsername)
+	} else {
+		err = follower.UnFollow(followeeUsername)
+	}
+
+	if err != nil {
+		if errors.Is(err, model.UserNotFoundError{}) {
+			http.Error(w, NotFound, http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	var userInput dtypes.UserInput
 	err := json.NewDecoder(r.Body).Decode(&userInput)

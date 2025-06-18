@@ -56,6 +56,51 @@ func (um *UserModel) New(userInput dtypes.UserInput) (UserData, error) {
 	return out, nil
 }
 
+//go:embed queries/create-user-follows.sql
+var createUserFollowsQuery string
+
+func (um *UserModel) Follow(followerID, followeeID int) error {
+	result, err := um.db.Exec(createUserFollowsQuery, followerID, followeeID)
+	if err != nil {
+		if dbutils.IsUniqueConstraintError(err) {
+			// user already likes this post, likely a duplicate request
+			return nil
+		}
+
+		if dbutils.ConstraintFailed(err) {
+			return dbutils.WrapConstraintError(err)
+		}
+
+		return err
+	}
+
+	_, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+//go:embed queries/delete-user-follows.sql
+var deleteUserFollowsQuery string
+
+func (um *UserModel) UnFollow(followerID, followeeID int) error {
+	result, err := um.db.Exec(deleteUserFollowsQuery, followerID, followeeID)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 //go:embed queries/select-user-base-query.sql
 var selectUserBaseQuery string
 

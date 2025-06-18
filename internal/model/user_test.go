@@ -265,6 +265,40 @@ func TestUserLogin(t *testing.T) {
 	})
 }
 
+func TestUserFollow(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		UserModel := &UserModel{db}
+		user1 := queryUser(1, db)
+		user2 := queryUser(2, db)
+		user4 := queryUser(4, db)
+
+		err := UserModel.Follow(user1.ID, user4.ID)
+		followerID, followeeID := queryUserFollowRow(1, db)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(user1.ID, followerID)
+		tu.AssertEqual(user4.ID, followeeID)
+
+		err = UserModel.Follow(user4.ID, user2.ID)
+		followerID, followeeID = queryUserFollowRow(2, db)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(user4.ID, followerID)
+		tu.AssertEqual(user2.ID, followeeID)
+
+		// no error returned for double follow, also no rows inserted
+		err = UserModel.Follow(user4.ID, user2.ID)
+		numRows := queryUserFollowCount(db)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, numRows)
+
+		err = UserModel.Follow(user4.ID, user4.ID)
+		var constraintError dbutils.ConstraintError
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.CHECK_ERROR, constraintError.Constraint)
+	})
+}
+
 func queryUser(userID int, db *sql.DB) UserData {
 	query := `
 	SELECT 
@@ -355,4 +389,30 @@ func updateLastLogin(userID int, db *sql.DB) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func queryUserFollowRow(rowID int, db *sql.DB) (followerID, followeeID int) {
+	query := `
+		SELECT follower_id, followee_id
+		FROM UserFollows
+		WHERE id = $1;
+	`
+
+	err := db.QueryRow(query, rowID).Scan(&followerID, &followeeID)
+	if err != nil {
+		panic(err)
+	}
+
+	return followerID, followeeID
+}
+
+func queryUserFollowCount(db *sql.DB) (count int) {
+	query := `
+		SELECT COUNT(*)
+		FROM UserFollows;
+	`
+
+	db.QueryRow(query).Scan(&count)
+
+	return count
 }

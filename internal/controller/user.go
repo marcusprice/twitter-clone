@@ -13,7 +13,7 @@ import (
 
 type User struct {
 	model       *model.UserModel
-	id          *int
+	id          *int // TODO: change this to a regular in, use 0 value as null check
 	Email       string
 	Username    string
 	FirstName   string
@@ -100,6 +100,35 @@ func (u *User) Create(password string) error {
 
 	u.setFromModel(userData)
 	return nil
+}
+
+func (u *User) Follow(followeeUsername string) error {
+	followeeData, err := u.model.GetByIdentifier("", followeeUsername)
+	if err != nil {
+		return err
+	}
+
+	err = u.model.Follow(u.ID(), followeeData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *User) UnFollow(followeeUsername string) error {
+	followeeData, err := u.model.GetByIdentifier("", followeeUsername)
+	if err != nil {
+		return err
+	}
+
+	err = u.model.UnFollow(u.ID(), followeeData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (u *User) AuthenticateAndSet(pwd string) (authenticated bool, err error) {

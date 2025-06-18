@@ -115,8 +115,8 @@ func (pa *PostAction) Bookmark(postID, userID int) error {
 		return err
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil || int(rowsAffected) == 0 {
+	_, err = result.RowsAffected()
+	if err != nil {
 		return err
 	}
 
