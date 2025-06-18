@@ -67,6 +67,16 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 					http.HandlerFunc(postAPI.Retweet)))),
 	)
 
+	mux.Handle(
+		"/api/v1/post/{id}/bookmark",
+		Logger(
+			AllowMethods(
+				[]string{http.MethodPut, http.MethodDelete},
+				ValidateUser(
+					user,
+					http.HandlerFunc(postAPI.Bookmark)))),
+	)
+
 	return mux
 }
 

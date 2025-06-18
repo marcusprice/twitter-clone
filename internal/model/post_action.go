@@ -97,6 +97,49 @@ func (pa *PostAction) UnRetweet(postID, userID int) error {
 	return nil
 }
 
+//go:embed queries/create-post-bookmark.sql
+var createPostBookmarkQuery string
+
+func (pa *PostAction) Bookmark(postID, userID int) error {
+	result, err := pa.db.Exec(createPostBookmarkQuery, postID, userID)
+	if err != nil {
+		if dbutils.IsUniqueConstraintError(err) {
+			// user already likes this post, likely a duplicate request
+			return nil
+		}
+
+		if dbutils.ConstraintFailed(err) {
+			return dbutils.WrapConstraintError(err)
+		}
+
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || int(rowsAffected) == 0 {
+		return err
+	}
+
+	return nil
+}
+
+//go:embed queries/delete-post-bookmark.sql
+var deletePostBookmarkQuery string
+
+func (pa *PostAction) UnBookmark(postID, userID int) error {
+	result, err := pa.db.Exec(deletePostBookmarkQuery, postID, userID)
+	if err != nil {
+		return err
+	}
+
+	_, err = result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewPostActionModel(db *sql.DB) *PostAction {
 	return &PostAction{db}
 }

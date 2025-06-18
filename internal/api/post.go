@@ -168,6 +168,43 @@ func (postAPI *PostAPI) Retweet(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (postAPI *PostAPI) Bookmark(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	postID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, BadRequest, http.StatusBadRequest)
+	}
+
+	post := postAPI.post
+	err = post.ByID(postID)
+	if err != nil {
+		var postNotFoundError model.PostNotFoundError
+		if errors.As(err, &postNotFoundError) {
+			http.Error(w, NotFound, http.StatusNotFound)
+		} else {
+			http.Error(w, InternalServerError, http.StatusInternalServerError)
+		}
+	}
+
+	if r.Method == http.MethodPut {
+		err = post.Bookmark(userID)
+	} else {
+		err = post.UnBookmark(userID)
+	}
+
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func generatePostPayload(post *controller.Post) PostPayload {
 	author := AuthorPayload{
 		Username:    post.Author.Username,
