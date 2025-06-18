@@ -246,6 +246,102 @@ func TestPostUnlike(t *testing.T) {
 	})
 }
 
+func TestPostRetweet(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		post := NewPostController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
+
+		err := post.Retweet(user1.ID())
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.Retweet(): missing required postID in post controller",
+			err.Error(),
+		)
+
+		post.ByID(1)
+
+		err = post.Retweet(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, post.RetweetCount)
+
+		err = post.Retweet(user2.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, post.RetweetCount)
+
+		err = post.Retweet(user3.ID())
+		tu.AssertErrorNil(err)
+
+		err = post.Retweet(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(4, post.RetweetCount)
+
+		// user4 retweets again, no error expected and count stays the same
+		err = post.Retweet(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(4, post.RetweetCount)
+	})
+}
+
+func TestPostUnRetweet(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		post := NewPostController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
+
+		err := post.UnRetweet(user1.ID())
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.UnRetweet(): missing required postID in post controller",
+			err.Error(),
+		)
+
+		post.ByID(1)
+		post.Retweet(user1.ID())
+		post.Retweet(user2.ID())
+		post.Retweet(user3.ID())
+		post.Retweet(user4.ID())
+
+		err = post.UnRetweet(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.RetweetCount)
+
+		err = post.UnRetweet(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.RetweetCount)
+
+		err = post.UnRetweet(user3.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, post.RetweetCount)
+
+		err = post.UnRetweet(user2.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, post.RetweetCount)
+
+		err = post.UnRetweet(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, post.RetweetCount)
+
+		err = post.UnRetweet(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, post.RetweetCount)
+	})
+}
+
 func TestPostSync(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)
