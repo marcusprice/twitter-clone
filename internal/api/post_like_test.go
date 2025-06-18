@@ -208,6 +208,200 @@ func TestPostLikeUnauthorized(t *testing.T) {
 	})
 }
 
+func TestPostRetweetSimple(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user := createTestUser(db)
+		user.Login()
+		token, _ := GenerateJWT(user.ID())
+		post := createTestPost(user.ID(), db)
+
+		req := httptest.NewRequest(
+			http.MethodPut,
+			fmt.Sprintf("/api/v1/post/%d/retweet", post.ID),
+			nil,
+		)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(1, post.RetweetCount)
+
+		req = httptest.NewRequest(
+			http.MethodDelete,
+			fmt.Sprintf("/api/v1/post/%d/retweet", post.ID),
+			nil,
+		)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(0, post.RetweetCount)
+	})
+}
+
+func TestPostRetweetComprehensive(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		endpoint := "/api/v1/post/%d/retweet"
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user1 := loadUserControllerByID(db, 1)
+		user2 := loadUserControllerByID(db, 2)
+		user3 := loadUserControllerByID(db, 3)
+		user1Token := loginAndToken(user1)
+		user2Token := loginAndToken(user2)
+		user3Token := loginAndToken(user3)
+		post := loadPostControllerByID(db, 1)
+
+		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf(endpoint, post.ID), nil)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user1Token))
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(1, post.RetweetCount)
+
+		req = httptest.NewRequest(http.MethodPut, fmt.Sprintf(endpoint, post.ID), nil)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user2Token))
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(2, post.RetweetCount)
+
+		req = httptest.NewRequest(http.MethodPut, fmt.Sprintf(endpoint, post.ID), nil)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user3Token))
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(3, post.RetweetCount)
+
+		// if user double-retweets a post, API sends the same StatusNoContent
+		// response but RetweetCount isn't effected
+		req = httptest.NewRequest(http.MethodPut, fmt.Sprintf(endpoint, post.ID), nil)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user3Token))
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(3, post.RetweetCount)
+
+		req = httptest.NewRequest(http.MethodDelete, fmt.Sprintf(endpoint, post.ID), nil)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user2Token))
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(2, post.RetweetCount)
+
+		// if user double-unretweets a post, API sends the same StatusNoContent
+		// response but RetweetCount isn't effected
+		req = httptest.NewRequest(http.MethodDelete, fmt.Sprintf(endpoint, post.ID), nil)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", user2Token))
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		post.Sync()
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(2, post.RetweetCount)
+	})
+}
+
+func TestRetweetPostMissingPost(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user := createTestUser(db)
+		user.Login()
+		token, _ := GenerateJWT(user.ID())
+
+		req := httptest.NewRequest(
+			http.MethodPut,
+			fmt.Sprintf("/api/v1/post/%d/retweet", 42069),
+			nil,
+		)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		tu.AssertEqual(http.StatusNotFound, res.Code)
+	})
+}
+
+func TestCreatePostRetweetWrongMethod(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/post/1/retweet", nil)
+		getRes := httptest.NewRecorder()
+		postReq := httptest.NewRequest(http.MethodPost, "/api/v1/post/1/retweet", nil)
+		postRes := httptest.NewRecorder()
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/post/1/retweet", nil)
+		patchRes := httptest.NewRecorder()
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/post/1/retweet", nil)
+		headRes := httptest.NewRecorder()
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/post/1/retweet", nil)
+		optionRes := httptest.NewRecorder()
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/post/1/retweet", nil)
+		traceRes := httptest.NewRecorder()
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/post/1/retweet", nil)
+		connectRes := httptest.NewRecorder()
+
+		handler.ServeHTTP(getRes, getReq)
+		handler.ServeHTTP(postRes, postReq)
+		handler.ServeHTTP(patchRes, patchReq)
+		handler.ServeHTTP(headRes, headReq)
+		handler.ServeHTTP(optionRes, optionReq)
+		handler.ServeHTTP(traceRes, traceReq)
+		handler.ServeHTTP(connectRes, connectReq)
+
+		tu.AssertEqual(http.StatusMethodNotAllowed, getRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, postRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, patchRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, headRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, optionRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, traceRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, connectRes.Code)
+	})
+}
+
+func TestPostRetweetUnauthorized(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+
+		noAuthHeaderReq := httptest.NewRequest(http.MethodPut, "/api/v1/post/1/retweet", nil)
+		noAuthHeaderRes := httptest.NewRecorder()
+		handler.ServeHTTP(noAuthHeaderRes, noAuthHeaderReq)
+
+		headerNoTokenReq := httptest.NewRequest(http.MethodDelete, "/api/v1/post/1/retweet", nil)
+		headerNoTokenReq.Header.Set("Authorization", "Bearer ")
+		headerNoTokenRes := httptest.NewRecorder()
+		handler.ServeHTTP(headerNoTokenRes, headerNoTokenReq)
+
+		headerWrongKeywordReq := httptest.NewRequest(http.MethodPut, "/api/v1/post/1/retweet", nil)
+		headerWrongKeywordReq.Header.Set("Authorization", "Esteban ")
+		headerWrongKeywordRes := httptest.NewRecorder()
+		handler.ServeHTTP(headerWrongKeywordRes, headerWrongKeywordReq)
+
+		badToken := generateBadToken()
+		badTokenReq := httptest.NewRequest(http.MethodDelete, "/api/v1/post/1/retweet", nil)
+		badTokenReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", badToken))
+		badTokenRes := httptest.NewRecorder()
+		handler.ServeHTTP(badTokenRes, badTokenReq)
+
+		tu.AssertEqual(http.StatusUnauthorized, noAuthHeaderRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, headerNoTokenRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, headerWrongKeywordRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, badTokenRes.Code)
+	})
+}
+
 func createTestPost(userID int, db *sql.DB) *controller.Post {
 	post := controller.NewPostController(db)
 	postInput := dtypes.PostInput{
