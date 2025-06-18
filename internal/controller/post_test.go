@@ -342,6 +342,102 @@ func TestPostUnRetweet(t *testing.T) {
 	})
 }
 
+func TestPostBookmark(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		post := NewPostController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
+
+		err := post.Bookmark(user1.ID())
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.Bookmark(): missing required postID in post controller",
+			err.Error(),
+		)
+
+		post.ByID(1)
+
+		err = post.Bookmark(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, post.BookmarkCount)
+
+		err = post.Bookmark(user2.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, post.BookmarkCount)
+
+		err = post.Bookmark(user3.ID())
+		tu.AssertErrorNil(err)
+
+		err = post.Bookmark(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(4, post.BookmarkCount)
+
+		// user4 retweets again, no error expected and count stays the same
+		err = post.Bookmark(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(4, post.BookmarkCount)
+	})
+}
+
+func TestPostUnBookmark(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user4 := NewUserController(db)
+		post := NewPostController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user4.ByID(4)
+
+		err := post.UnBookmark(user1.ID())
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(
+			"Post.UnBookmark(): missing required postID in post controller",
+			err.Error(),
+		)
+
+		post.ByID(1)
+		post.Bookmark(user1.ID())
+		post.Bookmark(user2.ID())
+		post.Bookmark(user3.ID())
+		post.Bookmark(user4.ID())
+
+		err = post.UnBookmark(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.BookmarkCount)
+
+		err = post.UnBookmark(user4.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(3, post.BookmarkCount)
+
+		err = post.UnBookmark(user3.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(2, post.BookmarkCount)
+
+		err = post.UnBookmark(user2.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, post.BookmarkCount)
+
+		err = post.UnBookmark(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, post.BookmarkCount)
+
+		err = post.UnBookmark(user1.ID())
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(0, post.BookmarkCount)
+	})
+}
+
 func TestPostSync(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)

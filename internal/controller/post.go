@@ -168,7 +168,7 @@ func (post *Post) UnRetweet(retweeterID int) error {
 
 func (post *Post) Bookmark(bookmarkerID int) error {
 	if post.ID == 0 {
-		err := fmt.Errorf("Post.Retweet(): missing required postID in post controller")
+		err := fmt.Errorf("Post.Bookmark(): missing required postID in post controller")
 		if util.InDevContext() {
 			log.Panicf("Like failed: %v", err)
 		}
@@ -191,7 +191,7 @@ func (post *Post) Bookmark(bookmarkerID int) error {
 
 func (post *Post) UnBookmark(bookmarkerID int) error {
 	if post.ID == 0 {
-		err := fmt.Errorf("Post.UnRetweet(): missing required postID in post controller")
+		err := fmt.Errorf("Post.UnBookmark(): missing required postID in post controller")
 		if util.InDevContext() {
 			log.Panicf("Unlike failed: %v", err)
 		}
@@ -199,7 +199,7 @@ func (post *Post) UnBookmark(bookmarkerID int) error {
 		return err
 	}
 
-	err := post.postAction.Unbookmark(post.ID, bookmarkerID)
+	err := post.postAction.UnBookmark(post.ID, bookmarkerID)
 	if err != nil {
 		return err
 	}
