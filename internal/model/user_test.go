@@ -294,7 +294,7 @@ func TestUserFollow(t *testing.T) {
 
 		// no error returned for double follow, also no rows inserted
 		err = UserModel.Follow(user4.ID, user2.ID)
-		numRows := queryUserFollowTableCount(db)
+		numRows := QueryUserFollowTableCount(db)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(3, numRows)
 
@@ -321,15 +321,15 @@ func TestUserUnFollow(t *testing.T) {
 		rowDeleted := verifyUserFollowsRowDeleted(user1FollowsUser2RowID, db)
 		tu.AssertErrorNil(err)
 		tu.AssertTrue(rowDeleted)
-		tu.AssertEqual(2, queryUserFollowTableCount(db))
+		tu.AssertEqual(2, QueryUserFollowTableCount(db))
 
 		err = UserModel.UnFollow(user1.ID, user2.ID)
 		tu.AssertErrorNil(err)
-		tu.AssertEqual(2, queryUserFollowTableCount(db))
+		tu.AssertEqual(2, QueryUserFollowTableCount(db))
 
 		err = UserModel.UnFollow(user1.ID, user2.ID)
 		tu.AssertErrorNil(err)
-		tu.AssertEqual(2, queryUserFollowTableCount(db))
+		tu.AssertEqual(2, QueryUserFollowTableCount(db))
 	})
 }
 
@@ -454,17 +454,6 @@ func queryUserFollowRow(rowID int, db *sql.DB) (followerID, followeeID int) {
 	}
 
 	return followerID, followeeID
-}
-
-func queryUserFollowTableCount(db *sql.DB) (count int) {
-	query := `
-		SELECT COUNT(*)
-		FROM UserFollows;
-	`
-
-	db.QueryRow(query).Scan(&count)
-
-	return count
 }
 
 func verifyUserFollowsRowDeleted(rowID int, db *sql.DB) bool {

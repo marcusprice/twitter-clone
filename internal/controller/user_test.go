@@ -2,9 +2,12 @@ package controller
 
 import (
 	"database/sql"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/constants"
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
@@ -176,6 +179,43 @@ func TestUserByID(t *testing.T) {
 		tu.AssertErrorNotNil(err)
 		err = errUser.ByID(-20)
 		tu.AssertErrorNotNil(err)
+	})
+}
+
+func TestUserFollow(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		user1 := NewUserController(db)
+		user2 := NewUserController(db)
+		user3 := NewUserController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+
+		err := user1.Follow(user2.Username)
+		tu.AssertErrorNil(err)
+
+		err = user2.Follow(user1.Username)
+		tu.AssertErrorNil(err)
+
+		err = user1.Follow("idontexist")
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.Is(err, model.UserNotFoundError{}))
+
+		err = user1.Follow(user1.Username)
+		var constraintError dbutils.ConstraintError
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.CHECK_ERROR, constraintError.Constraint)
+
+		userFollowNumRows := model.QueryUserFollowTableCount(db)
+		tu.AssertEqual(2, userFollowNumRows)
+
+		err = user3.Follow(user2.Username)
+		tu.AssertErrorNil(err)
+
+		userFollowNumRows = model.QueryUserFollowTableCount(db)
+		tu.AssertEqual(3, userFollowNumRows)
 	})
 }
 
