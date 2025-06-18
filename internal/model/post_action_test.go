@@ -67,7 +67,7 @@ func TestPostActionUnlike(t *testing.T) {
 	})
 }
 
-func TestPostActionConstraintError(t *testing.T) {
+func TestPostActionLikeConstraintError(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)
 		postAction := &PostAction{db}
@@ -92,12 +92,105 @@ func TestPostActionConstraintError(t *testing.T) {
 	})
 }
 
+func TestPostActionRetweet(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		postAction := NewPostActionModel(db)
+		userID := 3
+		postID := 2
+		err := postAction.Retweet(postID, userID)
+		tu.AssertErrorNil(err)
+
+		queriedPostID, queriedUserID := queryPostRetweetRowByID(1, db)
+		tu.AssertEqual(postID, queriedPostID)
+		tu.AssertEqual(userID, queriedUserID)
+	})
+}
+
+func TestPostActionUnRetweet(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		postAction := NewPostActionModel(db)
+
+		insertPostRetweetRow(1, 1, db, t)
+		insertPostRetweetRow(1, 2, db, t)
+		insertPostRetweetRow(1, 3, db, t)
+		insertPostRetweetRow(1, 4, db, t)
+
+		err := postAction.UnRetweet(1, 4)
+		tu.AssertErrorNil(err)
+		postData := queryPost(1, db)
+		tu.AssertEqual(3, postData.RetweetCount)
+
+		err = postAction.UnRetweet(1, 3)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(2, postData.RetweetCount)
+
+		err = postAction.UnRetweet(1, 2)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(1, postData.RetweetCount)
+
+		err = postAction.UnRetweet(1, 2)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(1, postData.RetweetCount)
+
+		err = postAction.UnRetweet(1, 1)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(0, postData.RetweetCount)
+
+		err = postAction.UnRetweet(1, 1)
+		tu.AssertErrorNil(err)
+		postData = queryPost(1, db)
+		tu.AssertEqual(0, postData.RetweetCount)
+	})
+}
+
+func TestPostActionRetweetConstraintError(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		postAction := &PostAction{db}
+		var constraintError dbutils.ConstraintError
+
+		err := postAction.Retweet(1, 42069)
+		postData := queryPost(1, db)
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.FOREIGN_KEY_ERROR, constraintError.Constraint)
+		tu.AssertEqual(0, postData.RetweetCount)
+
+		err = postAction.Retweet(42069, 1)
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.FOREIGN_KEY_ERROR, constraintError.Constraint)
+
+		err = postAction.Retweet(42069, 42069)
+		tu.AssertErrorNotNil(err)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.FOREIGN_KEY_ERROR, constraintError.Constraint)
+	})
+}
+
 func queryPostLikeRowByID(id int, db *sql.DB) (int, int) {
 	var postID int
 	var userID int
 
 	db.
 		QueryRow("SELECT post_id, user_id FROM PostLike WHERE id = $1;", id).
+		Scan(&postID, &userID)
+
+	return postID, userID
+}
+
+func queryPostRetweetRowByID(id int, db *sql.DB) (int, int) {
+	var postID int
+	var userID int
+
+	db.
+		QueryRow("SELECT post_id, user_id FROM PostRetweet WHERE id = $1;", id).
 		Scan(&postID, &userID)
 
 	return postID, userID
@@ -113,5 +206,18 @@ func insertPostLikeRow(postID, userID int, db *sql.DB, t *testing.T) {
 
 	if err != nil {
 		t.Fatal("Error inserting PostLike row", err.Error())
+	}
+}
+
+func insertPostRetweetRow(postID, userID int, db *sql.DB, t *testing.T) {
+	_, err := db.Exec(`
+		INSERT INTO PostRetweet 
+			(post_id, user_id)
+		VALUES
+			($1, $2);
+	`, postID, userID)
+
+	if err != nil {
+		t.Fatal("Error inserting PostRetweet row", err.Error())
 	}
 }

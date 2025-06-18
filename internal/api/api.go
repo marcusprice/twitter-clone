@@ -57,6 +57,16 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 					http.HandlerFunc(postAPI.Like)))),
 	)
 
+	mux.Handle(
+		"/api/v1/post/{id}/retweet",
+		Logger(
+			AllowMethods(
+				[]string{http.MethodPut, http.MethodDelete},
+				ValidateUser(
+					user,
+					http.HandlerFunc(postAPI.Retweet)))),
+	)
+
 	return mux
 }
 
