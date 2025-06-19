@@ -21,3 +21,11 @@ run-tests:
 
 loc:
 	find . \( -name '*.go' -o -name '*.sql' \) -type f | xargs wc -l
+
+# run delve debugger with Package::Test i.e. Model::TestTimelineOffsetCount
+debug-test:
+	@./scripts/debug_test.sh $(filter-out $@,$(MAKECMDGOALS))
+
+# Prevent make from trying to make a file named after the argument
+%:
+	@:
