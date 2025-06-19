@@ -334,7 +334,7 @@ func TestUserUnFollow(t *testing.T) {
 	})
 }
 
-func queryUser(userID int, db *sql.DB) UserData {
+func queryUser(userID int, db *sql.DB) dtypes.UserData {
 	query := `
 	SELECT 
 		id,
@@ -378,7 +378,7 @@ func queryUser(userID int, db *sql.DB) UserData {
 		lastLoginString = ""
 	}
 
-	return UserData{
+	return dtypes.UserData{
 		ID:          id,
 		Email:       email,
 		Username:    username,

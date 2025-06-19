@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/testhelpers"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 )
 
@@ -511,24 +513,99 @@ func TestAuthenticateUserWrongMethod(t *testing.T) {
 	})
 }
 
+func TestFollowUser(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+		user1 := controller.NewUserController(db)
+		user2 := controller.NewUserController(db)
+		user3 := controller.NewUserController(db)
+		user1.ByID(1)
+		user2.ByID(2)
+		user3.ByID(3)
+		user1.Login()
+		user3.Login()
+		user1Token, _ := GenerateJWT(user1.ID())
+		user3Token, _ := GenerateJWT(user3.ID())
+
+		req := httptest.NewRequest(
+			http.MethodPut, fmt.Sprintf("/api/v1/user/%s/follow", user2.Username), nil)
+		req.Header.Set("Authorization", "Bearer "+user1Token)
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+
+		req = httptest.NewRequest(
+			http.MethodPut, fmt.Sprintf("/api/v1/user/%s/follow", user2.Username), nil)
+		req.Header.Set("Authorization", "Bearer "+user3Token)
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+
+		userFollowers := testhelpers.QueryUserFollowers(user2.ID(), db)
+		tu.AssertEqual(2, len(userFollowers))
+		tu.AssertEqual(user1.ID(), userFollowers[0].ID)
+		tu.AssertEqual(user3.ID(), userFollowers[1].ID)
+
+		// unfollow
+		req = httptest.NewRequest(
+			http.MethodDelete, fmt.Sprintf("/api/v1/user/%s/follow", user2.Username), nil)
+		req.Header.Set("Authorization", "Bearer "+user3Token)
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+
+		userFollowers = testhelpers.QueryUserFollowers(user2.ID(), db)
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(1, len(userFollowers))
+		tu.AssertEqual(user1.ID(), userFollowers[0].ID)
+
+		// duplicate requests okay
+		req = httptest.NewRequest(
+			http.MethodDelete, fmt.Sprintf("/api/v1/user/%s/follow", user2.Username), nil)
+		req.Header.Set("Authorization", "Bearer "+user3Token)
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+
+		userFollowers = testhelpers.QueryUserFollowers(user2.ID(), db)
+		tu.AssertEqual(http.StatusNoContent, res.Code)
+		tu.AssertEqual(1, len(userFollowers))
+		tu.AssertEqual(user1.ID(), userFollowers[0].ID)
+
+		req = httptest.NewRequest(
+			http.MethodPut, fmt.Sprintf("/api/v1/user/%s/follow", "made-up-user-name"), nil)
+		req.Header.Set("Authorization", "Bearer "+user3Token)
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+
+		tu.AssertEqual(http.StatusNotFound, res.Code)
+
+		req = httptest.NewRequest(
+			http.MethodDelete, fmt.Sprintf("/api/v1/user/%s/follow", "made-up-user-name"), nil)
+		req.Header.Set("Authorization", "Bearer "+user3Token)
+		res = httptest.NewRecorder()
+		handler.ServeHTTP(res, req)
+
+		tu.AssertEqual(http.StatusNotFound, res.Code)
+	})
+}
+
 func TestFollowUserWrongMethod(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
 		handler := RegisterHandlers(db)
 
-		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/user/1/follow", nil)
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/user/esteban/follow", nil)
 		getRes := httptest.NewRecorder()
-		postReq := httptest.NewRequest(http.MethodPost, "/api/v1/user/1/follow", nil)
+		postReq := httptest.NewRequest(http.MethodPost, "/api/v1/user/esteban/follow", nil)
 		postRes := httptest.NewRecorder()
-		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/user/1/follow", nil)
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/user/esteban/follow", nil)
 		patchRes := httptest.NewRecorder()
-		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/user/1/follow", nil)
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/user/esteban/follow", nil)
 		headRes := httptest.NewRecorder()
-		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/user/1/follow", nil)
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/user/esteban/follow", nil)
 		optionRes := httptest.NewRecorder()
-		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/user/1/follow", nil)
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/user/esteban/follow", nil)
 		traceRes := httptest.NewRecorder()
-		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/user/1/follow", nil)
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/user/esteban/follow", nil)
 		connectRes := httptest.NewRecorder()
 
 		handler.ServeHTTP(getRes, getReq)

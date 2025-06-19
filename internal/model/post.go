@@ -41,7 +41,7 @@ func (pm PostModel) New(postInput dtypes.PostInput) (int, error) {
 //go:embed queries/select-post-by-id.sql
 var selectPostByIdQuery string
 
-func (pm PostModel) GetByID(id int) (PostData, error) {
+func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 	var username string
 	var displayName string
 	var avatar string
@@ -65,22 +65,22 @@ func (pm PostModel) GetByID(id int) (PostData, error) {
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return PostData{}, PostNotFoundError{}
+			return dtypes.PostData{}, PostNotFoundError{}
 		} else {
 			if util.InDevContext() {
 				panic(err)
 			}
-			return PostData{}, err
+			return dtypes.PostData{}, err
 		}
 	}
 
-	postAuthor := PostAuthor{
+	postAuthor := dtypes.PostAuthor{
 		Username:    username,
 		DisplayName: displayName,
 		Avatar:      avatar,
 	}
 
-	postData := PostData{
+	postData := dtypes.PostData{
 		Author:        postAuthor,
 		ID:            postID,
 		UserID:        userID,

@@ -38,7 +38,7 @@ func (u *User) Set(userID *int, userInput dtypes.UserInput) {
 	u.DisplayName = userInput.DisplayName
 }
 
-func (u *User) setFromModel(userData model.UserData) {
+func (u *User) setFromModel(userData dtypes.UserData) {
 	u.id = &userData.ID
 	u.Email = userData.Email
 	u.Username = userData.Username

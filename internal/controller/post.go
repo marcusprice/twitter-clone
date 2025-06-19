@@ -31,7 +31,7 @@ type Post struct {
 	}
 }
 
-func (p *Post) setFromModel(postData model.PostData) {
+func (p *Post) setFromModel(postData dtypes.PostData) {
 	p.ID = postData.ID
 	p.UserID = postData.UserID
 	p.Content = postData.Content

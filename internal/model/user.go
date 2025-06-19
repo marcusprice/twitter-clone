@@ -18,7 +18,7 @@ type UserModel struct {
 //go:embed queries/create-user.sql
 var createUserQuery string
 
-func (um *UserModel) New(userInput dtypes.UserInput) (UserData, error) {
+func (um *UserModel) New(userInput dtypes.UserInput) (dtypes.UserData, error) {
 	var userID int
 	var lastLogin sql.NullString
 	var createdAt string
@@ -36,14 +36,14 @@ func (um *UserModel) New(userInput dtypes.UserInput) (UserData, error) {
 
 	if err != nil {
 		if dbutils.ConstraintFailed(err) {
-			return UserData{}, dbutils.WrapConstraintError(err)
+			return dtypes.UserData{}, dbutils.WrapConstraintError(err)
 		}
 
 		logger.LogError("error creating user: " + err.Error())
-		return UserData{}, err
+		return dtypes.UserData{}, err
 	}
 
-	out := UserData{
+	out := dtypes.UserData{
 		ID:          userID,
 		Email:       userInput.Email,
 		Username:    userInput.Username,
@@ -106,9 +106,9 @@ func (um *UserModel) UnFollow(followerID, followeeID int) error {
 //go:embed queries/select-user-base-query.sql
 var selectUserBaseQuery string
 
-func (um *UserModel) GetByID(userID int) (UserData, error) {
+func (um *UserModel) GetByID(userID int) (dtypes.UserData, error) {
 	if userID == 0 {
-		return UserData{}, errors.New("userID required")
+		return dtypes.UserData{}, errors.New("userID required")
 	}
 
 	query := selectUserBaseQuery + "WHERE id = $1;"
@@ -117,9 +117,9 @@ func (um *UserModel) GetByID(userID int) (UserData, error) {
 	return parseUserQueryRow(row)
 }
 
-func (um *UserModel) GetByIdentifier(email, username string) (UserData, error) {
+func (um *UserModel) GetByIdentifier(email, username string) (dtypes.UserData, error) {
 	if email == "" && username == "" {
-		return UserData{}, MissingRequiredFilterData{}
+		return dtypes.UserData{}, MissingRequiredFilterData{}
 	}
 
 	filterValue := ""
@@ -207,7 +207,7 @@ func NewUserModel(dbConn *sql.DB) *UserModel {
 	return &UserModel{db: dbConn}
 }
 
-func parseUserQueryRow(row *sql.Row) (UserData, error) {
+func parseUserQueryRow(row *sql.Row) (dtypes.UserData, error) {
 	var id int
 	var email string
 	var userName string
@@ -225,7 +225,7 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		&lastLogin, &isActive, &createdAt, &updatedAt)
 
 	if err != nil {
-		return UserData{}, UserNotFoundError{}
+		return dtypes.UserData{}, UserNotFoundError{}
 	}
 
 	lastLoginString := ""
@@ -233,17 +233,17 @@ func parseUserQueryRow(row *sql.Row) (UserData, error) {
 		lastLoginString = lastLogin.String
 	}
 
-	return UserData{
-		id,
-		email,
-		userName,
-		firstName,
-		lastName,
-		displayName,
-		password,
-		lastLoginString,
-		isActive,
-		createdAt,
-		updatedAt,
+	return dtypes.UserData{
+		ID:          id,
+		Email:       email,
+		Username:    userName,
+		FirstName:   firstName,
+		LastName:    lastName,
+		DisplayName: displayName,
+		Password:    password,
+		LastLogin:   lastLoginString,
+		IsActive:    isActive,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}, nil
 }

@@ -48,7 +48,7 @@ func TestUserSet(t *testing.T) {
 func TestUserSetFromModel(t *testing.T) {
 	tu := testutil.NewTestUtil(t)
 	user := User{}
-	userDbData := model.UserData{
+	userDbData := dtypes.UserData{
 		Email:       "estecat42069@yahoo.com",
 		Username:    "estecat",
 		FirstName:   "Esteban",

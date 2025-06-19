@@ -16,12 +16,12 @@ import (
 func TestSetFromModel(t *testing.T) {
 	tu := testutil.NewTestUtil(t)
 	post := &Post{}
-	postAuthor := model.PostAuthor{
+	postAuthor := dtypes.PostAuthor{
 		Username:    "estecat",
 		DisplayName: "Bubba",
 		Avatar:      "lazy-cat.png",
 	}
-	postData := model.PostData{
+	postData := dtypes.PostData{
 		ID:            42069,
 		UserID:        69,
 		Content:       "Is it time for dinner yet?",

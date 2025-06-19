@@ -127,7 +127,7 @@ func TestPostGetByID(t *testing.T) {
 	})
 }
 
-func queryPost(id int, db *sql.DB) PostData {
+func queryPost(id int, db *sql.DB) dtypes.PostData {
 	query := `
 		SELECT
 			id,
@@ -160,7 +160,7 @@ func queryPost(id int, db *sql.DB) PostData {
 			&postID, &userID, &content, &likeCount, &retweetCount,
 			&bookmarkCount, &impressions, &image, &createdAt, &updatedAt)
 
-	postData := PostData{
+	postData := dtypes.PostData{
 		ID:            postID,
 		UserID:        userID,
 		Content:       content,
