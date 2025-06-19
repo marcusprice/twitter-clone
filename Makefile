@@ -22,7 +22,7 @@ run-tests:
 loc:
 	find . \( -name '*.go' -o -name '*.sql' \) -type f | xargs wc -l
 
-# run delve debugger with Package::Test i.e. Model::TestTimelineOffsetCount
+# run delve debugger with Package::Test i.e. model::TestTimelineOffsetCount
 debug-test:
 	@./scripts/debug_test.sh $(filter-out $@,$(MAKECMDGOALS))
 

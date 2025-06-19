@@ -6,3 +6,6 @@ debug*
 *.sqlite
 upload/*
 test-upload/*
+
+# exception for the debug test script
+!scripts/debug_test.sh
