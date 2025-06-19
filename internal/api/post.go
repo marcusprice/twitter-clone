@@ -205,27 +205,6 @@ func (postAPI *PostAPI) Bookmark(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func generatePostPayload(post *controller.Post) PostPayload {
-	author := AuthorPayload{
-		Username:    post.Author.Username,
-		DisplayName: post.Author.DisplayName,
-		Avatar:      post.Author.Avatar,
-	}
-
-	return PostPayload{
-		ID:            post.ID,
-		Content:       post.Content,
-		LikeCount:     post.LikeCount,
-		RetweetCount:  post.RetweetCount,
-		BookmarkCount: post.BookmarkCount,
-		Impressions:   post.Impressions,
-		Image:         post.Image,
-		CreatedAt:     post.CreatedAt,
-		UpdatedAt:     post.UpdatedAt,
-		Author:        author,
-	}
-}
-
 func NewPostAPI(postController *controller.Post) *PostAPI {
 	return &PostAPI{postController}
 }

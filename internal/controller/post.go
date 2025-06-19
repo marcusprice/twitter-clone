@@ -2,11 +2,13 @@ package controller
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/model"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
@@ -210,6 +212,14 @@ func (post *Post) UnBookmark(bookmarkerID int) error {
 	}
 
 	return nil
+}
+
+func (post *Post) AddImpression() error {
+	if post.ID == 0 {
+		logger.LogError("Post.AddImpression(): missing postID")
+		return errors.New("postID required")
+	}
+	return post.model.AddImpression(post.ID)
 }
 
 func (post *Post) Sync() error {

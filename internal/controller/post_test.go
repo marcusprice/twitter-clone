@@ -11,6 +11,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
+	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 func TestSetFromModel(t *testing.T) {
@@ -103,8 +104,6 @@ func TestPostNew(t *testing.T) {
 func TestPostByID(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, timestamp time.Time) {
 		tu := testutil.NewTestUtil(t)
-		before := timestamp.Add(-1 * time.Minute)
-		after := timestamp.Add(time.Minute)
 		post := NewPostController(db)
 
 		// unknown ID
@@ -113,6 +112,7 @@ func TestPostByID(t *testing.T) {
 		tu.AssertErrorNotNil(err)
 		tu.AssertTrue(errors.As(err, &postNotFoundErr))
 
+		createdAt, updatedAt := queryAndParsePostTime(1, db)
 		err = post.ByID(1)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(3, post.UserID)
@@ -125,10 +125,8 @@ func TestPostByID(t *testing.T) {
 		tu.AssertEqual(0, post.RetweetCount)
 		tu.AssertEqual(0, post.BookmarkCount)
 		tu.AssertEqual(0, post.Impressions)
-		tu.AssertTrue(post.CreatedAt.After(before))
-		tu.AssertTrue(post.CreatedAt.Before(after))
-		tu.AssertTrue(post.UpdatedAt.After(before))
-		tu.AssertTrue(post.UpdatedAt.Before(after))
+		tu.AssertEqual(createdAt, post.CreatedAt)
+		tu.AssertEqual(updatedAt, post.UpdatedAt)
 		tu.AssertEqual("dalecooper", post.Author.Username)
 		tu.AssertEqual("Coffee Fre@k", post.Author.DisplayName)
 		tu.AssertEqual("", post.Author.Avatar)
@@ -467,4 +465,21 @@ func TestPostSync(t *testing.T) {
 		tu.AssertErrorNil(err)
 		tu.AssertEqual("wazzup!!!", post.Content)
 	})
+}
+
+func queryAndParsePostTime(postID int, db *sql.DB) (time.Time, time.Time) {
+	query := `
+		SELECT created_at, updated_at
+		FROM Post
+		WHERE id = $1;
+	`
+	var created_at string
+	var updated_at string
+
+	err := db.QueryRow(query, postID).Scan(&created_at, &updated_at)
+	if err != nil {
+		panic(err)
+	}
+
+	return util.ParseTime(created_at), util.ParseTime(updated_at)
 }

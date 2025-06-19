@@ -5,7 +5,7 @@ init-test-db:
 	rm -f test-db.sqlite && sqlite3 test-db.sqlite < ./sql/schema.sql && sqlite3 test-db.sqlite < ./sql/seed-data.sql
 
 seed-db:
-	sqlite3 db.sqlite < ./sql/seed-data.sql
+	sqlite3 db.sqlite < ./sql/seed-test-data.sql
 
 build:
 	go build ./cmd/twitter/twitter.go

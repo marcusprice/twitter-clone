@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	_ "embed"
 	"errors"
+	"fmt"
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
@@ -95,6 +97,139 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 	}
 
 	return postData, nil
+}
+
+//go:embed queries/user-timeline-base-query.sql
+var userTimelineBaseQuery string
+
+func (post *PostModel) QueryUserTimeline(userID, limit, offset int) ([]dtypes.PostData, error) {
+	query := userTimelineBaseQuery
+	if limit != 0 {
+		query += " LIMIT $2"
+	}
+
+	if offset != 0 {
+		query += " OFFSET $3"
+	}
+
+	query += ";"
+
+	result, err := post.db.Query(userTimelineBaseQuery, userID)
+	if err != nil {
+		logger.LogError("PostModel.QueryUserTimeline(): query error: " + err.Error())
+		return []dtypes.PostData{}, err
+	}
+
+	ret := []dtypes.PostData{}
+	for result.Next() {
+		var id int
+		var user_id int
+		var content string
+		var like_count int
+		var retweet_count int
+		var bookmark_count int
+		var impressions int
+		var image string
+		var created_at string
+		var updated_at string
+		var user_name string
+		var display_name string
+		var avatar string
+		var count int
+
+		err := result.Scan(
+			&id, &user_id, &content, &like_count, &retweet_count,
+			&bookmark_count, &impressions, &image, &created_at, &updated_at,
+			&user_name, &display_name, &avatar, &count)
+
+		if err != nil {
+			logger.LogError("PostModel.QueryUserTimeline(): error scanning timeline post: " + err.Error())
+			return []dtypes.PostData{}, err
+		}
+
+		postAuthor := dtypes.PostAuthor{
+			Username:    user_name,
+			DisplayName: display_name,
+			Avatar:      avatar,
+		}
+
+		postData := dtypes.PostData{
+			ID:            id,
+			UserID:        user_id,
+			Content:       content,
+			LikeCount:     like_count,
+			RetweetCount:  retweet_count,
+			BookmarkCount: bookmark_count,
+			Impressions:   impressions,
+			Image:         image,
+			CreatedAt:     created_at,
+			UpdatedAt:     updated_at,
+			Author:        postAuthor,
+		}
+
+		ret = append(ret, postData)
+	}
+
+	return ret, nil
+}
+
+//go:embed queries/timeline-offset-count.sql
+var timelineOffsetCountQuery string
+
+func (pm *PostModel) TimelineRemainingPostsCount(userID, limit, offset int) (int, error) {
+	if limit <= 0 {
+		logger.LogError("PostModel.TimelineRemainingPostsCount(): postitive limit value required")
+		return -1, errors.New("Positive limit value required")
+	}
+
+	var count int
+
+	err := pm.db.
+		QueryRow(timelineOffsetCountQuery, userID, limit, offset).
+		Scan(&count)
+
+	if err != nil {
+		logger.LogError("PostModel.OffsetCount() error: " + err.Error())
+		return -1, err
+	}
+
+	remainingPosts := count - (limit + offset)
+	if remainingPosts < 0 {
+		remainingPosts = 0
+	}
+
+	return remainingPosts, nil
+}
+
+//go:embed queries/add-impression.sql
+var addImpressionQuery string
+
+func (postModel *PostModel) AddImpression(postID int) error {
+	result, err := postModel.db.Exec(addImpressionQuery, postID)
+	if err != nil {
+		logMsg := fmt.Sprintf(
+			"Error adding impression for postID: %d, error: %s",
+			postID, err.Error())
+
+		logger.LogError(logMsg)
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logMsg := fmt.Sprintf(
+			"Error adding impression for postID: %d, error: %s",
+			postID, err.Error())
+
+		logger.LogError(logMsg)
+	}
+
+	if rowsAffected == 0 {
+		logMsg := fmt.Sprintf("No rows affected for postID: %d", postID)
+		logger.LogError(logMsg)
+	}
+
+	return nil
 }
 
 func NewPostModel(db *sql.DB) *PostModel {

@@ -76,6 +76,17 @@ func VerifyPostMethod(next http.Handler) http.Handler {
 	})
 }
 
+func VerifyGetMethod(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, MethodNotAllowed, http.StatusMethodNotAllowed)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func AllowMethods(methods []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !slices.Contains(methods, r.Method) {
