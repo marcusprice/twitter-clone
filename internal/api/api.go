@@ -21,6 +21,7 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 	post := controller.NewPostController(db)
 	userAPI := NewUserAPI(user)
 	postAPI := NewPostAPI(post)
+	timelineAPI := NewTimelineAPI(db)
 
 	mux := http.NewServeMux()
 
@@ -49,7 +50,7 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 			VerifyGetMethod(
 				ValidateUser(
 					user,
-					http.HandlerFunc(postAPI.CreatePost)))),
+					http.HandlerFunc(timelineAPI.Get)))),
 	)
 
 	mux.Handle(

@@ -18,17 +18,24 @@ type TimelineAPI struct {
 }
 
 func (timelineAPI *TimelineAPI) Get(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	limitParam := values.Get("limit")
+	offsetParam := values.Get("offset")
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
 
-	values := r.URL.Query()
-	limit, limitErr := strconv.Atoi(values.Get("limit"))
-	offset, offsetErr := strconv.Atoi(values.Get("offset"))
-	if limitErr != nil || offsetErr != nil {
+	limit, limitErr := strconv.Atoi(limitParam)
+	if limitParam == "" || limitErr != nil {
 		http.Error(w, BadRequest, http.StatusBadRequest)
+		return
+	}
+
+	offset, offsetErr := strconv.Atoi(offsetParam)
+	if offsetParam == "" || offsetErr != nil {
+		offset = 0
 	}
 
 	if limit < MAX_LIMIT {
@@ -55,6 +62,7 @@ func (timelineAPI *TimelineAPI) Get(w http.ResponseWriter, r *http.Request) {
 	posts, postsRemaining, err := timeline.GetPosts(limit, offset)
 	if err != nil {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
 	}
 
 	var postPayloads []PostPayload

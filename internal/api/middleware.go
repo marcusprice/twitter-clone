@@ -49,6 +49,7 @@ func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 		if err != nil || !user.IsActive {
 			var userNotFoundError model.UserNotFoundError
 			if err != nil && !errors.As(err, &userNotFoundError) {
+				logger.LogError("user not found?")
 				http.Error(w, InternalServerError, http.StatusInternalServerError)
 			} else {
 				http.Error(w, Unauthorized, http.StatusUnauthorized)

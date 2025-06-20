@@ -3,6 +3,7 @@ project.txt
 .env
 /twitter
 debug*
+*debug*
 *.sqlite
 upload/*
 test-upload/*

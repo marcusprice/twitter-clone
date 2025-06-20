@@ -24,29 +24,30 @@ func (t *Timeline) GetPosts(limit, offset int) (posts []*Post, postsRemaining in
 		return []*Post{}, -1, errors.New("userID required to fetch posts")
 	}
 
-	postRows, err := t.postModel.QueryUserTimeline(t.userID, limit, offset)
+	postRows, postIDs, err := t.postModel.QueryUserTimeline(t.userID, limit, offset)
+	if err != nil {
+		return []*Post{}, -1, err
+	}
+
+	postsRemaining, err = t.postModel.TimelineRemainingPostsCount(t.userID, limit, offset)
+	rowsAffected, _ := t.postModel.AddImpressionBulk(postIDs) // okay to silently fail
+
 	if err != nil {
 		return []*Post{}, -1, err
 	}
 
 	posts = []*Post{}
-
 	for _, row := range postRows {
 		post := &Post{}
 		post.setFromModel(row)
-		post.AddImpression()
+		if rowsAffected == len(postRows) {
+			post.Impressions += 1
+		}
 		posts = append(posts, post)
+		postIDs = append(postIDs, post.ID)
 	}
 
-	postsRemaining, err = t.postModel.TimelineRemainingPostsCount(
-		t.userID, limit, offset,
-	)
-
-	if err != nil {
-		return []*Post{}, -1, err
-	}
-
-	return posts, postsRemaining - limit, nil
+	return posts, postsRemaining, nil
 }
 
 func NewTimelineController(db *sql.DB) *Timeline {

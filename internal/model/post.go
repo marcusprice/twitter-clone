@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
@@ -102,19 +103,18 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 //go:embed queries/user-timeline-query.sql
 var userTimelineBaseQuery string
 
-func (post *PostModel) QueryUserTimeline(userID, limit, offset int) ([]dtypes.PostData, error) {
+func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
 	if limit <= 0 {
 		logger.LogError("PostModel.TimelineRemainingPostsCount(): postitive limit value required")
-		return []dtypes.PostData{}, errors.New("Positive limit value required")
+		return []dtypes.PostData{}, []int{}, errors.New("Positive limit value required")
 	}
 
 	result, err := post.db.Query(userTimelineBaseQuery, userID, limit, offset)
 	if err != nil {
 		logger.LogError("PostModel.QueryUserTimeline(): query error: " + err.Error())
-		return []dtypes.PostData{}, err
+		return []dtypes.PostData{}, []int{}, err
 	}
 
-	ret := []dtypes.PostData{}
 	for result.Next() {
 		var id int
 		var user_id int
@@ -137,7 +137,7 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) ([]dtypes.Po
 
 		if err != nil {
 			logger.LogError("PostModel.QueryUserTimeline(): error scanning timeline post: " + err.Error())
-			return []dtypes.PostData{}, err
+			return []dtypes.PostData{}, []int{}, err
 		}
 
 		postAuthor := dtypes.PostAuthor{
@@ -160,10 +160,12 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) ([]dtypes.Po
 			Author:        postAuthor,
 		}
 
-		ret = append(ret, postData)
+		postIDs = append(postIDs, id)
+
+		postRows = append(postRows, postData)
 	}
 
-	return ret, nil
+	return postRows, postIDs, nil
 }
 
 //go:embed queries/timeline-offset-count.sql
@@ -223,6 +225,39 @@ func (postModel *PostModel) AddImpression(postID int) error {
 	}
 
 	return nil
+}
+
+//go:embed queries/add-impression-bulk.sql
+var addImpressionBulkQuery string
+
+func (postModel *PostModel) AddImpressionBulk(postIDs []int) (rowsAffected int, err error) {
+	var idStrings string
+	for index, id := range postIDs {
+		if index == 0 {
+			idStrings += strconv.Itoa(id)
+		} else {
+			idStrings += fmt.Sprintf(", %d", id)
+		}
+	}
+
+	query := fmt.Sprintf(addImpressionBulkQuery, idStrings)
+
+	result, err := postModel.db.Exec(query)
+	if err != nil {
+		return -1, err
+	}
+
+	ra, err := result.RowsAffected()
+	if err != nil {
+		return -1, err
+	}
+
+	if ra == 0 {
+		logger.LogError("PostModel.AddImpressionBulk(): no rows affected")
+		return -1, errors.New("no rows affected")
+	}
+
+	return int(ra), nil
 }
 
 func NewPostModel(db *sql.DB) *PostModel {
