@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/testutil"
+	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 func TestTimelineOffsetCount(t *testing.T) {
@@ -71,6 +72,51 @@ func TestTimelineOffsetCount(t *testing.T) {
 		count, err = PostModel.TimelineRemainingPostsCount(user1.ID, 15, 45)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(0, count)
+	})
+}
+
+func TestQueryUserTimeline(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
+		tu := testutil.NewTestUtil(t)
+		postModel := PostModel{db}
+		user1 := queryUser(1, db)
+		insertUserFollow(user1.ID, 2, db)
+		insertUserFollow(user1.ID, 3, db)
+		insertUserFollow(user1.ID, 4, db)
+
+		posts, err := postModel.QueryUserTimeline(user1.ID, 0, 0)
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual("Positive limit value required", err.Error())
+		tu.AssertEqual(0, len(posts))
+
+		posts, err = postModel.QueryUserTimeline(user1.ID, -42069, 0)
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual("Positive limit value required", err.Error())
+		tu.AssertEqual(0, len(posts))
+
+		posts, err = postModel.QueryUserTimeline(user1.ID, 10, 0)
+		post1CreatedAt := util.ParseTime(posts[0].CreatedAt)
+		post10CreatedAt := util.ParseTime(posts[9].CreatedAt)
+		post1 := posts[0]
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(10, len(posts))
+		tu.AssertTrue(post1CreatedAt.After(post10CreatedAt))
+		tu.AssertEqual(44, post1.ID)
+		tu.AssertEqual(2, post1.UserID)
+		tu.AssertEqual("waveform-cave.jpg", post1.Image)
+		tu.AssertEqual("", post1.Content)
+		tu.AssertEqual(0, post1.LikeCount)
+		tu.AssertEqual(0, post1.RetweetCount)
+		tu.AssertEqual(0, post1.BookmarkCount)
+		tu.AssertEqual(0, post1.Impressions)
+
+		posts, err = postModel.QueryUserTimeline(user1.ID, 10, 10)
+		post11CreatedAt := util.ParseTime(posts[0].CreatedAt)
+		post20CreatedAt := util.ParseTime(posts[9].CreatedAt)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(10, len(posts))
+		tu.AssertTrue(post10CreatedAt.After(post11CreatedAt))
+		tu.AssertTrue(post11CreatedAt.After(post20CreatedAt))
 	})
 }
 

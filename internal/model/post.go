@@ -99,22 +99,16 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 	return postData, nil
 }
 
-//go:embed queries/user-timeline-base-query.sql
+//go:embed queries/user-timeline-query.sql
 var userTimelineBaseQuery string
 
 func (post *PostModel) QueryUserTimeline(userID, limit, offset int) ([]dtypes.PostData, error) {
-	query := userTimelineBaseQuery
-	if limit != 0 {
-		query += " LIMIT $2"
+	if limit <= 0 {
+		logger.LogError("PostModel.TimelineRemainingPostsCount(): postitive limit value required")
+		return []dtypes.PostData{}, errors.New("Positive limit value required")
 	}
 
-	if offset != 0 {
-		query += " OFFSET $3"
-	}
-
-	query += ";"
-
-	result, err := post.db.Query(userTimelineBaseQuery, userID)
+	result, err := post.db.Query(userTimelineBaseQuery, userID, limit, offset)
 	if err != nil {
 		logger.LogError("PostModel.QueryUserTimeline(): query error: " + err.Error())
 		return []dtypes.PostData{}, err
@@ -135,12 +129,11 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) ([]dtypes.Po
 		var user_name string
 		var display_name string
 		var avatar string
-		var count int
 
 		err := result.Scan(
 			&id, &user_id, &content, &like_count, &retweet_count,
 			&bookmark_count, &impressions, &image, &created_at, &updated_at,
-			&user_name, &display_name, &avatar, &count)
+			&user_name, &display_name, &avatar)
 
 		if err != nil {
 			logger.LogError("PostModel.QueryUserTimeline(): error scanning timeline post: " + err.Error())
