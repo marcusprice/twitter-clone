@@ -197,9 +197,7 @@ func (pm *PostModel) TimelineRemainingPostsCount(userID, limit, offset int) (int
 	}
 
 	remainingPosts := count - (limit + offset)
-	if remainingPosts < 0 {
-		remainingPosts = 0
-	}
+	remainingPosts = max(remainingPosts, 0)
 
 	return remainingPosts, nil
 }
