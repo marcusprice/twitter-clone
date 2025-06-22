@@ -24,5 +24,5 @@ FROM
 WHERE
     FollowedUsers.follower_id IS NOT NULL OR RetweetedUsers.follower_id IS NOT NULL
 ORDER BY 
-    Post.created_at DESC
+    COALESCE(PostRetweet.created_at, Post.created_at) DESC
 LIMIT $2 OFFSET $3;
