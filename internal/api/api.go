@@ -59,7 +59,7 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 		"/api/v1/user/create",
 		Logger(
 			VerifyPostMethod(
-				http.HandlerFunc(userAPI.CreateUser))),
+				http.HandlerFunc(userAPI.Create))),
 	)
 
 	mux.Handle(
@@ -85,7 +85,7 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 			VerifyPostMethod(
 				ValidateUser(
 					user,
-					http.HandlerFunc(postAPI.CreatePost)))),
+					http.HandlerFunc(postAPI.Create)))),
 	)
 
 	mux.Handle(

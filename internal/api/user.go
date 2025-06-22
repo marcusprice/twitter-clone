@@ -16,7 +16,7 @@ type UserAPI struct {
 	user *controller.User
 }
 
-func (userAPI UserAPI) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (userAPI UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 	var userInput dtypes.UserInput
 	err := json.NewDecoder(r.Body).Decode(&userInput)
 

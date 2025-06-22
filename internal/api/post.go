@@ -18,7 +18,7 @@ type PostAPI struct {
 	post *controller.Post
 }
 
-func (postAPI PostAPI) CreatePost(w http.ResponseWriter, r *http.Request) {
+func (postAPI PostAPI) Create(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
