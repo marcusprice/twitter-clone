@@ -77,7 +77,7 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 		}
 	}
 
-	postAuthor := dtypes.PostAuthor{
+	postAuthor := dtypes.Author{
 		Username:    username,
 		DisplayName: displayName,
 		Avatar:      avatar,
@@ -143,13 +143,13 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 			return []dtypes.PostData{}, []int{}, err
 		}
 
-		postAuthor := dtypes.PostAuthor{
+		postAuthor := dtypes.Author{
 			Username:    author_user_name,
 			DisplayName: author_display_name,
 			Avatar:      author_avatar,
 		}
 
-		postRetweeter := dtypes.PostRetweeter{
+		postRetweeter := dtypes.Retweeter{
 			Username:    retweeter_user_name_ns.String,
 			DisplayName: retweeter_display_name_ns.String,
 		}

@@ -49,7 +49,14 @@ paths:
         content: 
           application/json:
             schema: 
-              $ref: '#/components/schemas/UserInput'
+              type: object
+              properties:
+                email:
+                  type: string
+                username:
+                  type: string
+                password:
+                  type: string
       responses:
         "500":
           description: internal server error

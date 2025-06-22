@@ -30,7 +30,11 @@ func (t *Timeline) GetPosts(limit, offset int) (posts []*Post, postsRemaining in
 	}
 
 	postsRemaining, err = t.postModel.TimelineRemainingPostsCount(t.userID, limit, offset)
-	rowsAffected, _ := t.postModel.AddImpressionBulk(postIDs) // okay to silently fail
+
+	rowsAffected := 0
+	if len(postRows) > 0 {
+		rowsAffected, _ = t.postModel.AddImpressionBulk(postIDs) // okay to silently fail
+	}
 
 	if err != nil {
 		return []*Post{}, -1, err

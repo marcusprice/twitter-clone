@@ -15,6 +15,14 @@ type PostInput struct {
 	Image   string
 }
 
+type CommentInput struct {
+	UserID          int
+	PostID          int
+	ParentCommentID int
+	Content         string
+	Image           string
+}
+
 type UserData struct {
 	ID          int
 	Email       string
@@ -29,9 +37,15 @@ type UserData struct {
 	UpdatedAt   string
 }
 
+type Author struct {
+	Username    string
+	DisplayName string
+	Avatar      string
+}
+
 type PostData struct {
-	Author        PostAuthor
-	Retweeter     PostRetweeter
+	Author        Author
+	Retweeter     Retweeter
 	ID            int
 	UserID        int
 	Content       string
@@ -44,13 +58,25 @@ type PostData struct {
 	UpdatedAt     string
 }
 
-type PostAuthor struct {
-	Username    string
-	DisplayName string
-	Avatar      string
+type CommentData struct {
+	Author          Author
+	Retweeter       Retweeter
+	ID              int
+	PostID          int
+	UserID          int
+	Depth           int
+	ParentCommentID int
+	Content         string
+	LikeCount       int
+	RetweetCount    int
+	BookmarkCount   int
+	Impressions     int
+	Image           string
+	CreatedAt       string
+	UpdatedAt       string
 }
 
-type PostRetweeter struct {
+type Retweeter struct {
 	Username    string
 	DisplayName string
 }

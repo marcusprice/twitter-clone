@@ -20,6 +20,12 @@ type UserPayload struct {
 	DisplayName string `json:"displayName"`
 }
 
+type AuthorPayload struct {
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+	Avatar      string `json:"avatar"`
+}
+
 type PostPayload struct {
 	ID                   int           `json:"postID"`
 	Content              string        `json:"content"`
@@ -34,12 +40,6 @@ type PostPayload struct {
 	IsRetweet            bool          `json:"isRetweet"`
 	RetweeterUsername    string        `json:"retweeterUsername"`
 	RetweeterDisplayName string        `json:"retweeterDisplayName"`
-}
-
-type AuthorPayload struct {
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
-	Avatar      string `json:"avatar"`
 }
 
 func generatePostPayload(post *controller.Post) PostPayload {
@@ -60,8 +60,52 @@ func generatePostPayload(post *controller.Post) PostPayload {
 		CreatedAt:            post.CreatedAt,
 		UpdatedAt:            post.UpdatedAt,
 		Author:               author,
-		IsRetweet:            post.PostRetweeter.Username != "",
-		RetweeterUsername:    post.PostRetweeter.Username,
-		RetweeterDisplayName: post.PostRetweeter.DisplayName,
+		IsRetweet:            post.Retweeter.Username != "",
+		RetweeterUsername:    post.Retweeter.Username,
+		RetweeterDisplayName: post.Retweeter.DisplayName,
+	}
+}
+
+type CommentPayload struct {
+	ID                   int           `json:"commentID"`
+	PostID               int           `json:"postID"`
+	ParentCommentID      int           `json:"parentCommentID"`
+	Content              string        `json:"content"`
+	LikeCount            int           `json:"likeCount"`
+	RetweetCount         int           `json:"retweetCount"`
+	BookmarkCount        int           `json:"bookmarkCount"`
+	Impressions          int           `json:"impressions"`
+	Image                string        `json:"image"`
+	CreatedAt            time.Time     `json:"createdAt"`
+	UpdatedAt            time.Time     `json:"updatedAt"`
+	Author               AuthorPayload `json:"author"`
+	IsRetweet            bool          `json:"isRetweet"`
+	RetweeterUsername    string        `json:"retweeterUsername"`
+	RetweeterDisplayName string        `json:"retweeterDisplayName"`
+}
+
+func generateCommentPayload(comment *controller.Comment) *CommentPayload {
+	author := AuthorPayload{
+		Username:    comment.Author.Username,
+		DisplayName: comment.Author.DisplayName,
+		Avatar:      comment.Author.Avatar,
+	}
+
+	return &CommentPayload{
+		ID:                   comment.ID,
+		PostID:               comment.PostID,
+		ParentCommentID:      comment.ParentCommentID,
+		Content:              comment.Content,
+		LikeCount:            comment.LikeCount,
+		RetweetCount:         comment.RetweetCount,
+		BookmarkCount:        comment.BookmarkCount,
+		Impressions:          comment.Impressions,
+		Image:                comment.Image,
+		CreatedAt:            comment.CreatedAt,
+		UpdatedAt:            comment.UpdatedAt,
+		IsRetweet:            comment.IsRetweet,
+		RetweeterUsername:    comment.RetweeterUsername,
+		RetweeterDisplayName: comment.RetweeterDisplayName,
+		Author:               author,
 	}
 }
