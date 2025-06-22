@@ -7,44 +7,6 @@ servers:
   - url: /api/v1
 
 paths:
-  /timeline:
-    get:
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: limit
-          in: query
-          description: maximum number of posts to return
-          required: false
-          schema:
-            type: integer
-        - name: offset
-          in: query
-          description: number of posts to offset by
-          required: false
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: successfully retreived timeline posts
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  hasMore:
-                    type: boolean
-                  posts:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        postID:
-                          type: integer
-                        content:
-                          type: string
-                        image:
-                          type: string
   /user/create:
     post:
       description: Creates a new user
@@ -157,6 +119,44 @@ paths:
           description: bad request
         "204":
           description: user successfully unfollowed
+  /timeline:
+    get:
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: number of posts to offset by
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: successfully retreived timeline posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasMore:
+                    type: boolean
+                  posts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        postID:
+                          type: integer
+                        content:
+                          type: string
+                        image:
+                          type: string
   /post/create:
     post:
       security:
