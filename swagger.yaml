@@ -157,6 +157,35 @@ paths:
                           type: string
                         image:
                           type: string
+                        likeCount:
+                          type: integer
+                        retweetCount:
+                          type: integer
+                        bookmarkCount:
+                          type: integer
+                        impressions:
+                          type: integer
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                        isRetweet:
+                          type: boolean
+                        retweeterUsername:
+                          type: string
+                        retweeterDisplayName:
+                          type: string
+                        author:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            displayName:
+                              type: string
+                            avatar:
+                              type: string
   /post/create:
     post:
       security:
