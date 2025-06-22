@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/testhelpers"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
@@ -84,17 +86,20 @@ func TestQueryUserTimeline(t *testing.T) {
 		insertUserFollow(user1.ID, 3, db)
 		insertUserFollow(user1.ID, 4, db)
 
-		posts, err := postModel.QueryUserTimeline(user1.ID, 0, 0)
+		posts, postIDs, err := postModel.QueryUserTimeline(user1.ID, 0, 0)
 		tu.AssertErrorNotNil(err)
 		tu.AssertEqual("Positive limit value required", err.Error())
 		tu.AssertEqual(0, len(posts))
+		tu.AssertEqual(0, len(postIDs))
 
-		posts, err = postModel.QueryUserTimeline(user1.ID, -42069, 0)
+		posts, postIDs, err = postModel.QueryUserTimeline(user1.ID, -42069, 0)
 		tu.AssertErrorNotNil(err)
 		tu.AssertEqual("Positive limit value required", err.Error())
 		tu.AssertEqual(0, len(posts))
+		tu.AssertEqual(0, len(postIDs))
 
-		posts, err = postModel.QueryUserTimeline(user1.ID, 10, 0)
+		// TODO: Add tests for postIDs
+		posts, _, err = postModel.QueryUserTimeline(user1.ID, 10, 0)
 		post1CreatedAt := util.ParseTime(posts[0].CreatedAt)
 		post10CreatedAt := util.ParseTime(posts[9].CreatedAt)
 		post1 := posts[0]
@@ -110,13 +115,43 @@ func TestQueryUserTimeline(t *testing.T) {
 		tu.AssertEqual(0, post1.BookmarkCount)
 		tu.AssertEqual(0, post1.Impressions)
 
-		posts, err = postModel.QueryUserTimeline(user1.ID, 10, 10)
+		posts, _, err = postModel.QueryUserTimeline(user1.ID, 10, 10)
 		post11CreatedAt := util.ParseTime(posts[0].CreatedAt)
 		post20CreatedAt := util.ParseTime(posts[9].CreatedAt)
 		tu.AssertErrorNil(err)
 		tu.AssertEqual(10, len(posts))
 		tu.AssertTrue(post10CreatedAt.After(post11CreatedAt))
 		tu.AssertTrue(post11CreatedAt.After(post20CreatedAt))
+	})
+}
+
+func TestQueryUserTimelineWithRetweet(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
+		tu := testutil.NewTestUtil(t)
+		postModel := NewPostModel(db)
+
+		user1 := testhelpers.QueryUser(1, db)
+		user2 := testhelpers.QueryUser(2, db)
+		user3 := testhelpers.QueryUser(3, db)
+		testhelpers.CreateUserFollows(user1.ID, user2.ID, db)
+
+		newPost := dtypes.PostInput{
+			Content: "Strawberry fields forever",
+			Image:   "strawberries.jpeg",
+			UserID:  user3.ID,
+		}
+		postID := testhelpers.CreatePost(newPost, db)
+		testhelpers.CreateRetweet(postID, user2.ID, db)
+		retweetedPost := queryPost(postID, db)
+
+		posts, postIDs, err := postModel.QueryUserTimeline(user1.ID, 10, 0)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(user3.ID, posts[0].UserID)
+		tu.AssertEqual(retweetedPost.Content, posts[0].Content)
+		tu.AssertEqual(retweetedPost.Image, posts[0].Image)
+		tu.AssertEqual(retweetedPost.ID, postIDs[0])
+		tu.AssertEqual(user2.Username, posts[0].Retweeter.Username)
+		tu.AssertEqual(user2.DisplayName, posts[0].Retweeter.DisplayName)
 	})
 }
 

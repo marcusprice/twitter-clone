@@ -31,6 +31,7 @@ type UserData struct {
 
 type PostData struct {
 	Author        PostAuthor
+	Retweeter     PostRetweeter
 	ID            int
 	UserID        int
 	Content       string
@@ -47,6 +48,11 @@ type PostAuthor struct {
 	Username    string
 	DisplayName string
 	Avatar      string
+}
+
+type PostRetweeter struct {
+	Username    string
+	DisplayName string
 }
 
 type IdentifierAlreadyExistsError struct{}

@@ -126,14 +126,17 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 		var image string
 		var created_at string
 		var updated_at string
-		var user_name string
-		var display_name string
-		var avatar string
+		var author_user_name string
+		var author_display_name string
+		var author_avatar string
+		var retweeter_user_name_ns sql.NullString
+		var retweeter_display_name_ns sql.NullString
 
 		err := result.Scan(
 			&id, &user_id, &content, &like_count, &retweet_count,
 			&bookmark_count, &impressions, &image, &created_at, &updated_at,
-			&user_name, &display_name, &avatar)
+			&author_user_name, &author_display_name, &author_avatar,
+			&retweeter_user_name_ns, &retweeter_display_name_ns)
 
 		if err != nil {
 			logger.LogError("PostModel.QueryUserTimeline(): error scanning timeline post: " + err.Error())
@@ -141,9 +144,14 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 		}
 
 		postAuthor := dtypes.PostAuthor{
-			Username:    user_name,
-			DisplayName: display_name,
-			Avatar:      avatar,
+			Username:    author_user_name,
+			DisplayName: author_display_name,
+			Avatar:      author_avatar,
+		}
+
+		postRetweeter := dtypes.PostRetweeter{
+			Username:    retweeter_user_name_ns.String,
+			DisplayName: retweeter_display_name_ns.String,
 		}
 
 		postData := dtypes.PostData{
@@ -158,10 +166,10 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 			CreatedAt:     created_at,
 			UpdatedAt:     updated_at,
 			Author:        postAuthor,
+			Retweeter:     postRetweeter,
 		}
 
 		postIDs = append(postIDs, id)
-
 		postRows = append(postRows, postData)
 	}
 

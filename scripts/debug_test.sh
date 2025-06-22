@@ -13,11 +13,12 @@ fi
 pkg="${input%%::*}"
 test_name="${input##*::}"
 
-     # Map package name to path
-     case "$pkg" in
-         model) path="./internal/model" ;;
-         *) echo "Unknown package: $pkg" && exit 1 ;;
-     esac
+case "$pkg" in
+    model) path="./internal/model" ;;
+    controller) path="./internal/controller" ;;
+    api) path="./internal/api" ;;
+    *) echo "Unknown package: $pkg" && exit 1 ;;
+esac
 
 # Run delve with the extracted path and test name
 dlv test "$path" -- -test.run "^$test_name"
