@@ -21,16 +21,19 @@ type UserPayload struct {
 }
 
 type PostPayload struct {
-	ID            int           `json:"postID"`
-	Content       string        `json:"content"`
-	LikeCount     int           `json:"likeCount"`
-	RetweetCount  int           `json:"retweetCount"`
-	BookmarkCount int           `json:"bookmarkCount"`
-	Impressions   int           `json:"impressions"`
-	Image         string        `json:"image"`
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
-	Author        AuthorPayload `json:"author"`
+	ID                   int           `json:"postID"`
+	Content              string        `json:"content"`
+	LikeCount            int           `json:"likeCount"`
+	RetweetCount         int           `json:"retweetCount"`
+	BookmarkCount        int           `json:"bookmarkCount"`
+	Impressions          int           `json:"impressions"`
+	Image                string        `json:"image"`
+	CreatedAt            time.Time     `json:"createdAt"`
+	UpdatedAt            time.Time     `json:"updatedAt"`
+	Author               AuthorPayload `json:"author"`
+	IsRetweet            bool          `json:"isRetweet"`
+	RetweeterUsername    string        `json:"retweeterUsername"`
+	RetweeterDisplayName string        `json:"retweeterDisplayName"`
 }
 
 type AuthorPayload struct {
@@ -47,15 +50,18 @@ func generatePostPayload(post *controller.Post) PostPayload {
 	}
 
 	return PostPayload{
-		ID:            post.ID,
-		Content:       post.Content,
-		LikeCount:     post.LikeCount,
-		RetweetCount:  post.RetweetCount,
-		BookmarkCount: post.BookmarkCount,
-		Impressions:   post.Impressions,
-		Image:         post.Image,
-		CreatedAt:     post.CreatedAt,
-		UpdatedAt:     post.UpdatedAt,
-		Author:        author,
+		ID:                   post.ID,
+		Content:              post.Content,
+		LikeCount:            post.LikeCount,
+		RetweetCount:         post.RetweetCount,
+		BookmarkCount:        post.BookmarkCount,
+		Impressions:          post.Impressions,
+		Image:                post.Image,
+		CreatedAt:            post.CreatedAt,
+		UpdatedAt:            post.UpdatedAt,
+		Author:               author,
+		IsRetweet:            post.PostRetweeter.Username != "",
+		RetweeterUsername:    post.PostRetweeter.Username,
+		RetweeterDisplayName: post.PostRetweeter.DisplayName,
 	}
 }

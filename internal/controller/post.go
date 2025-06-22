@@ -31,6 +31,7 @@ type Post struct {
 		DisplayName string
 		Avatar      string
 	}
+	dtypes.PostRetweeter
 }
 
 func (p *Post) setFromModel(postData dtypes.PostData) {
@@ -47,6 +48,8 @@ func (p *Post) setFromModel(postData dtypes.PostData) {
 	p.Author.Username = postData.Author.Username
 	p.Author.DisplayName = postData.Author.DisplayName
 	p.Author.Avatar = postData.Author.Avatar
+	p.PostRetweeter.Username = postData.Retweeter.Username
+	p.PostRetweeter.DisplayName = postData.Retweeter.DisplayName
 }
 
 func (post *Post) New(postInput dtypes.PostInput) error {
