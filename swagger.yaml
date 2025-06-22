@@ -373,6 +373,31 @@ paths:
           description: bad request
         "204":
           description: post successfully unbookmarked
+  /comment/create:
+    post:
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                image:
+                  type: string
+                  format: binary
+                postID:
+                  description: parent post ID
+                  type: integer
+                parentCommentID:
+                  description: parent comment ID (if comment reply)
+                  type: integer
+      responses:
+        "200":
+          description: "Status ok"
 components:
   securitySchemes:
     bearerAuth:

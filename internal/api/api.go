@@ -19,8 +19,10 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 	user := controller.NewUserController(db)
 	post := controller.NewPostController(db)
+	comment := controller.NewCommentController(db)
 	userAPI := NewUserAPI(user)
 	postAPI := NewPostAPI(post)
+	commentAPI := NewCommentAPI(comment)
 	timelineAPI := NewTimelineAPI(db)
 
 	mux := http.NewServeMux()
@@ -114,6 +116,15 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 				ValidateUser(
 					user,
 					http.HandlerFunc(postAPI.Bookmark)))),
+	)
+
+	mux.Handle(
+		"/api/v1/comment/create",
+		Logger(
+			VerifyPostMethod(
+				ValidateUser(
+					user,
+					http.HandlerFunc(commentAPI.Create)))),
 	)
 
 	return mux

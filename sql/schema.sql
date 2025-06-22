@@ -63,11 +63,11 @@ CREATE TABLE Post (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     content TEXT NOT NULL,
+    image TEXT DEFAULT '',
     like_count INTEGER DEFAULT 0,
     retweet_count INTEGER DEFAULT 0,
     bookmark_count INTEGER DEFAULT 0,
     impressions INTEGER DEFAULT 0,
-    image TEXT DEFAULT '',
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp,
 
@@ -117,12 +117,13 @@ CREATE TABLE PostBookmark (
 CREATE TABLE Comment (
     id INTEGER PRIMARY KEY,
     content TEXT,
+    image TEXT,
     like_count INTEGER DEFAULT 0,
     retweet_count INTEGER DEFAULT 0,
     bookmark_count INTEGER DEFAULT 0,
     impressions INTEGER DEFAULT 0,
-    post_id INTEGER,
-    user_id INTEGER,
+    post_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     parent_comment_id INTEGER,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp,
@@ -131,6 +132,7 @@ CREATE TABLE Comment (
     FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE,
     FOREIGN KEY (parent_comment_id) REFERENCES Comment (id) ON DELETE CASCADE
 
+    CHECK (content != '' OR image != ''),
     CHECK (like_count >= 0),
     CHECK (retweet_count >= 0),
     CHECK (bookmark_count >= 0)
