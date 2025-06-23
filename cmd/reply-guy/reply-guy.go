@@ -10,6 +10,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/replyqueue"
+	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 func ReplyGuyHandler(replyQueue *replyqueue.ReplyQueue) http.HandlerFunc {
@@ -22,6 +23,8 @@ func ReplyGuyHandler(replyQueue *replyqueue.ReplyQueue) http.HandlerFunc {
 }
 
 func main() {
+	util.LoadEnvVariables()
+
 	replyQueue := replyqueue.NewReplyQueue()
 	replyQueue.StartWorker()
 
