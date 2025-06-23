@@ -1,5 +1,7 @@
 package dtypes
 
+import "time"
+
 type UserInput struct {
 	Email       string `json:"email"`
 	Username    string `json:"username"`
@@ -85,4 +87,27 @@ type IdentifierAlreadyExistsError struct{}
 
 func (_ IdentifierAlreadyExistsError) Error() string {
 	return "Username or email already exists"
+}
+
+type ModelResponse struct {
+	Model              string    `json:"model"`
+	CreatedAt          time.Time `json:"created_at"`
+	Response           string    `json:"response"`
+	Done               bool      `json:"done"`
+	DoneReason         string    `json:"done_reason"`
+	Context            []int     `json:"context"`
+	TotalDuration      int64     `json:"total_duration"`
+	LoadDuration       int       `json:"load_duration"`
+	PromptEvalCount    int       `json:"prompt_eval_count"`
+	PromptEvalDuration int64     `json:"prompt_eval_duration"`
+	EvalCount          int       `json:"eval_count"`
+	EvalDuration       int       `json:"eval_duration"`
+}
+
+type ReplyGuyRequest struct {
+	Model             string `json:"model"`
+	Prompt            string `json:"prompt"`
+	RequesterUsername string `json:"requesterUsername"`
+	PostID            int    `json:"postID"`
+	ParentCommentID   int    `json:"parentCommentID"`
 }
