@@ -40,15 +40,15 @@ To run all services (requires ollama to be installed and configured):
 $ make run-all
 ```
 
-### api documentation
 Logs share the same standard output with service prefix.
+
+### api documentation
 
 In development mode, swagger api documentation is available at 
 http://address:port/docs i.e.
 ```
 http://localhost:42069/docs
 ```
-
 
 ### debugging
 
