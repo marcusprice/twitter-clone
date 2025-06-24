@@ -2,8 +2,10 @@ package controller
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/client"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/model"
@@ -20,6 +22,7 @@ const DEPTH_LIMIT = 1
 
 type Comment struct {
 	model           *model.CommentModel
+	replyGuy        *client.ReplyGuyClient
 	ID              int
 	PostID          int
 	ParentCommentID int
@@ -89,10 +92,27 @@ func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) 
 	newComment := &Comment{}
 	newComment.setFromModel(commentData)
 
+	for _, guy := range comment.replyGuy.GetReplyGuys() {
+		if strings.Contains(newComment.Content, guy) {
+			replyGuyRequest := dtypes.ReplyGuyRequest{
+				PostID:            newComment.PostID,
+				ParentCommentID:   newComment.ParentCommentID,
+				RequesterUsername: newComment.Author.Username,
+				Model:             strings.TrimPrefix(guy, "@"),
+				Prompt:            newComment.Content,
+			}
+			err = comment.replyGuy.RequestReply(replyGuyRequest)
+			if err != nil {
+				logger.LogError("Comment.New() error with reply guy request: " + err.Error())
+			}
+		}
+	}
+
 	return newComment, nil
 }
 
 func NewCommentController(db *sql.DB) *Comment {
-	commentModel := model.NewCommentModel(db)
-	return &Comment{model: commentModel}
+	replyGuy := client.NewReplyGuyClient()
+	model := model.NewCommentModel(db)
+	return &Comment{model: model, replyGuy: replyGuy}
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
@@ -23,12 +24,24 @@ func (cc *CoreClient) PostComment(postID, parentCommentID int, content string) (
 	fields["postID"] = fmt.Sprintf("%d", postID)
 	fields["parentCommentID"] = fmt.Sprintf("%d", parentCommentID)
 
-	requestBody, err := util.GenerateMultipartForm(fields)
+	requestBody, contentType, err := util.GenerateMultipartForm(fields)
+	if err != nil {
+		logger.LogError("CoreClient.PostComment() error generating multipart form: " + err.Error())
+		return &http.Response{}, err
+	}
 	request, err := http.NewRequest(
 		http.MethodPost,
-		fmt.Sprintf("%s:%s/%s", cc.host, cc.port, COMMENT_API_ENDPOINT),
+		fmt.Sprintf("http://%s:%s%s", cc.host, cc.port, COMMENT_API_ENDPOINT),
 		requestBody)
+
+	if err != nil {
+		logger.LogError("CoreClient.PostComment() error creating new request: " + err.Error())
+		return &http.Response{}, err
+	}
+
 	request.Header.Set("Authorization", "Bearer "+cc.authToken)
+	request.Header.Set("Content-Type", contentType)
+
 	apiResponse, err := cc.client.Do(request)
 	if err != nil {
 		return &http.Response{}, err

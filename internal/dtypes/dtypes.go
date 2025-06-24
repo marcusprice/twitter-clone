@@ -110,4 +110,5 @@ type ReplyGuyRequest struct {
 	RequesterUsername string `json:"requesterUsername"`
 	PostID            int    `json:"postID"`
 	ParentCommentID   int    `json:"parentCommentID"`
+	Stream            bool   `json:"stream"`
 }

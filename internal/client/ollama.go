@@ -11,6 +11,8 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/logger"
 )
 
+const GENERATE_ENDPOINT = "/api/generate"
+
 type OllamaClient struct {
 	host   string
 	port   string
@@ -18,6 +20,7 @@ type OllamaClient struct {
 }
 
 func (oc OllamaClient) Prompt(job dtypes.ReplyGuyRequest) (dtypes.ModelResponse, error) {
+	job.Stream = false
 	payload, err := json.Marshal(job)
 	if err != nil {
 		logger.LogError("OllamaClient.Prompt() error marshalling payload: " + err.Error())
@@ -25,7 +28,7 @@ func (oc OllamaClient) Prompt(job dtypes.ReplyGuyRequest) (dtypes.ModelResponse,
 	}
 
 	resp, err := http.Post(
-		fmt.Sprintf("%s:%s", oc.host, oc.port),
+		fmt.Sprintf("http://%s:%s%s", oc.host, oc.port, GENERATE_ENDPOINT),
 		"application/json",
 		bytes.NewReader(payload))
 

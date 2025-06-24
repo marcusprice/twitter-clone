@@ -1,6 +1,7 @@
 package replyqueue
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/marcusprice/twitter-clone/internal/api"
@@ -47,10 +48,19 @@ func (rq *ReplyQueue) StartWorker() {
 }
 
 func (rq *ReplyQueue) process(job dtypes.ReplyGuyRequest) error {
+	logger.LogInfo(
+		fmt.Sprintf(
+			"ReplyQueue.process() new processes request for postID: %d",
+			job.PostID))
+
 	modelResponse, err := rq.ollamaClient.Prompt(job)
 	if err != nil {
 		return err
 	}
+	logger.LogInfo(
+		fmt.Sprintf(
+			"ReplyQueue.process() model response: %s",
+			modelResponse.Response))
 
 	resp, err := rq.coreClient.PostComment(
 		job.PostID, job.ParentCommentID, modelResponse.Response)
@@ -74,9 +84,14 @@ func NewReplyQueue() *ReplyQueue {
 	}
 
 	coreClient := client.NewCoreClient(dalecooperJWT)
+	ollamaClient := client.NewOllamaClient()
 	jobs := make([]dtypes.ReplyGuyRequest, 0, 100)
 
-	replyQueue := &ReplyQueue{jobs: jobs, coreClient: coreClient}
+	replyQueue := &ReplyQueue{
+		jobs:         jobs,
+		coreClient:   coreClient,
+		ollamaClient: ollamaClient,
+	}
 	replyQueue.cond = sync.NewCond(&replyQueue.lock)
 
 	return replyQueue
