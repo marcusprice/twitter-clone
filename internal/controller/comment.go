@@ -22,9 +22,11 @@ const DEPTH_LIMIT = 1
 
 type Comment struct {
 	model           *model.CommentModel
+	post            *Post
 	replyGuy        *client.ReplyGuyClient
 	ID              int
 	PostID          int
+	Depth           int
 	ParentCommentID int
 	Content         string
 	LikeCount       int
@@ -44,6 +46,16 @@ type Comment struct {
 	RetweeterDisplayName string
 }
 
+func (comment *Comment) ByID(commentID int) (*Comment, error) {
+	queriedComment := &Comment{}
+	commentData, err := comment.model.GetByID(commentID)
+	if err != nil {
+		return &Comment{}, err
+	}
+	queriedComment.setFromModel(commentData)
+	return queriedComment, nil
+}
+
 func (comment *Comment) setFromModel(commentData dtypes.CommentData) {
 	comment.ID = commentData.ID
 	comment.PostID = commentData.PostID
@@ -59,6 +71,7 @@ func (comment *Comment) setFromModel(commentData dtypes.CommentData) {
 	comment.Author.Username = commentData.Author.Username
 	comment.Author.DisplayName = commentData.Author.DisplayName
 	comment.Author.Avatar = commentData.Author.Avatar
+	comment.Depth = commentData.Depth
 }
 
 func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) {
@@ -94,12 +107,33 @@ func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) 
 
 	for _, guy := range comment.replyGuy.GetReplyGuys() {
 		if strings.Contains(newComment.Content, guy) {
+			parentPost := comment.post
+			err := parentPost.ByID(newComment.PostID)
+			if err != nil {
+				logger.LogError("Comment.New() error querying newComment.PostID: " + err.Error())
+				break
+			}
+
+			parentComment := &Comment{}
+			if newComment.ParentCommentID != 0 {
+				// TODO: duplicate fetch. in refactor, reuse earlier query of newComment.ParentCommentID
+				parentComment, err = comment.ByID(newComment.ParentCommentID)
+				if err != nil {
+					logger.LogError("Comment.New() error querying newComment.ParentCommentID: " + err.Error())
+					break
+				}
+			}
+
 			replyGuyRequest := dtypes.ReplyGuyRequest{
-				PostID:            newComment.PostID,
-				ParentCommentID:   newComment.ParentCommentID,
-				RequesterUsername: newComment.Author.Username,
-				Model:             strings.TrimPrefix(guy, "@"),
-				Prompt:            newComment.Content,
+				PostID:                      parentPost.ID,
+				PostAuthorUsername:          parentPost.Author.Username,
+				PostContent:                 parentPost.Content,
+				ParentCommentID:             parentComment.ID,
+				ParentCommentAuthorUsername: parentComment.Author.Username,
+				ParentCommentContent:        parentComment.Content,
+				RequesterUsername:           newComment.Author.Username,
+				Model:                       strings.TrimPrefix(guy, "@"),
+				Prompt:                      newComment.Content,
 			}
 			err = comment.replyGuy.RequestReply(replyGuyRequest)
 			if err != nil {
@@ -113,6 +147,7 @@ func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) 
 
 func NewCommentController(db *sql.DB) *Comment {
 	replyGuy := client.NewReplyGuyClient()
+	postController := NewPostController(db)
 	model := model.NewCommentModel(db)
-	return &Comment{model: model, replyGuy: replyGuy}
+	return &Comment{model: model, post: postController, replyGuy: replyGuy}
 }

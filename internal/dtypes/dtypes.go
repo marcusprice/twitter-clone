@@ -105,10 +105,14 @@ type ModelResponse struct {
 }
 
 type ReplyGuyRequest struct {
-	Model             string `json:"model"`
-	Prompt            string `json:"prompt"`
-	RequesterUsername string `json:"requesterUsername"`
-	PostID            int    `json:"postID"`
-	ParentCommentID   int    `json:"parentCommentID"`
-	Stream            bool   `json:"stream"`
+	Model                       string `json:"model"`
+	Prompt                      string `json:"prompt"`
+	RequesterUsername           string `json:"requesterUsername"`
+	PostID                      int    `json:"postID"`
+	PostAuthorUsername          string `json:"postAuthorUsername"`
+	PostContent                 string `json:"postContent"`
+	ParentCommentID             int    `json:"parentCommentID"`
+	ParentCommentAuthorUsername string `json:"parentCommentAuthorUsername"`
+	ParentCommentContent        string `json:"parentCommentContent"`
+	Stream                      bool   `json:"stream"`
 }
