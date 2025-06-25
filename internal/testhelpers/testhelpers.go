@@ -235,6 +235,87 @@ func QueryUserPosts(userID int, db *sql.DB) []dtypes.PostData {
 	return postRows
 }
 
+func QueryComment(commentID int, db *sql.DB) dtypes.CommentData {
+	var id int
+	var post_id int
+	var user_id int
+	var depth int
+	var parent_comment_id sql.NullInt64
+	var content string
+	var image string
+	var like_count int
+	var retweet_count int
+	var bookmark_count int
+	var impressions int
+	var created_at string
+	var updated_at string
+	var author_username string
+	var author_display_name string
+	var author_avatar string
+
+	query := `
+		SELECT
+			Comment.id,
+			Comment.post_id,
+			Comment.user_id,
+			Comment.depth,
+			Comment.parent_comment_id,
+			Comment.content,
+			Comment.image,
+			Comment.like_count,
+			Comment.retweet_count,
+			Comment.bookmark_count,
+			Comment.impressions,
+			Comment.created_at,
+			Comment.updated_at,
+			User.user_name,
+			User.display_name,
+			User.avatar
+		FROM
+			Comment
+			INNER JOIN User ON User.id = Comment.user_id
+		WHERE
+			Comment.id = $1;
+	`
+
+	err := db.
+		QueryRow(query, commentID).
+		Scan(
+			&id, &post_id, &user_id, &depth, &parent_comment_id, &content,
+			&image, &like_count, &retweet_count, &bookmark_count, &impressions,
+			&created_at, &updated_at, &author_username, &author_display_name,
+			&author_avatar)
+
+	if err != nil {
+		panic(err)
+	}
+
+	author := dtypes.Author{
+		Username:    author_username,
+		DisplayName: author_display_name,
+		Avatar:      author_avatar,
+	}
+
+	commentData := dtypes.CommentData{
+		ID:              id,
+		PostID:          post_id,
+		UserID:          user_id,
+		Depth:           depth,
+		ParentCommentID: int(parent_comment_id.Int64),
+		Content:         content,
+		Image:           image,
+		LikeCount:       like_count,
+		RetweetCount:    retweet_count,
+		BookmarkCount:   bookmark_count,
+		Impressions:     impressions,
+		CreatedAt:       created_at,
+		UpdatedAt:       updated_at,
+		Author:          author,
+	}
+
+	return commentData
+}
+
 func CreateUserFollows(followerID, followeeID int, db *sql.DB) (rowID int) {
 	query := `
 		INSERT INTO UserFollows (follower_id, followee_id)
