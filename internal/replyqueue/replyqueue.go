@@ -50,8 +50,8 @@ func (rq *ReplyQueue) StartWorker() {
 func (rq *ReplyQueue) process(job dtypes.ReplyGuyRequest) error {
 	logger.LogInfo(
 		fmt.Sprintf(
-			"ReplyQueue.process() new processes request for postID: %d",
-			job.PostID))
+			"ReplyQueue.process() new process request for commentID: %d",
+			job.Comment.ID))
 
 	modelResponse, err := rq.ollamaClient.Prompt(job)
 	if err != nil {
@@ -59,7 +59,7 @@ func (rq *ReplyQueue) process(job dtypes.ReplyGuyRequest) error {
 	}
 
 	resp, err := rq.coreClient.PostComment(
-		job.PostID, job.ParentCommentID, modelResponse.Response)
+		job.ParentPost.ID, job.ParentComment.ID, modelResponse.Response)
 
 	if err != nil {
 		return err
