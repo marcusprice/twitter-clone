@@ -109,44 +109,79 @@ func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) 
 
 	for _, guy := range comment.replyGuy.GetReplyGuys() {
 		if strings.Contains(newComment.Content, guy) {
-			parentPost := comment.post
-			err := parentPost.ByID(newComment.PostID)
+			err := comment.handleReplyGuyRequest(guy, newComment)
+
 			if err != nil {
-				logger.LogError("Comment.New() error querying newComment.PostID: " + err.Error())
 				break
-			}
-
-			parentComment := &Comment{}
-			if newComment.ParentCommentID != 0 {
-				// TODO: duplicate fetch. in refactor, reuse earlier query of newComment.ParentCommentID
-				parentComment, err = comment.ByID(newComment.ParentCommentID)
-				if err != nil {
-					logger.LogError("Comment.New() error querying newComment.ParentCommentID: " + err.Error())
-					break
-				}
-			}
-
-			replyGuyRequest := dtypes.ReplyGuyRequest{
-				PostID:                      parentPost.ID,
-				PostAuthorUsername:          parentPost.Author.Username,
-				PostContent:                 parentPost.Content,
-				ParentCommentID:             parentComment.ID,
-				ParentCommentAuthorUsername: parentComment.Author.Username,
-				ParentCommentContent:        parentComment.Content,
-				RequesterUsername:           newComment.Author.Username,
-				Model:                       strings.TrimPrefix(guy, "@"),
-				Prompt:                      newComment.Content,
-			}
-
-			if comment.replyGuy.RunAsync() {
-				go comment.replyGuy.RequestReply(replyGuyRequest)
-			} else {
-				comment.replyGuy.RequestReply(replyGuyRequest)
 			}
 		}
 	}
 
 	return newComment, nil
+}
+
+func (comment *Comment) handleReplyGuyRequest(guy string, newComment *Comment) error {
+	parentPost := comment.post
+	err := parentPost.ByID(newComment.PostID)
+	if err != nil {
+		logger.LogError("Comment.New() error querying newComment.PostID: " + err.Error())
+		return err
+	}
+
+	parentComment := &Comment{}
+	if newComment.ParentCommentID != 0 {
+		// TODO: duplicate fetch. in refactor, reuse earlier query of newComment.ParentCommentID
+		parentComment, err = comment.ByID(newComment.ParentCommentID)
+		if err != nil {
+			logger.LogError("Comment.New() error querying newComment.ParentCommentID: " + err.Error())
+			return err
+		}
+	}
+
+	replyGuyComment := dtypes.ReplyGuyComment{
+		ID:      newComment.ID,
+		Content: newComment.Content,
+		Author:  newComment.Author,
+	}
+
+	replyGuyParentPostAuthor := dtypes.Author{
+		Username: parentPost.Author.Username,
+	}
+
+	replyGuyParentPost := dtypes.ReplyGuyPost{
+		ID:      parentPost.ID,
+		Content: parentPost.Content,
+		Author:  replyGuyParentPostAuthor,
+	}
+
+	var replyGuyParentComment dtypes.ReplyGuyComment
+	var replyGuyParentCommentAuthor dtypes.Author
+	if parentComment.ID != 0 {
+		replyGuyParentCommentAuthor = dtypes.Author{
+			Username: parentComment.Author.Username,
+		}
+
+		replyGuyParentComment = dtypes.ReplyGuyComment{
+			ID:      parentComment.ID,
+			Content: parentComment.Content,
+			Author:  replyGuyParentCommentAuthor,
+		}
+	}
+
+	replyGuyRequest := dtypes.ReplyGuyRequest{
+		Model:         strings.TrimPrefix(guy, "@"),
+		Comment:       replyGuyComment,
+		ParentPost:    replyGuyParentPost,
+		ParentComment: replyGuyParentComment,
+	}
+
+	if comment.replyGuy.RunAsync() {
+		go comment.replyGuy.RequestReply(replyGuyRequest)
+	} else {
+		comment.replyGuy.RequestReply(replyGuyRequest)
+	}
+
+	return nil
 }
 
 func NewCommentController(db *sql.DB) *Comment {

@@ -103,16 +103,3 @@ type ModelResponse struct {
 	EvalCount          int       `json:"eval_count"`
 	EvalDuration       int       `json:"eval_duration"`
 }
-
-type ReplyGuyRequest struct {
-	Model                       string `json:"model"`
-	Prompt                      string `json:"prompt"`
-	RequesterUsername           string `json:"requesterUsername"`
-	PostID                      int    `json:"postID"`
-	PostAuthorUsername          string `json:"postAuthorUsername"`
-	PostContent                 string `json:"postContent"`
-	ParentCommentID             int    `json:"parentCommentID"`
-	ParentCommentAuthorUsername string `json:"parentCommentAuthorUsername"`
-	ParentCommentContent        string `json:"parentCommentContent"`
-	Stream                      bool   `json:"stream"`
-}

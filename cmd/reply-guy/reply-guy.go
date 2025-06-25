@@ -13,10 +13,16 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
+// TODO: need more work here to handle various failure situations
 func ReplyGuyHandler(replyQueue *replyqueue.ReplyQueue) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var requestBody dtypes.ReplyGuyRequest
-		json.NewDecoder(r.Body).Decode(&requestBody)
+		err := json.NewDecoder(r.Body).Decode(&requestBody)
+		if err != nil {
+			http.Error(w, api.BadRequest, http.StatusBadRequest)
+			return
+		}
+
 		replyQueue.Enqueue(requestBody)
 		w.WriteHeader(http.StatusAccepted)
 	}

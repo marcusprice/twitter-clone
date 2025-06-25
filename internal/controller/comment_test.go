@@ -152,19 +152,23 @@ func TestNewCommentWithReplyGuyRequest(t *testing.T) {
 		op := NewPostController(db)
 		op.ByID(41)
 
-		// TODO this ReplyGuyRequest struct sucks
 		newComment, err := Comment.New(commentInput)
 		calledWith := replyGuyMockClient.CalledWith
 		tu.AssertErrorNil(err)
-		tu.AssertEqual(newComment.PostID, calledWith.PostID)
-		tu.AssertEqual(newComment.Author.Username, calledWith.RequesterUsername)
-		tu.AssertEqual(op.Content, calledWith.PostContent)
-		tu.AssertEqual(newComment.Content, calledWith.Prompt)
-		tu.AssertEqual(0, calledWith.ParentCommentID)
-		tu.AssertEqual("", calledWith.ParentCommentAuthorUsername)
-		tu.AssertEqual("", calledWith.ParentCommentContent)
-		tu.AssertEqual(donnaHayward.Username, calledWith.RequesterUsername)
 		tu.AssertEqual("dalecooper", calledWith.Model)
+
+		tu.AssertEqual(op.ID, calledWith.ParentPost.ID)
+		tu.AssertEqual(op.Content, calledWith.ParentPost.Content)
+		tu.AssertEqual(op.Author.Username, calledWith.ParentPost.Author.Username)
+
+		tu.AssertEqual(donnaHayward.Username, calledWith.Comment.Author.Username)
+		tu.AssertEqual(newComment.PostID, calledWith.ParentPost.ID)
+		tu.AssertEqual(newComment.Author.Username, calledWith.Comment.Author.Username)
+		tu.AssertEqual(newComment.Content, calledWith.Comment.Content)
+
+		tu.AssertEqual(0, calledWith.ParentComment.ID)
+		tu.AssertEqual("", calledWith.ParentComment.Author.Username)
+		tu.AssertEqual("", calledWith.ParentComment.Content)
 
 		audreyHorne := testhelpers.QueryUser(4, db)
 		commentInput = dtypes.CommentInput{
@@ -175,15 +179,21 @@ func TestNewCommentWithReplyGuyRequest(t *testing.T) {
 		}
 		commentReply, err := Comment.New(commentInput)
 		calledWith = replyGuyMockClient.CalledWith
-		tu.AssertEqual(op.Content, calledWith.PostContent)
-		tu.AssertEqual(op.ID, calledWith.PostID)
-		tu.AssertEqual(commentReply.PostID, calledWith.PostID)
-		tu.AssertEqual(commentReply.Author.Username, calledWith.RequesterUsername)
-		tu.AssertEqual(commentReply.Content, calledWith.Prompt)
-		tu.AssertEqual(commentReply.ParentCommentID, calledWith.ParentCommentID)
-		tu.AssertEqual(donnaHayward.Username, calledWith.ParentCommentAuthorUsername)
-		tu.AssertEqual(newComment.Content, calledWith.ParentCommentContent)
-		tu.AssertEqual(audreyHorne.Username, calledWith.RequesterUsername)
+		tu.AssertErrorNil(err)
 		tu.AssertEqual("dalecooper", calledWith.Model)
+
+		tu.AssertEqual(op.ID, calledWith.ParentPost.ID)
+		tu.AssertEqual(op.Content, calledWith.ParentPost.Content)
+		tu.AssertEqual(op.Author.Username, calledWith.ParentPost.Author.Username)
+
+		tu.AssertEqual(audreyHorne.Username, calledWith.Comment.Author.Username)
+		tu.AssertEqual(commentReply.PostID, calledWith.ParentPost.ID)
+		tu.AssertEqual(commentReply.Author.Username, calledWith.Comment.Author.Username)
+		tu.AssertEqual(commentReply.Content, calledWith.Comment.Content)
+
+		tu.AssertEqual(donnaHayward.Username, calledWith.ParentComment.Author.Username)
+		tu.AssertEqual(newComment.ID, calledWith.ParentComment.ID)
+		tu.AssertEqual(newComment.Author.Username, calledWith.ParentComment.Author.Username)
+		tu.AssertEqual(newComment.Content, calledWith.ParentComment.Content)
 	})
 }
