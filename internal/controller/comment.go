@@ -23,7 +23,7 @@ const DEPTH_LIMIT = 1
 type Comment struct {
 	model           *model.CommentModel
 	post            *Post
-	replyGuy        *client.ReplyGuyClient
+	replyGuy        client.ReplyGuyRequester
 	ID              int
 	PostID          int
 	UserID          int
@@ -138,7 +138,11 @@ func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) 
 				Prompt:                      newComment.Content,
 			}
 
-			go comment.replyGuy.RequestReply(replyGuyRequest)
+			if comment.replyGuy.RunAsync() {
+				go comment.replyGuy.RequestReply(replyGuyRequest)
+			} else {
+				comment.replyGuy.RequestReply(replyGuyRequest)
+			}
 		}
 	}
 

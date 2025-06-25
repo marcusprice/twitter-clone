@@ -23,7 +23,7 @@ func TestCommentByID(t *testing.T) {
 		}
 		commentID := testhelpers.CreateComment(commentInput, db)
 		commentModel := model.NewCommentModel(db)
-		Comment := &Comment{model: commentModel}
+		Comment := &Comment{model: commentModel, replyGuy: &testhelpers.MockReplyGuyClient{}}
 
 		esteComment, err := Comment.ByID(commentID)
 		tu.AssertErrorNil(err)
@@ -41,7 +41,7 @@ func TestCommentNew(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
 		model := model.NewCommentModel(db)
-		Comment := &Comment{model: model}
+		Comment := &Comment{model: model, replyGuy: &testhelpers.MockReplyGuyClient{}}
 		commentInput := dtypes.CommentInput{
 			PostID:  1,
 			UserID:  1,
@@ -78,7 +78,7 @@ func TestCommentNewReply(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
 		model := model.NewCommentModel(db)
-		Comment := &Comment{model: model}
+		Comment := &Comment{model: model, replyGuy: &testhelpers.MockReplyGuyClient{}}
 		commentInput := dtypes.CommentInput{
 			PostID:  1,
 			UserID:  1,
@@ -128,5 +128,42 @@ func TestCommentNewReply(t *testing.T) {
 		tu.AssertTrue(errors.As(err, &depthLimitError))
 		tu.AssertEqual("Reply depth exceeds limit", depthLimitError.Error())
 		tu.AssertEqual(0, badComment.ID)
+	})
+}
+
+func TestNewCommentWithReplyGuyRequest(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
+		tu := testutil.NewTestUtil(t)
+		model := model.NewCommentModel(db)
+		postController := NewPostController(db)
+		replyGuyMockClient := &testhelpers.MockReplyGuyClient{}
+		Comment := &Comment{
+			model:    model,
+			replyGuy: replyGuyMockClient,
+			post:     postController,
+		}
+		donnaHayward := testhelpers.QueryUser(1, db)
+		commentInput := dtypes.CommentInput{
+			UserID:  donnaHayward.ID,
+			PostID:  30,
+			Content: "Be careful Audrey! @dalecooper will you please keep an eye on her?!",
+		}
+
+		op := NewPostController(db)
+		op.ByID(30)
+
+		// TODO this ReplyGuyRequest struct sucks
+		newComment, err := Comment.New(commentInput)
+		calledWith := replyGuyMockClient.CalledWith
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(newComment.PostID, calledWith.PostID)
+		tu.AssertEqual(newComment.Author.Username, calledWith.RequesterUsername)
+		tu.AssertEqual(op.Content, calledWith.PostContent)
+		tu.AssertEqual(newComment.Content, calledWith.Prompt)
+		tu.AssertEqual(0, calledWith.ParentCommentID)
+		tu.AssertEqual("", calledWith.ParentCommentAuthorUsername)
+		tu.AssertEqual("", calledWith.ParentCommentContent)
+		tu.AssertEqual(donnaHayward.Username, calledWith.RequesterUsername)
+		tu.AssertEqual("dalecooper", calledWith.Model)
 	})
 }

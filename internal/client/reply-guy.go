@@ -14,10 +14,24 @@ import (
 
 const DALE_COOPER_ENDPOINT = "/api/v1/@dalecooper/request-reply"
 
+type ReplyGuyRequester interface {
+	RunAsync() bool
+	GetReplyGuys() []string
+	RequestReply(request dtypes.ReplyGuyRequest)
+}
+
 type ReplyGuyClient struct {
 	host   string
 	port   string
 	client *http.Client
+}
+
+func (rg *ReplyGuyClient) RunAsync() bool {
+	return true
+}
+
+func (rg *ReplyGuyClient) GetReplyGuys() []string {
+	return []string{"@dalecooper"}
 }
 
 func (rg *ReplyGuyClient) RequestReply(request dtypes.ReplyGuyRequest) {
@@ -47,10 +61,6 @@ func (rg *ReplyGuyClient) RequestReply(request dtypes.ReplyGuyRequest) {
 
 func (rg *ReplyGuyClient) address() string {
 	return fmt.Sprintf("http://%s:%s", rg.host, rg.port)
-}
-
-func (rg *ReplyGuyClient) GetReplyGuys() []string {
-	return []string{"@dalecooper"}
 }
 
 func NewReplyGuyClient() *ReplyGuyClient {
