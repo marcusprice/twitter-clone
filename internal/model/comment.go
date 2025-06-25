@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	_ "embed"
+	"errors"
 
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
@@ -43,6 +44,10 @@ func (commentModel *CommentModel) GetByID(postID int) (dtypes.CommentData, error
 			&author_avatar)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return dtypes.CommentData{}, CommentNotFoundError{}
+		}
+
 		return dtypes.CommentData{}, err
 	}
 
