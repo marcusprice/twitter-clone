@@ -57,7 +57,6 @@ func (commentAPI *CommentAPI) Create(w http.ResponseWriter, r *http.Request) {
 
 	file, header, err := r.FormFile("image")
 	if err != nil && err != http.ErrMissingFile {
-		statusText := http.StatusText(http.StatusBadRequest)
 		http.Error(w, BadRequest, http.StatusBadRequest)
 		return
 	}

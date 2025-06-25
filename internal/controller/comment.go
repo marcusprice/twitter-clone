@@ -26,6 +26,7 @@ type Comment struct {
 	replyGuy        *client.ReplyGuyClient
 	ID              int
 	PostID          int
+	UserID          int
 	Depth           int
 	ParentCommentID int
 	Content         string
@@ -59,6 +60,7 @@ func (comment *Comment) ByID(commentID int) (*Comment, error) {
 func (comment *Comment) setFromModel(commentData dtypes.CommentData) {
 	comment.ID = commentData.ID
 	comment.PostID = commentData.PostID
+	comment.UserID = commentData.UserID
 	comment.ParentCommentID = commentData.ParentCommentID
 	comment.Content = commentData.Content
 	comment.LikeCount = commentData.LikeCount
