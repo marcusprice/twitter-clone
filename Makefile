@@ -29,6 +29,9 @@ run-tests:
 	go test -v ./...
 
 loc:
+	find . \( -name '*.go' -o -name '*.sql' \) -type f ! -name '*_test.go' | xargs wc -l
+
+loc-including-tests:
 	find . \( -name '*.go' -o -name '*.sql' \) -type f | xargs wc -l
 
 # run delve debugger with Package::Test i.e. model::TestTimelineOffsetCount
