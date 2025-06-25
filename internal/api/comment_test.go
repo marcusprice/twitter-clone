@@ -19,7 +19,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
-func TestCreateCommentContentOnly(t *testing.T) {
+func TestCreateComment(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
 		defer tu.CleanTestUploads()
@@ -58,6 +58,32 @@ func TestCreateCommentContentOnly(t *testing.T) {
 		tu.AssertEqual("", commentPayload.Author.Avatar)
 		tu.AssertTrue(commentPayload.CreatedAt.After(beforeRequest))
 		tu.AssertTrue(commentPayload.CreatedAt.Before(afterRequest))
+
+		formValues = make(map[string]string)
+		formValues["content"] = "Cats are awesome"
+		formValues["postID"] = ""
+		requestBody, contentType, _ = util.GenerateMultipartForm(formValues)
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", requestBody)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
+
+		formValues = make(map[string]string)
+		formValues["content"] = "Cats are awesome"
+		formValues["postID"] = "lkjas8kjsf"
+		requestBody, contentType, _ = util.GenerateMultipartForm(formValues)
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", requestBody)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
 	})
 }
 
@@ -123,6 +149,20 @@ func TestCreateCommentReply(t *testing.T) {
 
 		handler.ServeHTTP(res, req)
 
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
+
+		formValues = make(map[string]string)
+		formValues["content"] = "Cats are awesome"
+		formValues["postID"] = "1"
+		formValues["parentCommentID"] = "ljasfljkasd"
+		requestBody, contentType, _ = util.GenerateMultipartForm(formValues)
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", requestBody)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
 		tu.AssertEqual(http.StatusBadRequest, res.Code)
 	})
 }
@@ -245,7 +285,7 @@ func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
 
 		b, contentType := createLargeImgMultipartFormBodyWithPostID(0.5, 1)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", contentType)
 		res := httptest.NewRecorder()
@@ -258,7 +298,7 @@ func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
 
 		b, contentType = createLargeImgMultipartFormBodyWithPostID(0.5, 1)
 
-		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", contentType)
 		res = httptest.NewRecorder()
@@ -271,7 +311,7 @@ func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
 
 		b, contentType = createLargeImgMultipartFormBodyWithPostID(5, 1)
 
-		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", b)
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		req.Header.Set("Content-Type", contentType)
 		res = httptest.NewRecorder()
@@ -280,6 +320,108 @@ func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
 		fileNotUploaded = len(testutil.GetTestUploads()) == 0
 
 		tu.AssertEqual(http.StatusRequestEntityTooLarge, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+	})
+}
+
+func TestCreateCommentNoContentOrImage(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		defer tu.CleanTestUploads()
+		handler := RegisterHandlers(db)
+		testUser := createTestUser(db)
+		testUser.Login()
+		token, _ := GenerateJWT(testUser.ID())
+
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+		content, _ := writer.CreateFormField("content")
+		io.Copy(content, strings.NewReader(""))
+		image, _ := writer.CreateFormField("image")
+		io.Copy(image, strings.NewReader(""))
+		postID, _ := writer.CreateFormField("postID")
+		io.Copy(postID, strings.NewReader("1"))
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", &b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		res := httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded := len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+
+		b.Reset()
+		writer = multipart.NewWriter(&b)
+		content, _ = writer.CreateFormField("content")
+		io.Copy(content, strings.NewReader(""))
+		image, _ = writer.CreateFormField("image")
+		io.Copy(image, strings.NewReader("data but not image"))
+		postID, _ = writer.CreateFormField("postID")
+		io.Copy(postID, strings.NewReader("1"))
+		writer.Close()
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", &b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded = len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+	})
+}
+
+func TestCreateCommentInvalidFileType(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		defer tu.CleanTestUploads()
+		handler := RegisterHandlers(db)
+		testUser := createTestUser(db)
+		testUser.Login()
+		token, _ := GenerateJWT(testUser.ID())
+
+		var b bytes.Buffer
+		writer := multipart.NewWriter(&b)
+		fileString := generateLargeString(5)
+		imgPart, _ := writer.CreateFormFile("image", "video.mp4")
+		io.Copy(imgPart, strings.NewReader(fileString))
+		postIDField, _ := writer.CreateFormField("postID")
+		io.Copy(postIDField, strings.NewReader("1"))
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", &b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		res := httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded := len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusUnsupportedMediaType, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+
+		writer = multipart.NewWriter(&b)
+		imgPart, _ = writer.CreateFormFile("image", "video.flac")
+		io.Copy(imgPart, strings.NewReader(fileString))
+		postIDField, _ = writer.CreateFormField("postID")
+		io.Copy(postIDField, strings.NewReader("1"))
+		writer.Close()
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", &b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded = len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusUnsupportedMediaType, res.Code)
 		tu.AssertTrue(fileNotUploaded)
 	})
 }

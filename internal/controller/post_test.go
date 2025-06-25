@@ -17,7 +17,7 @@ import (
 func TestSetFromModel(t *testing.T) {
 	tu := testutil.NewTestUtil(t)
 	post := &Post{}
-	postAuthor := dtypes.PostAuthor{
+	postAuthor := dtypes.Author{
 		Username:    "estecat",
 		DisplayName: "Bubba",
 		Avatar:      "lazy-cat.png",
