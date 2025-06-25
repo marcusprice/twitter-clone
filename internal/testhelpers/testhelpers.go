@@ -281,3 +281,26 @@ func CreateRetweet(postID, userID int, db *sql.DB) (rowID int) {
 
 	return rowID
 }
+
+func CreateComment(commentInput dtypes.CommentInput, db *sql.DB) (rowID int) {
+	query := `
+		INSERT INTO Comment
+			(post_id, user_id, content, image, depth)
+		VALUES
+			($1, $2, $3, $4, 0)
+		RETURNING
+			id;
+	`
+
+	err := db.
+		QueryRow(
+			query, commentInput.PostID, commentInput.UserID,
+			commentInput.Content, commentInput.Image).
+		Scan(&rowID)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return rowID
+}

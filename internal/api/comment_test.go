@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/testhelpers"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
@@ -56,6 +58,72 @@ func TestCreateCommentContentOnly(t *testing.T) {
 		tu.AssertEqual("", commentPayload.Author.Avatar)
 		tu.AssertTrue(commentPayload.CreatedAt.After(beforeRequest))
 		tu.AssertTrue(commentPayload.CreatedAt.Before(afterRequest))
+	})
+}
+
+func TestCreateCommentReply(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
+		tu := testutil.NewTestUtil(t)
+		defer tu.CleanTestUploads()
+		handler := RegisterHandlers(db)
+		commentInput := dtypes.CommentInput{
+			PostID:  1,
+			UserID:  1,
+			Content: "post reply",
+		}
+		parentCommentID := testhelpers.CreateComment(commentInput, db)
+
+		testUser := createTestUser(db)
+		testUser.Login()
+		token, _ := GenerateJWT(testUser.ID())
+
+		formValues := make(map[string]string)
+		formValues["content"] = "Cats are awesome"
+		formValues["postID"] = "1"
+		formValues["parentCommentID"] = fmt.Sprintf("%d", parentCommentID)
+		requestBody, contentType, _ := util.GenerateMultipartForm(formValues)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", requestBody)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res := httptest.NewRecorder()
+
+		beforeRequest := time.Now().UTC().Add(-1 * time.Minute)
+		handler.ServeHTTP(res, req)
+		afterRequest := time.Now().UTC().Add(time.Minute)
+
+		var commentPayload CommentPayload
+		json.Unmarshal(res.Body.Bytes(), &commentPayload)
+
+		tu.AssertEqual(http.StatusOK, res.Code)
+		tu.AssertEqual(1, commentPayload.ParentCommentID)
+		tu.AssertEqual("Cats are awesome", commentPayload.Content)
+		tu.AssertEqual("", commentPayload.Image)
+		tu.AssertEqual(0, commentPayload.LikeCount)
+		tu.AssertEqual(0, commentPayload.RetweetCount)
+		tu.AssertEqual(0, commentPayload.BookmarkCount)
+		tu.AssertEqual(0, commentPayload.Impressions)
+		tu.AssertEqual("esteban", commentPayload.Author.Username)
+		tu.AssertEqual("Bubba", commentPayload.Author.DisplayName)
+		tu.AssertEqual("", commentPayload.Author.Avatar)
+		tu.AssertTrue(commentPayload.CreatedAt.After(beforeRequest))
+		tu.AssertTrue(commentPayload.CreatedAt.Before(afterRequest))
+
+		// can only reply to top level comments (depth 0)
+		formValues = make(map[string]string)
+		formValues["content"] = "Cats are awesome"
+		formValues["postID"] = "1"
+		formValues["parentCommentID"] = fmt.Sprintf("%d", commentPayload.ID)
+		requestBody, contentType, _ = util.GenerateMultipartForm(formValues)
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", requestBody)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+
+		tu.AssertEqual(http.StatusBadRequest, res.Code)
 	})
 }
 
