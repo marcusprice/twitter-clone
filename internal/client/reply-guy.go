@@ -20,6 +20,8 @@ type ReplyGuyRequester interface {
 	RequestReply(request dtypes.ReplyGuyRequest)
 }
 
+// TODO: retries
+
 type ReplyGuyClient struct {
 	host   string
 	port   string

@@ -142,15 +142,15 @@ func TestNewCommentWithReplyGuyRequest(t *testing.T) {
 			replyGuy: replyGuyMockClient,
 			post:     postController,
 		}
-		donnaHayward := testhelpers.QueryUser(1, db)
+		donnaHayward := testhelpers.QueryUser(6, db)
 		commentInput := dtypes.CommentInput{
 			UserID:  donnaHayward.ID,
-			PostID:  30,
-			Content: "Be careful Audrey! @dalecooper will you please keep an eye on her?!",
+			PostID:  41,
+			Content: "@dalecooper already questioned James, if that's what you're implying",
 		}
 
 		op := NewPostController(db)
-		op.ByID(30)
+		op.ByID(41)
 
 		// TODO this ReplyGuyRequest struct sucks
 		newComment, err := Comment.New(commentInput)
@@ -164,6 +164,26 @@ func TestNewCommentWithReplyGuyRequest(t *testing.T) {
 		tu.AssertEqual("", calledWith.ParentCommentAuthorUsername)
 		tu.AssertEqual("", calledWith.ParentCommentContent)
 		tu.AssertEqual(donnaHayward.Username, calledWith.RequesterUsername)
+		tu.AssertEqual("dalecooper", calledWith.Model)
+
+		audreyHorne := testhelpers.QueryUser(4, db)
+		commentInput = dtypes.CommentInput{
+			UserID:          audreyHorne.ID,
+			PostID:          41,
+			Content:         "@dalecooper is this true?",
+			ParentCommentID: newComment.ID,
+		}
+		commentReply, err := Comment.New(commentInput)
+		calledWith = replyGuyMockClient.CalledWith
+		tu.AssertEqual(op.Content, calledWith.PostContent)
+		tu.AssertEqual(op.ID, calledWith.PostID)
+		tu.AssertEqual(commentReply.PostID, calledWith.PostID)
+		tu.AssertEqual(commentReply.Author.Username, calledWith.RequesterUsername)
+		tu.AssertEqual(commentReply.Content, calledWith.Prompt)
+		tu.AssertEqual(commentReply.ParentCommentID, calledWith.ParentCommentID)
+		tu.AssertEqual(donnaHayward.Username, calledWith.ParentCommentAuthorUsername)
+		tu.AssertEqual(newComment.Content, calledWith.ParentCommentContent)
+		tu.AssertEqual(audreyHorne.Username, calledWith.RequesterUsername)
 		tu.AssertEqual("dalecooper", calledWith.Model)
 	})
 }
