@@ -164,3 +164,71 @@ func TestCreateCommentContentAndImage(t *testing.T) {
 		tu.AssertTrue(commentPayload.CreatedAt.Before(afterRequest))
 	})
 }
+
+func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
+		tu := testutil.NewTestUtil(t)
+		testUser := createTestUser(db)
+		testUser.Login()
+		token, _ := GenerateJWT(testUser.ID())
+		defer tu.CleanTestUploads()
+
+		handler := RegisterHandlers(db)
+
+		b, contentType := createLargeImgMultipartFormBodyWithPostID(0.5, 1)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res := httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded := len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusRequestEntityTooLarge, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+
+		b, contentType = createLargeImgMultipartFormBodyWithPostID(0.5, 1)
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded = len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusRequestEntityTooLarge, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+
+		b, contentType = createLargeImgMultipartFormBodyWithPostID(5, 1)
+
+		req = httptest.NewRequest(http.MethodPost, "/api/v1/post/create", b)
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+		req.Header.Set("Content-Type", contentType)
+		res = httptest.NewRecorder()
+
+		handler.ServeHTTP(res, req)
+		fileNotUploaded = len(testutil.GetTestUploads()) == 0
+
+		tu.AssertEqual(http.StatusRequestEntityTooLarge, res.Code)
+		tu.AssertTrue(fileNotUploaded)
+	})
+}
+
+func createLargeImgMultipartFormBodyWithPostID(mbOver float64, postID int) (*bytes.Buffer, string) {
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+	mb := convertBytesToMB(MAX_POST_UPLOAD_BYTES) + mbOver
+	largerString := generateLargeString(mb)
+
+	postIDField, _ := writer.CreateFormField("postID")
+	io.Copy(postIDField, strings.NewReader(fmt.Sprintf("%d", postID)))
+
+	imgPart, _ := writer.CreateFormFile("image", "bigger.jpg")
+	io.Copy(imgPart, strings.NewReader(largerString))
+
+	writer.Close()
+
+	return &b, writer.FormDataContentType()
+}
