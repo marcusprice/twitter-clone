@@ -1,4 +1,3 @@
-
 DROP TRIGGER IF EXISTS update_user_timestamp;
 DROP TRIGGER IF EXISTS update_post_timestamp;
 DROP TRIGGER IF EXISTS update_comment_timestamp;

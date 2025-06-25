@@ -209,7 +209,7 @@ func QueryUserPosts(userID int, db *sql.DB) []dtypes.PostData {
 			panic(err)
 		}
 
-		postAuthor := dtypes.PostAuthor{
+		postAuthor := dtypes.Author{
 			Username:    author_user_name,
 			DisplayName: author_display_name,
 			Avatar:      author_avatar,

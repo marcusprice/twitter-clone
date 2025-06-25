@@ -57,10 +57,6 @@ func (rq *ReplyQueue) process(job dtypes.ReplyGuyRequest) error {
 	if err != nil {
 		return err
 	}
-	logger.LogInfo(
-		fmt.Sprintf(
-			"ReplyQueue.process() model response: %s",
-			modelResponse.Response))
 
 	resp, err := rq.coreClient.PostComment(
 		job.PostID, job.ParentCommentID, modelResponse.Response)

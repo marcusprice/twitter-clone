@@ -135,10 +135,8 @@ func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) 
 				Model:                       strings.TrimPrefix(guy, "@"),
 				Prompt:                      newComment.Content,
 			}
-			err = comment.replyGuy.RequestReply(replyGuyRequest)
-			if err != nil {
-				logger.LogError("Comment.New() error with reply guy request: " + err.Error())
-			}
+
+			go comment.replyGuy.RequestReply(replyGuyRequest)
 		}
 	}
 

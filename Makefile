@@ -22,6 +22,9 @@ run-reply-guy:
 debug-reply-guy:
 	dlv debug ./cmd/reply-guy/reply-guy.go
 
+run-all:
+	@./scripts/run_all.sh
+
 run-tests:
 	go test -v ./...
 

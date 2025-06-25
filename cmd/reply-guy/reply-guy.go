@@ -31,8 +31,10 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle(
 		"/api/v1/@dalecooper/request-reply",
-		api.VerifyPostMethod(
-			ReplyGuyHandler(replyQueue),
+		api.Logger(
+			api.VerifyPostMethod(
+				ReplyGuyHandler(replyQueue),
+			),
 		),
 	)
 

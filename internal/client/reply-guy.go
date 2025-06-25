@@ -20,15 +20,13 @@ type ReplyGuyClient struct {
 	client *http.Client
 }
 
-func (rg *ReplyGuyClient) RequestReply(request dtypes.ReplyGuyRequest) error {
+func (rg *ReplyGuyClient) RequestReply(request dtypes.ReplyGuyRequest) {
 	json, err := json.Marshal(request)
 	if err != nil {
 		logger.LogError("ReplyGuyClient.RequestReply() error marshalling json: " + err.Error())
 		if util.InDevContext() {
 			panic(err)
 		}
-
-		return err
 	}
 
 	resp, err := http.Post(
@@ -38,15 +36,13 @@ func (rg *ReplyGuyClient) RequestReply(request dtypes.ReplyGuyRequest) error {
 	)
 	if err != nil {
 		logger.LogError("ReplyGuyClient.RequestReply() post request failed: " + err.Error())
-		return err
+		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
 		logger.LogWarn("ReplyGuyClient.RequestReply() non-status accepted code returned from reply-guy")
 	}
-
-	return nil
 }
 
 func (rg *ReplyGuyClient) address() string {
