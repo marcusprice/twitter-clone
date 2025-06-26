@@ -112,7 +112,7 @@ func (commentModel *CommentModel) NewCommentReply(commentInput dtypes.CommentInp
 
 	if err != nil {
 		logger.LogError("CommentModel.NewPostComment() error: " + err.Error())
-		if dbutils.IsConstraintError(err) {
+		if dbutils.ConstraintFailed(err) {
 			return -1, dbutils.WrapConstraintError(err)
 		}
 
