@@ -14,8 +14,13 @@ jobs:
         with:
           go-version: '1.24.2'
 
+      - name: Create .env file from sample
+        run: |
+          cp .env.sample .env
+          echo "TEST_IMAGE_STORAGE_PATH=./test-uploads" >> .env
+
       - name: Download dependencies
         run: go mod download
 
       - name: Run tests
-        run: go test ./...
+        run: go test -v ./...
