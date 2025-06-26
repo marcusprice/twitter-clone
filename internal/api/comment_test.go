@@ -22,6 +22,7 @@ import (
 func TestCreateComment(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 
@@ -90,6 +91,7 @@ func TestCreateComment(t *testing.T) {
 func TestCreateCommentReply(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		commentInput := dtypes.CommentInput{
@@ -170,6 +172,7 @@ func TestCreateCommentReply(t *testing.T) {
 func TestCreateCommentImageOnly(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 
@@ -224,6 +227,7 @@ func TestCreateCommentImageOnly(t *testing.T) {
 func TestCreateCommentContentAndImage(t *testing.T) {
 	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		testUser := createTestUser(db)
@@ -279,6 +283,7 @@ func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
 		testUser := createTestUser(db)
 		testUser.Login()
 		token, _ := GenerateJWT(testUser.ID())
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 
 		handler := RegisterHandlers(db)
@@ -327,6 +332,7 @@ func TestCreateCommentUploadSizeTooLarge(t *testing.T) {
 func TestCreateCommentNoContentOrImage(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		testUser := createTestUser(db)
@@ -380,6 +386,7 @@ func TestCreateCommentNoContentOrImage(t *testing.T) {
 func TestCreateCommentInvalidFileType(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		testUser := createTestUser(db)

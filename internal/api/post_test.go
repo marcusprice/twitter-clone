@@ -22,6 +22,7 @@ import (
 func TestCreatePostContentOnly(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 
@@ -66,6 +67,7 @@ func TestCreatePostContentOnly(t *testing.T) {
 func TestCreatePostImageOnly(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 
@@ -104,7 +106,7 @@ func TestCreatePostImageOnly(t *testing.T) {
 		tu.AssertEqual("esteban", postPayload.Author.Username)
 		tu.AssertEqual("Bubba", postPayload.Author.DisplayName)
 		tu.AssertEqual("", postPayload.Author.Avatar)
-		tu.AssertEqual(postPayload.Image, uploadedFileName)
+		tu.AssertEqual(postPayload.Image, getUploadPath(uploadedFileName))
 		tu.AssertTrue(fileWritten)
 		tu.AssertTrue(strings.Contains(uploadedFileName, "meme.png"))
 		tu.AssertTrue(strings.Contains(postPayload.Image, "meme.png"))
@@ -116,6 +118,7 @@ func TestCreatePostImageOnly(t *testing.T) {
 func TestCreatePostContentAndImage(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		testUser := createTestUser(db)
@@ -154,7 +157,7 @@ func TestCreatePostContentAndImage(t *testing.T) {
 		tu.AssertEqual("esteban", postPayload.Author.Username)
 		tu.AssertEqual("Bubba", postPayload.Author.DisplayName)
 		tu.AssertEqual("", postPayload.Author.Avatar)
-		tu.AssertEqual(postPayload.Image, uploadedFileName)
+		tu.AssertEqual(postPayload.Image, getUploadPath(uploadedFileName))
 		tu.AssertTrue(fileWritten)
 		tu.AssertTrue(strings.Contains(uploadedFileName, "sunset.jpeg"))
 		tu.AssertTrue(strings.Contains(postPayload.Image, "sunset.jpeg"))
@@ -166,6 +169,7 @@ func TestCreatePostContentAndImage(t *testing.T) {
 func TestCreatePostInvalidFileType(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		testUser := createTestUser(db)
@@ -211,6 +215,7 @@ func TestCreatePostInvalidFileType(t *testing.T) {
 func TestCreatePostNoContentOrImage(t *testing.T) {
 	testutil.WithTestDB(t, func(db *sql.DB) {
 		tu := testutil.NewTestUtil(t)
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 		handler := RegisterHandlers(db)
 		testUser := createTestUser(db)
@@ -263,6 +268,7 @@ func TestCreatePostUploadSizeTooLarge(t *testing.T) {
 		testUser := createTestUser(db)
 		testUser.Login()
 		token, _ := GenerateJWT(testUser.ID())
+		tu.CreateTestUploadsDir()
 		defer tu.CleanTestUploads()
 
 		handler := RegisterHandlers(db)
