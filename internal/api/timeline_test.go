@@ -50,7 +50,7 @@ func TestTimelineGet(t *testing.T) {
 		tu.AssertEqual(len(user2Posts)-10, payload.PostsRemaining)
 		tu.AssertEqual(user2Posts[0].ID, payload.Posts[0].ID)
 		tu.AssertEqual(user2Posts[0].Content, payload.Posts[0].Content)
-		tu.AssertEqual(user2Posts[0].Image, payload.Posts[0].Image)
+		tu.AssertEqual(getUploadPath(user2Posts[0].Image), payload.Posts[0].Image)
 		tu.AssertEqual(user2Posts[0].LikeCount, payload.Posts[0].LikeCount)
 		tu.AssertEqual(user2Posts[0].BookmarkCount, payload.Posts[0].BookmarkCount)
 		tu.AssertEqual(user2Posts[0].RetweetCount, payload.Posts[0].RetweetCount)
@@ -65,7 +65,7 @@ func TestTimelineGet(t *testing.T) {
 
 		tu.AssertEqual(user2Posts[9].ID, payload.Posts[9].ID)
 		tu.AssertEqual(user2Posts[9].Content, payload.Posts[9].Content)
-		tu.AssertEqual(user2Posts[9].Image, payload.Posts[9].Image)
+		tu.AssertEqual(getUploadPath(user2Posts[9].Image), payload.Posts[9].Image)
 		tu.AssertEqual(user2Posts[9].LikeCount, payload.Posts[9].LikeCount)
 		tu.AssertEqual(user2Posts[9].BookmarkCount, payload.Posts[9].BookmarkCount)
 		tu.AssertEqual(user2Posts[9].RetweetCount, payload.Posts[9].RetweetCount)

@@ -73,9 +73,13 @@ func (tu TestUtil) ShouldPanic() {
 	}
 }
 
+func (tu TestUtil) CreateTestUploadsDir() {
+	os.MkdirAll(os.Getenv("TEST_IMAGE_STORAGE_PATH"), os.ModePerm)
+}
+
 func (tu TestUtil) CleanTestUploads() {
 	tu.t.Cleanup(func() {
-		cleanDir(os.Getenv("TEST_IMAGE_STORAGE_PATH"))
+		deleteTestDir()
 	})
 }
 
@@ -154,6 +158,10 @@ func QueryUserPassword(userID int, db *sql.DB) string {
 	}
 
 	return password
+}
+
+func deleteTestDir() {
+	os.RemoveAll(os.Getenv("TEST_IMAGE_STORAGE_PATH"))
 }
 
 func cleanDir(path string) {

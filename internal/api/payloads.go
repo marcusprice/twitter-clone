@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
@@ -51,12 +49,9 @@ func generatePostPayload(post *controller.Post) PostPayload {
 		Avatar:      post.Author.Avatar,
 	}
 
-	imageURL := fmt.Sprintf(
-		"http://%s:%s%s%s",
-		os.Getenv("HOST"),
-		os.Getenv("PORT"),
-		UPLOADS_PREFIX,
-		post.Image)
+	if post.Image != "" {
+		post.Image = getUploadPath(post.Image)
+	}
 
 	return PostPayload{
 		ID:                   post.ID,
@@ -65,7 +60,7 @@ func generatePostPayload(post *controller.Post) PostPayload {
 		RetweetCount:         post.RetweetCount,
 		BookmarkCount:        post.BookmarkCount,
 		Impressions:          post.Impressions,
-		Image:                imageURL,
+		Image:                post.Image,
 		CreatedAt:            post.CreatedAt,
 		UpdatedAt:            post.UpdatedAt,
 		Author:               author,

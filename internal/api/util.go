@@ -26,6 +26,16 @@ func (w InvalidFileTypeError) Error() string {
 	return fmt.Sprintf("%s is not an accepted file type", w.filename)
 }
 
+func getUploadPath(fileName string) string {
+	return fmt.Sprintf(
+		"http://%s:%s/%s/%s",
+		os.Getenv("HOST"),
+		os.Getenv("PORT"),
+		UPLOADS_PREFIX,
+		fileName,
+	)
+}
+
 func handleImageUpload(file multipart.File, header *multipart.FileHeader) (filename string, err error) {
 	if !validImageFormat(header.Filename) {
 		return "", InvalidFileTypeError{header.Filename}
