@@ -40,8 +40,8 @@ CREATE TABLE User (
     display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
     avatar TEXT DEFAULT '',
     is_active INTEGER NOT NULL CHECK (is_active IN(0, 1)) DEFAULT 0,
+    role INTEGER NOT NULL CHECK (role IN(1, 2, 3)) DEFAULT 1,
     last_login TEXT,
-    role INTEGER NOT NULL CHECK (is_active IN(1, 2, 3)) DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp
 );
