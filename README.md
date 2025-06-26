@@ -1,5 +1,7 @@
 # twitter clone
 
+![Build Status](https://github.com/marcusprice/twitter-clone/actions/workflows/test.yml/badge.svg)
+
 ## quickstart
 ### installation and setup
 First clone repo and install dependencies:
