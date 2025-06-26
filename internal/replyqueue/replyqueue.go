@@ -11,6 +11,8 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/logger"
 )
 
+// TODO: write better tests for ReplyQueue
+
 type ReplyQueue struct {
 	jobs         []dtypes.ReplyGuyRequest
 	lock         sync.Mutex
@@ -44,7 +46,6 @@ func (rq *ReplyQueue) StartWorker() {
 			}
 		}
 	}()
-
 }
 
 func (rq *ReplyQueue) process(job dtypes.ReplyGuyRequest) error {
@@ -81,7 +82,7 @@ func NewReplyQueue() *ReplyQueue {
 
 	coreClient := client.NewCoreClient(dalecooperJWT)
 	ollamaClient := client.NewOllamaClient()
-	jobs := make([]dtypes.ReplyGuyRequest, 0, 100)
+	jobs := []dtypes.ReplyGuyRequest{}
 
 	replyQueue := &ReplyQueue{
 		jobs:         jobs,
