@@ -7,15 +7,18 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/model"
+	"github.com/marcusprice/twitter-clone/internal/permissions"
 )
 
 func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestID := r.Context().Value("requestID")
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			http.Error(w, Unauthorized, http.StatusUnauthorized)
@@ -26,6 +29,12 @@ func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 		token, err := ParseJWT(tokenString)
 		if err != nil || !token.Valid {
 			logger.LogWarn("failed authenticating user")
+			logger.LogInfo(
+				fmt.Sprintf(
+					"user authenitcation failed * requestID %v",
+					requestID,
+				),
+			)
 			http.Error(w, Unauthorized, http.StatusUnauthorized)
 			return
 		}
@@ -46,10 +55,8 @@ func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 
 		userID := int(sub)
 		err = user.ByID(userID)
-		if err != nil || !user.IsActive {
-			var userNotFoundError model.UserNotFoundError
-			if err != nil && !errors.As(err, &userNotFoundError) {
-				logger.LogError("user not found?")
+		if err != nil || (!user.IsActive && user.Role != permissions.SYSTEM_ROLE) {
+			if err != nil && !errors.Is(err, model.UserNotFoundError{}) {
 				http.Error(w, InternalServerError, http.StatusInternalServerError)
 			} else {
 				http.Error(w, Unauthorized, http.StatusUnauthorized)
@@ -58,7 +65,13 @@ func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 			return
 		}
 
-		logger.LogInfo(fmt.Sprintf("user authenticated, request userID: %d", userID))
+		logger.LogInfo(
+			fmt.Sprintf(
+				"user authenticated * userID: %d * requestID %v",
+				userID,
+				requestID,
+			),
+		)
 		ctx := context.WithValue(
 			r.Context(), "userID", userID)
 
@@ -99,18 +112,27 @@ func AllowMethods(methods []string, next http.Handler) http.Handler {
 	})
 }
 
+var requestCounter uint64
+
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		requestID := atomic.AddUint64(&requestCounter, 1)
+		msg := fmt.Sprintf("%s %s requestID %d", r.Method, r.URL.Path, requestID)
+		logger.LogInfo(msg)
+		ctx := context.WithValue(r.Context(), "requestID", fmt.Sprintf("%d", requestID))
+		r = r.WithContext(ctx)
+
 		ww := &responseWriterWrapper{
 			ResponseWriter: w, statusCode: http.StatusOK}
 
 		next.ServeHTTP(ww, r)
 
-		msg := fmt.Sprintf(
-			"%s %s | status=%d | %v\n",
-			r.Method, r.URL.Path, ww.statusCode, time.Since(start),
-		)
+		msg = fmt.Sprintf(
+			"%d * total time %v * requestID %d \n",
+			ww.statusCode,
+			time.Since(start),
+			requestID)
 
 		switch {
 		case ww.statusCode >= 500:

@@ -1,5 +1,11 @@
 package dtypes
 
+import (
+	"time"
+
+	"github.com/marcusprice/twitter-clone/internal/permissions"
+)
+
 type UserInput struct {
 	Email       string `json:"email"`
 	Username    string `json:"username"`
@@ -30,9 +36,11 @@ type UserData struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
+	Avatar      string
 	Password    string
 	LastLogin   string
 	IsActive    int
+	Role        permissions.Role
 	CreatedAt   string
 	UpdatedAt   string
 }
@@ -85,4 +93,19 @@ type IdentifierAlreadyExistsError struct{}
 
 func (_ IdentifierAlreadyExistsError) Error() string {
 	return "Username or email already exists"
+}
+
+type ModelResponse struct {
+	Model              string    `json:"model"`
+	CreatedAt          time.Time `json:"created_at"`
+	Response           string    `json:"response"`
+	Done               bool      `json:"done"`
+	DoneReason         string    `json:"done_reason"`
+	Context            []int     `json:"context"`
+	TotalDuration      int64     `json:"total_duration"`
+	LoadDuration       int       `json:"load_duration"`
+	PromptEvalCount    int       `json:"prompt_eval_count"`
+	PromptEvalDuration int64     `json:"prompt_eval_duration"`
+	EvalCount          int       `json:"eval_count"`
+	EvalDuration       int       `json:"eval_duration"`
 }

@@ -17,3 +17,9 @@ type PostNotFoundError struct{}
 func (_ PostNotFoundError) Error() string {
 	return "Post not found"
 }
+
+type CommentNotFoundError struct{}
+
+func (_ CommentNotFoundError) Error() string {
+	return "Comment not found"
+}

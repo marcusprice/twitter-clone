@@ -68,6 +68,7 @@ func (post *Post) New(postInput dtypes.PostInput) error {
 	return nil
 }
 
+// TODO: update to new patten
 func (post *Post) ByID(postID int) error {
 	postData, err := post.model.GetByID(postID)
 	if err != nil {

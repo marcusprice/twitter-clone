@@ -10,16 +10,28 @@ seed-db:
 build:
 	go build ./cmd/twitter/twitter.go
 
-run:
+run-core:
 	go run ./cmd/twitter/twitter.go
 
-debug:
+debug-core:
 	dlv debug ./cmd/twitter/twitter.go
+
+run-reply-guy:
+	go run ./cmd/reply-guy/reply-guy.go
+
+debug-reply-guy:
+	dlv debug ./cmd/reply-guy/reply-guy.go
+
+run-all:
+	@./scripts/run_all.sh
 
 run-tests:
 	go test -v ./...
 
 loc:
+	find . \( -name '*.go' -o -name '*.sql' \) -type f ! -name '*_test.go' | xargs wc -l
+
+loc-including-tests:
 	find . \( -name '*.go' -o -name '*.sql' \) -type f | xargs wc -l
 
 # run delve debugger with Package::Test i.e. model::TestTimelineOffsetCount
@@ -29,3 +41,5 @@ debug-test:
 # Prevent make from trying to make a file named after the argument
 %:
 	@:
+
+

@@ -10,6 +10,7 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/api"
 	"github.com/marcusprice/twitter-clone/internal/constants"
+	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/util"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -51,5 +52,6 @@ func main() {
 	}
 	handler := api.RegisterHandlers(conn)
 
+	logger.LogInfo(fmt.Sprintf("CORE APP LISTENING AT %s:%s", host, port))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), handler))
 }

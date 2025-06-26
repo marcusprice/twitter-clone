@@ -17,6 +17,7 @@ case "$pkg" in
     model) path="./internal/model" ;;
     controller) path="./internal/controller" ;;
     api) path="./internal/api" ;;
+    replyqueue) path="./internal/replyqueue" ;;
     *) echo "Unknown package: $pkg" && exit 1 ;;
 esac
 
