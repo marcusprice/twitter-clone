@@ -27,25 +27,6 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 	mux := http.NewServeMux()
 
-	if util.InDevContext() {
-		projectRoot, err := util.ProjectRoot()
-		if err != nil {
-			panic(err)
-		}
-
-		fs := http.FileServer(http.Dir(projectRoot + "/static/swagger-ui/"))
-
-		mux.Handle(
-			"/docs/",
-			Logger(
-				http.StripPrefix("/docs/", fs)))
-
-		mux.Handle(
-			"/swagger.yaml",
-			Logger(
-				http.FileServer(http.Dir("."))))
-	}
-
 	mux.Handle(
 		"/api/v1/timeline",
 		Logger(
@@ -126,6 +107,34 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 					user,
 					http.HandlerFunc(commentAPI.Create)))),
 	)
+
+	projectRoot, err := util.ProjectRoot()
+	uploadFileServer := http.FileServer(http.Dir(projectRoot + "/upload"))
+
+	mux.Handle(
+		"/uploads/",
+		Logger(
+			VerifyGetMethod(
+				http.StripPrefix(UPLOADS_PREFIX, uploadFileServer))),
+	)
+
+	if util.InDevContext() {
+		if err != nil {
+			panic(err)
+		}
+
+		swaggerFS := http.FileServer(http.Dir(projectRoot + "/static/swagger-ui/"))
+
+		mux.Handle(
+			"/docs/",
+			Logger(
+				http.StripPrefix("/docs/", swaggerFS)))
+
+		mux.Handle(
+			"/swagger.yaml",
+			Logger(
+				http.FileServer(http.Dir("."))))
+	}
 
 	return mux
 }

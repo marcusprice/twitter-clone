@@ -2,6 +2,8 @@ package api
 
 import "net/http"
 
+const UPLOADS_PREFIX = "/uploads/"
+
 var BadRequest = http.StatusText(http.StatusBadRequest)
 var Conflict = http.StatusText(http.StatusConflict)
 var InternalServerError = http.StatusText(http.StatusInternalServerError)

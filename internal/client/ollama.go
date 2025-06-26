@@ -21,7 +21,7 @@ type OllamaClient struct {
 
 func (oc OllamaClient) Prompt(job dtypes.ReplyGuyRequest) (dtypes.ModelResponse, error) {
 	ollamaRequestPayload := dtypes.OllamaRequest{
-		Stream: true,
+		Stream: false,
 		Model:  job.Model,
 		Prompt: formatPrompt(job),
 	}
