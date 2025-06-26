@@ -426,6 +426,80 @@ func TestCreateCommentInvalidFileType(t *testing.T) {
 	})
 }
 
+func TestCreateCommentUnauthorized(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+
+		noAuthHeaderReq := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", nil)
+		noAuthHeaderRes := httptest.NewRecorder()
+		handler.ServeHTTP(noAuthHeaderRes, noAuthHeaderReq)
+
+		headerNoTokenReq := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", nil)
+		headerNoTokenReq.Header.Set("Authorization", "Bearer ")
+		headerNoTokenRes := httptest.NewRecorder()
+		handler.ServeHTTP(headerNoTokenRes, headerNoTokenReq)
+
+		headerWrongKeywordReq := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", nil)
+		headerWrongKeywordReq.Header.Set("Authorization", "Esteban ")
+		headerWrongKeywordRes := httptest.NewRecorder()
+		handler.ServeHTTP(headerWrongKeywordRes, headerWrongKeywordReq)
+
+		badToken := generateBadToken()
+		badTokenReq := httptest.NewRequest(http.MethodPost, "/api/v1/comment/create", nil)
+		badTokenReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", badToken))
+		badTokenRes := httptest.NewRecorder()
+		handler.ServeHTTP(badTokenRes, badTokenReq)
+
+		tu.AssertEqual(http.StatusUnauthorized, noAuthHeaderRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, headerNoTokenRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, headerWrongKeywordRes.Code)
+		tu.AssertEqual(http.StatusUnauthorized, badTokenRes.Code)
+	})
+}
+
+func TestCreateCommentWrongMethod(t *testing.T) {
+	testutil.WithTestDB(t, func(db *sql.DB) {
+		tu := testutil.NewTestUtil(t)
+		handler := RegisterHandlers(db)
+
+		getReq := httptest.NewRequest(http.MethodGet, "/api/v1/comment/create", nil)
+		getRes := httptest.NewRecorder()
+		putReq := httptest.NewRequest(http.MethodPut, "/api/v1/comment/create", nil)
+		putRes := httptest.NewRecorder()
+		patchReq := httptest.NewRequest(http.MethodPatch, "/api/v1/comment/create", nil)
+		patchRes := httptest.NewRecorder()
+		deleteReq := httptest.NewRequest(http.MethodDelete, "/api/v1/comment/create", nil)
+		deleteRes := httptest.NewRecorder()
+		headReq := httptest.NewRequest(http.MethodHead, "/api/v1/comment/create", nil)
+		headRes := httptest.NewRecorder()
+		optionReq := httptest.NewRequest(http.MethodOptions, "/api/v1/comment/create", nil)
+		optionRes := httptest.NewRecorder()
+		traceReq := httptest.NewRequest(http.MethodTrace, "/api/v1/comment/create", nil)
+		traceRes := httptest.NewRecorder()
+		connectReq := httptest.NewRequest(http.MethodConnect, "/api/v1/comment/create", nil)
+		connectRes := httptest.NewRecorder()
+
+		handler.ServeHTTP(getRes, getReq)
+		handler.ServeHTTP(putRes, putReq)
+		handler.ServeHTTP(patchRes, patchReq)
+		handler.ServeHTTP(deleteRes, deleteReq)
+		handler.ServeHTTP(headRes, headReq)
+		handler.ServeHTTP(optionRes, optionReq)
+		handler.ServeHTTP(traceRes, traceReq)
+		handler.ServeHTTP(connectRes, connectReq)
+
+		tu.AssertEqual(http.StatusMethodNotAllowed, getRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, putRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, patchRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, deleteRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, headRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, optionRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, traceRes.Code)
+		tu.AssertEqual(http.StatusMethodNotAllowed, connectRes.Code)
+	})
+}
+
 func createLargeImgMultipartFormBodyWithPostID(mbOver float64, postID int) (*bytes.Buffer, string) {
 	var b bytes.Buffer
 	writer := multipart.NewWriter(&b)
