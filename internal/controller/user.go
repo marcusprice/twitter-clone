@@ -7,6 +7,7 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/model"
+	"github.com/marcusprice/twitter-clone/internal/permissions"
 	"github.com/marcusprice/twitter-clone/internal/util"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,6 +21,7 @@ type User struct {
 	LastName    string
 	DisplayName string
 	IsActive    bool
+	Role        permissions.Role
 	LastLogin   time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
@@ -46,6 +48,7 @@ func (u *User) setFromModel(userData dtypes.UserData) {
 	u.LastName = userData.LastName
 	u.DisplayName = userData.DisplayName
 	u.IsActive = userData.IsActive != 0
+	u.Role = userData.Role
 	u.LastLogin = util.ParseTime(userData.LastLogin)
 	u.CreatedAt = util.ParseTime(userData.CreatedAt)
 	u.UpdatedAt = util.ParseTime(userData.UpdatedAt)

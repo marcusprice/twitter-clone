@@ -8,6 +8,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/logger"
+	"github.com/marcusprice/twitter-clone/internal/permissions"
 	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
@@ -51,6 +52,7 @@ func (um *UserModel) New(userInput dtypes.UserInput) (dtypes.UserData, error) {
 		LastName:    userInput.LastName,
 		DisplayName: userInput.DisplayName,
 		LastLogin:   "", // last login null in the db
+		Role:        permissions.USER_ROLE,
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
 	}
@@ -217,12 +219,13 @@ func parseUserQueryRow(row *sql.Row) (dtypes.UserData, error) {
 	var displayName string
 	var lastLogin sql.NullString
 	var isActive int
+	var role int
 	var createdAt string
 	var updatedAt string
 
 	err := row.Scan(
 		&id, &email, &userName, &password, &firstName, &lastName, &displayName,
-		&lastLogin, &isActive, &createdAt, &updatedAt)
+		&lastLogin, &isActive, &role, &createdAt, &updatedAt)
 
 	if err != nil {
 		return dtypes.UserData{}, UserNotFoundError{}
@@ -243,6 +246,7 @@ func parseUserQueryRow(row *sql.Row) (dtypes.UserData, error) {
 		Password:    password,
 		LastLogin:   lastLoginString,
 		IsActive:    isActive,
+		Role:        permissions.Role(role),
 		CreatedAt:   createdAt,
 		UpdatedAt:   updatedAt,
 	}, nil

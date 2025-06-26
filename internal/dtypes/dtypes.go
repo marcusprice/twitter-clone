@@ -1,6 +1,10 @@
 package dtypes
 
-import "time"
+import (
+	"time"
+
+	"github.com/marcusprice/twitter-clone/internal/permissions"
+)
 
 type UserInput struct {
 	Email       string `json:"email"`
@@ -36,6 +40,7 @@ type UserData struct {
 	Password    string
 	LastLogin   string
 	IsActive    int
+	Role        permissions.Role
 	CreatedAt   string
 	UpdatedAt   string
 }

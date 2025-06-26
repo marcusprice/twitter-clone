@@ -13,6 +13,7 @@ import (
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/logger"
 	"github.com/marcusprice/twitter-clone/internal/model"
+	"github.com/marcusprice/twitter-clone/internal/permissions"
 )
 
 func ValidateUser(user *controller.User, next http.Handler) http.Handler {
@@ -54,10 +55,8 @@ func ValidateUser(user *controller.User, next http.Handler) http.Handler {
 
 		userID := int(sub)
 		err = user.ByID(userID)
-		if err != nil || !user.IsActive {
-			var userNotFoundError model.UserNotFoundError
-			if err != nil && !errors.As(err, &userNotFoundError) {
-				logger.LogError("user not found?")
+		if err != nil || (!user.IsActive && user.Role != permissions.SYSTEM_ROLE) {
+			if err != nil && !errors.Is(err, model.UserNotFoundError{}) {
 				http.Error(w, InternalServerError, http.StatusInternalServerError)
 			} else {
 				http.Error(w, Unauthorized, http.StatusUnauthorized)

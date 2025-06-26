@@ -41,6 +41,7 @@ CREATE TABLE User (
     avatar TEXT DEFAULT '',
     is_active INTEGER NOT NULL CHECK (is_active IN(0, 1)) DEFAULT 0,
     last_login TEXT,
+    role INTEGER NOT NULL CHECK (is_active IN(1, 2, 3)) DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT current_timestamp,
     updated_at TEXT NOT NULL DEFAULT current_timestamp
 );

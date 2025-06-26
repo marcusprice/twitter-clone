@@ -1,14 +1,14 @@
 -- seed_data.sql
 
 -- Users
-INSERT INTO User (email, user_name, password, first_name, last_name, display_name, is_active)
+INSERT INTO User (email, user_name, password, first_name, last_name, display_name, is_active, role)
 VALUES
-    ('estecat@yahoo.com', 'estecat', 'password', 'Esteban', 'Price', 'Bubba', 0),
-    ('whispers_from_wallphace@gmail.com', 'wallphace', 'password', 'Marcus', 'Price', 'Whispers From Wallphace', 0),
-    ('d.cooper@fbi.gov', 'dalecooper', 'password', 'Dale', 'Cooper', 'Coffee Fre@k', 0),
-    ('audrey@hornesdepartmentstore.com', 'audrey', 'password', 'Audrey', 'Horne', 'Audrey', 0),
-    ('bobby.briggs@twinpeakswa.gov', 'bobbybriggs', 'password', 'Bobby', 'Briggs', 'Bobby', 0),
-    ('donna.hayward@twinpeaksclinic.com', 'donnahayward', 'password', 'Donna', 'Hayward', 'Donna', 0);
+    ('estecat@yahoo.com', 'estecat', 'password', 'Esteban', 'Price', 'Bubba', 0, 1),
+    ('whispers_from_wallphace@gmail.com', 'wallphace', 'password', 'Marcus', 'Price', 'Whispers From Wallphace', 0, 2),
+    ('d.cooper@fbi.gov', 'dalecooper', 'password', 'Dale', 'Cooper', 'Coffee Fre@k', 0, 3),
+    ('audrey@hornesdepartmentstore.com', 'audrey', 'password', 'Audrey', 'Horne', 'Audrey', 0, 1),
+    ('bobby.briggs@twinpeakswa.gov', 'bobbybriggs', 'password', 'Bobby', 'Briggs', 'Bobby', 0, 1),
+    ('donna.hayward@twinpeaksclinic.com', 'donnahayward', 'password', 'Donna', 'Hayward', 'Donna', 0, 1);
 
 -- Posts (assumes the above inserts generate ids 1–6 in the same order)
 INSERT INTO Post (user_id, content, image, created_at, updated_at) VALUES
