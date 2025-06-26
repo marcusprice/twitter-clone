@@ -16,6 +16,7 @@ import (
 type Post struct {
 	model         *model.PostModel
 	postAction    *model.PostAction
+	comment       *Comment
 	ID            int
 	UserID        int
 	Content       string
@@ -31,6 +32,7 @@ type Post struct {
 		DisplayName string
 		Avatar      string
 	}
+	Comments []*Comment
 	dtypes.Retweeter
 }
 
@@ -66,6 +68,26 @@ func (post *Post) New(postInput dtypes.PostInput) error {
 	post.setFromModel(postData)
 
 	return nil
+}
+
+func (post *Post) GetPostAndComments(postID int) (*Post, error) {
+	postData, err := post.model.GetByID(postID)
+	if err != nil {
+		logger.LogError("Post.GetPostAndComments() error querying posts:" + err.Error())
+		return &Post{}, nil
+	}
+
+	postComments, err := post.comment.GetPostComments(postData.ID)
+	if err != nil {
+		logger.LogError("Post.GetPostAndComments() error querying comments:" + err.Error())
+		return &Post{}, nil
+	}
+
+	ret := &Post{}
+	ret.setFromModel(postData)
+	ret.Comments = postComments
+
+	return ret, nil
 }
 
 // TODO: update to new patten
@@ -240,8 +262,12 @@ func (post *Post) Sync() error {
 }
 
 func NewPostController(db *sql.DB) *Post {
+	commentModel := model.NewCommentModel(db)
+	commentController := &Comment{model: commentModel}
+
 	return &Post{
 		model:      model.NewPostModel(db),
 		postAction: model.NewPostActionModel(db),
+		comment:    commentController,
 	}
 }

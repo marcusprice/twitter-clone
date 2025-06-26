@@ -59,3 +59,7 @@ func WrapConstraintError(err error) ConstraintError {
 
 	return ConstraintError{OTHER_ERROR, err.Error()}
 }
+
+type RowScanner interface {
+	Scan(dest ...any) error
+}

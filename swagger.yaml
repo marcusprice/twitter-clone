@@ -193,6 +193,31 @@ paths:
                               type: string
                             avatar:
                               type: string
+  /post/{post-id}:
+    get:
+      security:
+        - bearerAuth: []
+      description: gets post and comments   
+      parameters:
+        - name: post-id
+          in: path
+          required: true
+          description: post id
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    $ref: '#/components/schemas/Post'
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
   /post/create:
     post:
       security:
@@ -431,3 +456,88 @@ components:
           type: string 
         password:
           type: string 
+    Post:
+      type: object
+      properties:
+        postID:
+          type: integer
+        content:
+          type: string
+        image:
+          type: string
+        likeCount:
+          type: integer
+        retweetCount:
+          type: integer
+        bookmarkCount:
+          type: integer
+        impressions:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        isRetweet:
+          type: boolean
+        retweeterUsername:
+          type: string
+        retweeterDisplayName:
+          type: string
+        author:
+          type: object
+          properties:
+            username:
+              type: string
+            displayName:
+              type: string
+            avatar:
+              type: string
+    Comment:
+      type: object
+      properties:
+        commentID:
+          type: integer
+        postID:
+          type: integer
+        parentCommentID:
+          type: integer
+        content:
+          type: string
+        likeCount:
+          type: integer
+        retweetCount:
+          type: integer
+        bookmarkCount:
+          type: integer
+        impressions:
+          type: integer
+        image:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        isRetweet:
+          type: integer
+        retweeterUsername:
+          type: integer
+        retweeterDisplayName:
+          type: integer
+        replies:
+          type: array
+          description: Only present on top-level comments (i.e., when parentCommentID is null)
+          items:
+            $ref: '#/components/schemas/Comment'
+        author:
+          type: object
+          properties:
+            username:
+              type: string
+            displayName:
+              type: string
+            avatar:
+              type: string

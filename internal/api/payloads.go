@@ -118,3 +118,90 @@ func generateCommentPayload(comment *controller.Comment) *CommentPayload {
 		Author:               author,
 	}
 }
+
+type CommentFromPostPayload struct {
+	ID              int                       `json:"commentID"`
+	PostID          int                       `json:"postID"`
+	ParentCommentID int                       `json:"parentCommentID"`
+	Content         string                    `json:"content"`
+	LikeCount       int                       `json:"likeCount"`
+	RetweetCount    int                       `json:"retweetCount"`
+	BookmarkCount   int                       `json:"bookmarkCount"`
+	Impressions     int                       `json:"impressions"`
+	Image           string                    `json:"image"`
+	CreatedAt       time.Time                 `json:"createdAt"`
+	UpdatedAt       time.Time                 `json:"updatedAt"`
+	Author          AuthorPayload             `json:"author"`
+	Replies         []*CommentFromPostPayload `json:"replies"`
+}
+
+type PostAndCommentsPayload struct {
+	ID            int                       `json:"postID"`
+	Content       string                    `json:"content"`
+	LikeCount     int                       `json:"likeCount"`
+	RetweetCount  int                       `json:"retweetCount"`
+	BookmarkCount int                       `json:"bookmarkCount"`
+	Impressions   int                       `json:"impressions"`
+	Image         string                    `json:"image"`
+	CreatedAt     time.Time                 `json:"createdAt"`
+	UpdatedAt     time.Time                 `json:"updatedAt"`
+	Author        AuthorPayload             `json:"author"`
+	Comments      []*CommentFromPostPayload `json:"comments"`
+}
+
+func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayload {
+	postAndCommentsPayload := PostAndCommentsPayload{}
+	postAndCommentsPayload.Comments = []*CommentFromPostPayload{}
+	for _, comment := range post.Comments {
+		commentPayload := &CommentFromPostPayload{}
+		repliesPayload := []*CommentFromPostPayload{}
+		for _, reply := range comment.Replies {
+			replyPayload := &CommentFromPostPayload{}
+			replyPayload.ID = reply.ID
+			replyPayload.PostID = reply.PostID
+			replyPayload.ParentCommentID = reply.ParentCommentID
+			replyPayload.Content = reply.Content
+			replyPayload.LikeCount = reply.LikeCount
+			replyPayload.RetweetCount = reply.RetweetCount
+			replyPayload.BookmarkCount = reply.BookmarkCount
+			replyPayload.Impressions = reply.Impressions
+			replyPayload.Image = reply.Image
+			replyPayload.CreatedAt = reply.CreatedAt
+			replyPayload.UpdatedAt = reply.UpdatedAt
+			replyPayload.Author = AuthorPayload(reply.Author)
+			repliesPayload = append(repliesPayload, replyPayload)
+		}
+
+		commentPayload.ID = comment.ID
+		commentPayload.PostID = comment.PostID
+		commentPayload.ParentCommentID = comment.ParentCommentID
+		commentPayload.Content = comment.Content
+		commentPayload.LikeCount = comment.LikeCount
+		commentPayload.RetweetCount = comment.RetweetCount
+		commentPayload.BookmarkCount = comment.BookmarkCount
+		commentPayload.Impressions = comment.Impressions
+		commentPayload.Image = comment.Image
+		commentPayload.CreatedAt = comment.CreatedAt
+		commentPayload.UpdatedAt = comment.UpdatedAt
+		commentPayload.Author = AuthorPayload(comment.Author)
+		commentPayload.Replies = repliesPayload
+
+		postAndCommentsPayload.Comments = append(
+			postAndCommentsPayload.Comments,
+			commentPayload,
+		)
+	}
+
+	postAndCommentsPayload.ID = post.ID
+	postAndCommentsPayload.Content = post.Content
+	postAndCommentsPayload.LikeCount = post.LikeCount
+	postAndCommentsPayload.RetweetCount = post.RetweetCount
+	postAndCommentsPayload.BookmarkCount = post.BookmarkCount
+	postAndCommentsPayload.Impressions = post.Impressions
+	postAndCommentsPayload.Image = post.Image
+	postAndCommentsPayload.CreatedAt = post.CreatedAt
+	postAndCommentsPayload.UpdatedAt = post.UpdatedAt
+	postAndCommentsPayload.Author = AuthorPayload(post.Author)
+
+	return postAndCommentsPayload
+}

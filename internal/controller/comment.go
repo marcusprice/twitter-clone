@@ -45,16 +45,7 @@ type Comment struct {
 	IsRetweet            bool
 	RetweeterUsername    string
 	RetweeterDisplayName string
-}
-
-func (comment *Comment) ByID(commentID int) (*Comment, error) {
-	queriedComment := &Comment{}
-	commentData, err := comment.model.GetByID(commentID)
-	if err != nil {
-		return &Comment{}, err
-	}
-	queriedComment.setFromModel(commentData)
-	return queriedComment, nil
+	Replies              []*Comment
 }
 
 func (comment *Comment) setFromModel(commentData dtypes.CommentData) {
@@ -74,6 +65,52 @@ func (comment *Comment) setFromModel(commentData dtypes.CommentData) {
 	comment.Author.DisplayName = commentData.Author.DisplayName
 	comment.Author.Avatar = commentData.Author.Avatar
 	comment.Depth = commentData.Depth
+}
+
+func (comment *Comment) ByID(commentID int) (*Comment, error) {
+	queriedComment := &Comment{}
+	commentData, err := comment.model.GetByID(commentID)
+	if err != nil {
+		return &Comment{}, err
+	}
+	queriedComment.setFromModel(commentData)
+	return queriedComment, nil
+}
+
+func (comment *Comment) GetPostComments(postID int) ([]*Comment, error) {
+	commentData, err := comment.model.GetByPostID(postID)
+	if err != nil {
+		return []*Comment{}, err
+	}
+
+	topLevelComments := []*Comment{}
+	commentByParentMap := make(map[int][]*Comment)
+	for _, c := range commentData {
+		comment := &Comment{}
+		comment.setFromModel(c)
+
+		if comment.ParentCommentID != 0 {
+			if slice, ok := commentByParentMap[comment.ParentCommentID]; !ok {
+				commentByParentMap[comment.ParentCommentID] = []*Comment{comment}
+			} else {
+				slice = append(slice, comment)
+				commentByParentMap[comment.ParentCommentID] = slice
+			}
+
+			continue
+		}
+
+		topLevelComments = append(topLevelComments, comment)
+	}
+
+	for _, comment := range topLevelComments {
+		comment.Replies = []*Comment{}
+		if replies, ok := commentByParentMap[comment.ID]; ok {
+			comment.Replies = replies
+		}
+	}
+
+	return topLevelComments, nil
 }
 
 func (comment *Comment) New(commentInput dtypes.CommentInput) (*Comment, error) {
@@ -186,7 +223,9 @@ func (comment *Comment) handleReplyGuyRequest(guy string, newComment *Comment) e
 
 func NewCommentController(db *sql.DB) *Comment {
 	replyGuy := client.NewReplyGuyClient()
-	postController := NewPostController(db)
+	postModel := model.NewPostModel(db)
+	postController := &Post{model: postModel}
+
 	model := model.NewCommentModel(db)
 	return &Comment{model: model, post: postController, replyGuy: replyGuy}
 }

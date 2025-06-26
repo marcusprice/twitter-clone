@@ -18,6 +18,24 @@ type PostAPI struct {
 	post *controller.Post
 }
 
+func (postAPI PostAPI) Get(w http.ResponseWriter, r *http.Request) {
+	postIDPathValue := r.PathValue("postID")
+	postID, err := strconv.Atoi(postIDPathValue)
+	if err != nil {
+		http.Error(w, BadRequest, http.StatusBadRequest)
+		return
+	}
+
+	post, err := postAPI.post.GetPostAndComments(postID)
+	if err != nil {
+		// TODO: figure out error handling
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(generatePostAndCommentsPayload(post))
+}
+
 func (postAPI PostAPI) Create(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
