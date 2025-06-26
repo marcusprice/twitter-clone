@@ -1,6 +1,6 @@
 # twitter clone
 
-![Build Status](https://github.com/marcusprice/twitter-clone/actions/workflows/test.yaml/badge)
+[![Test](https://github.com/marcusprice/twitter-clone/actions/workflows/test.yaml/badge.svg)](https://github.com/marcusprice/twitter-clone/actions/workflows/test.yaml)
 
 ## quickstart
 ### installation and setup
