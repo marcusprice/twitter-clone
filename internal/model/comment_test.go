@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/marcusprice/twitter-clone/internal/dbutils"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
 	"github.com/marcusprice/twitter-clone/internal/testhelpers"
 	"github.com/marcusprice/twitter-clone/internal/testutil"
+	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 func TestCommentGetByID(t *testing.T) {
@@ -41,5 +43,82 @@ func TestCommentGetByID(t *testing.T) {
 		tu.AssertTrue(errors.As(err, &commentNotFoundError))
 		tu.AssertEqual("Comment not found", commentNotFoundError.Error())
 		tu.AssertEqual(0, commentData.ID)
+	})
+}
+
+func TestNewPostComment(t *testing.T) {
+	testutil.WithTestData(t, func(db *sql.DB, _ time.Time) {
+		tu := testutil.NewTestUtil(t)
+		CommentModel := &CommentModel{db: db}
+
+		wallphace := testhelpers.QueryUser(1, db)
+		commentInput := dtypes.CommentInput{
+			PostID:  1,
+			UserID:  wallphace.ID,
+			Content: "Damn now I want to buy chocolate",
+			Image:   "suhdude.jpeg",
+		}
+
+		beforeInsert := time.Now().UTC().Add(-1 * time.Minute)
+		rowID, err := CommentModel.NewPostComment(commentInput)
+		afterInsert := time.Now().UTC().Add(time.Minute)
+		commentData := testhelpers.QueryComment(rowID, db)
+		tu.AssertErrorNil(err)
+		tu.AssertEqual(1, rowID)
+		tu.AssertEqual(rowID, commentData.ID)
+		tu.AssertEqual(commentInput.Content, commentData.Content)
+		tu.AssertEqual(commentInput.Image, commentData.Image)
+		tu.AssertEqual(commentInput.UserID, commentData.UserID)
+		tu.AssertEqual(commentInput.PostID, commentData.PostID)
+		tu.AssertEqual(0, commentData.ParentCommentID)
+		tu.AssertEqual(0, commentData.Depth)
+		tu.AssertEqual(0, commentData.LikeCount)
+		tu.AssertEqual(0, commentData.RetweetCount)
+		tu.AssertEqual(0, commentData.BookmarkCount)
+		tu.AssertEqual(0, commentData.Impressions)
+		tu.AssertEqual(wallphace.Username, commentData.Author.Username)
+		tu.AssertEqual(wallphace.DisplayName, commentData.Author.DisplayName)
+		tu.AssertEqual(wallphace.Avatar, commentData.Author.Avatar)
+		tu.AssertTrue(beforeInsert.Before(util.ParseTime(commentData.CreatedAt)))
+		tu.AssertTrue(afterInsert.After(util.ParseTime(commentData.CreatedAt)))
+		tu.AssertTrue(beforeInsert.Before(util.ParseTime(commentData.UpdatedAt)))
+		tu.AssertTrue(afterInsert.After(util.ParseTime(commentData.UpdatedAt)))
+
+		commentInput = dtypes.CommentInput{
+			PostID:  42069,
+			UserID:  wallphace.ID,
+			Content: "Damn now I want to buy chocolate",
+			Image:   "suhdude.jpeg",
+		}
+		rowID, err = CommentModel.NewPostComment(commentInput)
+		var constraintError dbutils.ConstraintError
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(-1, rowID)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.FOREIGN_KEY_ERROR, constraintError.Constraint)
+
+		commentInput = dtypes.CommentInput{
+			PostID:  1,
+			UserID:  42069,
+			Content: "Damn now I want to buy chocolate",
+			Image:   "suhdude.jpeg",
+		}
+		rowID, err = CommentModel.NewPostComment(commentInput)
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(-1, rowID)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.FOREIGN_KEY_ERROR, constraintError.Constraint)
+
+		commentInput = dtypes.CommentInput{
+			PostID:  1,
+			UserID:  1,
+			Content: "",
+			Image:   "",
+		}
+		rowID, err = CommentModel.NewPostComment(commentInput)
+		tu.AssertErrorNotNil(err)
+		tu.AssertEqual(-1, rowID)
+		tu.AssertTrue(errors.As(err, &constraintError))
+		tu.AssertEqual(dbutils.CHECK_ERROR, constraintError.Constraint)
 	})
 }

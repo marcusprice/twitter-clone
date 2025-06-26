@@ -32,6 +32,7 @@ type UserData struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
+	Avatar      string
 	Password    string
 	LastLogin   string
 	IsActive    int

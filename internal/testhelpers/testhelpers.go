@@ -19,6 +19,7 @@ func QueryUser(userID int, db *sql.DB) dtypes.UserData {
 		IsActive    int
 		CreatedAt   string
 		UpdatedAt   string
+		avatar      string
 	}
 
 	query := `
@@ -33,7 +34,8 @@ func QueryUser(userID int, db *sql.DB) dtypes.UserData {
 			last_login,
 			is_active,
 			created_at,
-			updated_at
+			updated_at,
+			avatar
 		FROM User
 		WHERE id = $1;
 	`
@@ -49,12 +51,14 @@ func QueryUser(userID int, db *sql.DB) dtypes.UserData {
 	var is_active int
 	var created_at string
 	var updated_at string
+	var avatar string
 
 	err := db.
 		QueryRow(query, userID).
 		Scan(
 			&id, &email, &user_name, &first_name, &last_name, &display_name,
-			&password, &last_login_ns, &is_active, &created_at, &updated_at)
+			&password, &last_login_ns, &is_active, &created_at, &updated_at,
+			&avatar)
 
 	if err != nil {
 		panic(err)
@@ -72,6 +76,7 @@ func QueryUser(userID int, db *sql.DB) dtypes.UserData {
 		IsActive:    is_active,
 		CreatedAt:   created_at,
 		UpdatedAt:   updated_at,
+		Avatar:      avatar,
 	}
 
 	return userData
