@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
+	"github.com/marcusprice/twitter-clone/internal/dtypes"
 )
 
 type TimelinePayload struct {
@@ -40,6 +41,54 @@ type PostPayload struct {
 	IsRetweet            bool          `json:"isRetweet"`
 	RetweeterUsername    string        `json:"retweeterUsername"`
 	RetweeterDisplayName string        `json:"retweeterDisplayName"`
+}
+
+type BookmarkPayload struct {
+	BookmarkCreatedAt string        `json:"bookmarkCreatedAt"`
+	ID                int           `json:"id"`
+	Content           string        `json:"content"`
+	Image             string        `json:"image"`
+	LikeCount         int           `json:"likeCount"`
+	RetweetCount      int           `json:"retweetCount"`
+	BookmarkCount     int           `json:"bookmarkCount"`
+	Impressions       int           `json:"impressions"`
+	CreatedAt         string        `json:"createdAt"`
+	UpdatedAt         string        `json:"updatedAt"`
+	Author            AuthorPayload `json:"author"`
+	Type              string        `json:"type"`
+}
+
+type BookmarkResponsePayload struct {
+	Bookmarks          []BookmarkPayload `json:"bookmarks"`
+	HasMore            bool              `json:"hasMore"`
+	BookmarksRemaining int               `json:"bookmarksRemaining"`
+}
+
+func generateBookmarkPayload(bookmarkData []dtypes.BookmarkData, bookmarksRemaining int) BookmarkResponsePayload {
+	var bookmarks []BookmarkPayload
+	for _, bookmark := range bookmarkData {
+		bp := BookmarkPayload{
+			BookmarkCreatedAt: bookmark.BookmarkCreatedAt,
+			ID:                bookmark.ID,
+			Content:           bookmark.Content,
+			Image:             bookmark.Image,
+			LikeCount:         bookmark.LikeCount,
+			RetweetCount:      bookmark.RetweetCount,
+			BookmarkCount:     bookmark.BookmarkCount,
+			Impressions:       bookmark.Impressions,
+			CreatedAt:         bookmark.CreatedAt,
+			UpdatedAt:         bookmark.UpdatedAt,
+			Author:            AuthorPayload(bookmark.Author),
+			Type:              bookmark.Type,
+		}
+		bookmarks = append(bookmarks, bp)
+	}
+
+	return BookmarkResponsePayload{
+		Bookmarks:          bookmarks,
+		HasMore:            bookmarksRemaining > 0,
+		BookmarksRemaining: bookmarksRemaining,
+	}
 }
 
 func generatePostPayload(post *controller.Post) PostPayload {

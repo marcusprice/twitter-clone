@@ -51,6 +51,15 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 	)
 
 	mux.Handle(
+		"/api/v1/user/bookmarks",
+		Logger(
+			VerifyGetMethod(
+				ValidateUser(
+					user,
+					http.HandlerFunc(userAPI.GetBookmarks)))),
+	)
+
+	mux.Handle(
 		"/api/v1/user/{username}/follow",
 		Logger(
 			AllowMethods(

@@ -119,6 +119,81 @@ func (um *UserModel) GetByID(userID int) (dtypes.UserData, error) {
 	return parseUserQueryRow(row)
 }
 
+//go:embed queries/select-user-bookmark-count.sql
+var selectUserBookmarkCountQuery string
+
+func (um *UserModel) GetBookmarkCount(userID int) (int, error) {
+	var count int
+	err := um.db.QueryRow(selectUserBookmarkCountQuery, userID).Scan(&count)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
+//go:embed queries/select-user-bookmarks.sql
+var selectUserBookmarksQuery string
+
+func (um *UserModel) GetBookmarks(userID, limit, offset int) ([]dtypes.BookmarkData, error) {
+	result, err := um.db.Query(selectUserBookmarksQuery, userID, limit, offset)
+	if err != nil {
+		return []dtypes.BookmarkData{}, err
+	}
+
+	var bookmarks []dtypes.BookmarkData
+	for result.Next() {
+		var bookmark_created_at string
+		var id int
+		var content string
+		var image string
+		var like_count int
+		var retweet_count int
+		var bookmark_count int
+		var impressions int
+		var created_at string
+		var updated_at string
+		var author_user_name string
+		var author_display_name string
+		var author_avatar string
+		var content_type string
+
+		err := result.Scan(
+			&bookmark_created_at, &id, &content, &image, &like_count,
+			&retweet_count, &bookmark_count, &impressions, &created_at,
+			&updated_at, &author_user_name, &author_display_name,
+			&author_avatar, &content_type,
+		)
+
+		author := dtypes.Author{
+			Username:    author_user_name,
+			DisplayName: author_display_name,
+			Avatar:      author_avatar,
+		}
+
+		bookmarkData := dtypes.BookmarkData{
+			BookmarkCreatedAt: bookmark_created_at,
+			ID:                id,
+			Content:           content,
+			Image:             image,
+			LikeCount:         like_count,
+			RetweetCount:      retweet_count,
+			BookmarkCount:     bookmark_count,
+			Impressions:       impressions,
+			CreatedAt:         created_at,
+			UpdatedAt:         updated_at,
+			Author:            author,
+			Type:              content_type,
+		}
+		bookmarks = append(bookmarks, bookmarkData)
+		if err != nil {
+			logger.LogError("UserModel.GetBookmarks() errors scanning row: " + err.Error())
+			return []dtypes.BookmarkData{}, err
+		}
+	}
+
+	return bookmarks, nil
+}
+
 func (um *UserModel) GetByIdentifier(email, username string) (dtypes.UserData, error) {
 	if email == "" && username == "" {
 		return dtypes.UserData{}, MissingRequiredFilterData{}

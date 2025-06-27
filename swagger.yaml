@@ -81,6 +81,71 @@ paths:
                     type: string
                   displayName:
                     type: string
+  /user/bookmarks:
+    get:
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: number of posts to offset by
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasMore:
+                    type: boolean
+                  bookmarksRemaining:
+                    type: integer
+                  bookmarks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bookmarkCreatedAt:
+                          type: string
+                          format: date-time
+                        id:
+                          type: integer
+                        content:
+                          type: string
+                        image:
+                          type: string
+                        likeCount:
+                          type: integer
+                        retweetCount:
+                          type: integer
+                        bookmarkCount:
+                          type: integer
+                        impressions:
+                          type: integer
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                        author:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            displayName:
+                              type: string
+                            avatar:
+                              type: string
   /user/{username}/follow:
     put:
       security:

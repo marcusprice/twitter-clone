@@ -133,6 +133,34 @@ func (userAPI UserAPI) Authenticate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(payload)
 }
 
+func (userAPI *UserAPI) GetBookmarks(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	values := r.URL.Query()
+	limitParam := values.Get("limit")
+	offsetParam := values.Get("offset")
+	limit, offset, err := parseLimitAndOffset(limitParam, offsetParam)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = userAPI.user.ByID(userID)
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	bookmarks, postsRemaining, err := userAPI.user.GetBookmarks(limit, offset)
+
+	bookmarkPayload := generateBookmarkPayload(bookmarks, postsRemaining)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(bookmarkPayload)
+}
+
 func NewUserAPI(user *controller.User) *UserAPI {
 	return &UserAPI{user}
 }

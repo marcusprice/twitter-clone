@@ -8,6 +8,4 @@ FROM
     LEFT JOIN UserFollows FollowedUsers ON FollowedUsers.followee_id = Author.id AND FollowedUsers.follower_id = $1
     LEFT JOIN UserFollows RetweetedUsers ON RetweetedUsers.followee_id = Retweeter.id AND RetweetedUsers.follower_id = $1
 WHERE
-    FollowedUsers.follower_id IS NOT NULL OR RetweetedUsers.follower_id IS NOT NULL
-ORDER BY 
-    Post.created_at DESC
+    FollowedUsers.follower_id IS NOT NULL OR RetweetedUsers.follower_id IS NOT NULL;

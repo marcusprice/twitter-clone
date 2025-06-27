@@ -89,6 +89,21 @@ type Retweeter struct {
 	DisplayName string
 }
 
+type BookmarkData struct {
+	BookmarkCreatedAt string
+	ID                int
+	Content           string
+	Image             string
+	LikeCount         int
+	RetweetCount      int
+	BookmarkCount     int
+	Impressions       int
+	CreatedAt         string
+	UpdatedAt         string
+	Author            Author
+	Type              string
+}
+
 type IdentifierAlreadyExistsError struct{}
 
 func (_ IdentifierAlreadyExistsError) Error() string {

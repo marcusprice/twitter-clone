@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -18,43 +19,18 @@ type TimelineAPI struct {
 }
 
 func (timelineAPI *TimelineAPI) Get(w http.ResponseWriter, r *http.Request) {
-	values := r.URL.Query()
-	limitParam := values.Get("limit")
-	offsetParam := values.Get("offset")
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
 
-	limit, limitErr := strconv.Atoi(limitParam)
-	if limitParam == "" || limitErr != nil {
-		http.Error(w, BadRequest, http.StatusBadRequest)
-		return
-	}
-
-	offset, offsetErr := strconv.Atoi(offsetParam)
-	if offsetParam == "" || offsetErr != nil {
-		offset = 0
-	}
-
-	if limit < MAX_LIMIT {
-		http.Error(
-			w,
-			fmt.Sprintf("Too large of a limit, max limit: %d", MAX_LIMIT),
-			http.StatusBadRequest,
-		)
-
-		return
-	}
-
-	if limit > MIN_LIMIT {
-		http.Error(
-			w,
-			fmt.Sprintf("Too small of a limit, max limit: %d", MIN_LIMIT),
-			http.StatusBadRequest,
-		)
-
+	values := r.URL.Query()
+	limitParam := values.Get("limit")
+	offsetParam := values.Get("offset")
+	limit, offset, err := parseLimitAndOffset(limitParam, offsetParam)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -79,6 +55,28 @@ func (timelineAPI *TimelineAPI) Get(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(timelinePayload)
+}
+
+func parseLimitAndOffset(limitParam, offsetParam string) (limit, offset int, err error) {
+	limit, limitErr := strconv.Atoi(limitParam)
+	if limitParam == "" || limitErr != nil {
+		return -1, -1, errors.New("Bad limit value")
+	}
+
+	offset, offsetErr := strconv.Atoi(offsetParam)
+	if offsetParam == "" || offsetErr != nil {
+		return -1, -1, errors.New("Bad offset value")
+	}
+
+	if limit < MAX_LIMIT {
+		return -1, -1, errors.New(fmt.Sprintf("Too large of a limit, max limit: %d", MAX_LIMIT))
+	}
+
+	if limit > MIN_LIMIT {
+		return -1, -1, errors.New(fmt.Sprintf("Too small of a limit, max limit: %d", MIN_LIMIT))
+	}
+
+	return limit, offset, err
 }
 
 func NewTimelineAPI(db *sql.DB) *TimelineAPI {

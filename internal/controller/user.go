@@ -183,6 +183,20 @@ func (u *User) ByID(userID int) error {
 	return nil
 }
 
+func (user *User) GetBookmarks(limit, offset int) (bookmarkData []dtypes.BookmarkData, postsRemaining int, err error) {
+	bookmarks, err := user.model.GetBookmarks(user.ID(), limit, offset)
+	if err != nil {
+		return []dtypes.BookmarkData{}, -1, err
+	}
+
+	bookmarkCount, err := user.model.GetBookmarkCount(user.ID())
+	if err != nil {
+		return []dtypes.BookmarkData{}, -1, err
+	}
+
+	return bookmarks, bookmarkCount - (limit + offset), nil
+}
+
 func NewUserController(dbConn *sql.DB) *User {
 	if dbConn == nil {
 		panic("db conn cannot be nil")
