@@ -5,6 +5,7 @@ SELECT
     Post.id,
     Post.user_id,
     Post.content,
+    Post.comment_count,
     Post.like_count,
     Post.retweet_count,
     Post.bookmark_count,

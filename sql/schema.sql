@@ -64,6 +64,7 @@ CREATE TABLE Post (
     user_id INTEGER NOT NULL,
     content TEXT NOT NULL,
     image TEXT DEFAULT '',
+    comment_count INTEGER DEFAULT 0,
     like_count INTEGER DEFAULT 0,
     retweet_count INTEGER DEFAULT 0,
     bookmark_count INTEGER DEFAULT 0,
@@ -74,6 +75,7 @@ CREATE TABLE Post (
     FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE,
 
     CHECK (content != '' OR image != ''),
+    CHECK (comment_count >= 0),
     CHECK (like_count >= 0),
     CHECK (retweet_count >= 0),
     CHECK (bookmark_count >= 0)
@@ -178,7 +180,7 @@ CREATE TABLE Notification (
     type TEXT NOT NULL CHECK (type IN(
         'post_like', 'post_comment','post_retweet',
         'comment_like', 'comment_reply', 'comment_retweet', 
-        'mention'
+        'mention', 'follow'
     )),
     is_read INTEGER NOT NULL CHECK (is_read IN(0, 1)),
     created_at TEXT NOT NULL DEFAULT current_timestamp,
@@ -220,6 +222,11 @@ BEGIN
 END;
 
 
+CREATE TRIGGER increment_post_comment_count
+AFTER INSERT ON Comment
+BEGIN
+    UPDATE Post SET comment_count = comment_count + 1 WHERE id = NEW.post_id;
+END;
 
 CREATE TRIGGER increment_post_like_count
 AFTER INSERT ON PostLike

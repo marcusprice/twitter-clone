@@ -16,6 +16,23 @@ type UserAPI struct {
 	user *controller.User
 }
 
+func (userAPI UserAPI) Get(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	user := userAPI.user
+
+	err := user.ByID(userID)
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(generateUserPayload(user))
+}
+
 func (userAPI UserAPI) Create(w http.ResponseWriter, r *http.Request) {
 	var userInput dtypes.UserInput
 	err := json.NewDecoder(r.Body).Decode(&userInput)
@@ -186,7 +203,10 @@ func validUserFields(userInput dtypes.UserInput, pwdRequired bool) bool {
 }
 
 func generateUserPayload(user *controller.User) UserPayload {
+	if user.Avatar != "" {
+		user.Avatar = getUploadPath(user.Avatar)
+	}
 	return UserPayload{
 		user.Email, user.Username, user.FirstName,
-		user.LastName, user.DisplayName}
+		user.LastName, user.DisplayName, user.Avatar}
 }

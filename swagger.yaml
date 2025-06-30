@@ -12,10 +12,10 @@ paths:
       description: Creates a new user
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
-            schema: 
-              $ref: '#/components/schemas/UserInput'
+            schema:
+              $ref: "#/components/schemas/UserInput"
       responses:
         "500":
           description: internal server error
@@ -23,7 +23,7 @@ paths:
           description: bad request
         "409":
           description: username and or email already exists
-        "200": 
+        "200":
           description: A JSON object of the newly created user
           content:
             application/json:
@@ -42,13 +42,13 @@ paths:
                     type: string
   /user/authenticate:
     post:
-      description: | 
+      description: |
         Attempts to authenticate user based on email (or username) and password
       requestBody:
         required: true
-        content: 
+        content:
           application/json:
-            schema: 
+            schema:
               type: object
               properties:
                 email:
@@ -64,7 +64,7 @@ paths:
           description: unauthorized
         "400":
           description: bad request
-        "200": 
+        "200":
           description: A JSON object of the authenticated user
           content:
             application/json:
@@ -229,6 +229,8 @@ paths:
                           type: string
                         image:
                           type: string
+                        commentCount:
+                          type: integer
                         likeCount:
                           type: integer
                         retweetCount:
@@ -262,7 +264,7 @@ paths:
     get:
       security:
         - bearerAuth: []
-      description: gets post and comments   
+      description: gets post and comments
       parameters:
         - name: post-id
           in: path
@@ -278,11 +280,11 @@ paths:
                 type: object
                 properties:
                   post:
-                    $ref: '#/components/schemas/Post'
+                    $ref: "#/components/schemas/Post"
                   comments:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Comment'
+                      $ref: "#/components/schemas/Comment"
   /post/create:
     post:
       security:
@@ -510,17 +512,17 @@ components:
         - password
       properties:
         email:
-          type: string 
+          type: string
         username:
-          type: string 
+          type: string
         firstName:
-          type: string 
+          type: string
         lastName:
-          type: string 
+          type: string
         displayName:
-          type: string 
+          type: string
         password:
-          type: string 
+          type: string
     Post:
       type: object
       properties:
@@ -530,6 +532,8 @@ components:
           type: string
         image:
           type: string
+        commentCount:
+          type: integer
         likeCount:
           type: integer
         retweetCount:
@@ -596,7 +600,7 @@ components:
           type: array
           description: Only present on top-level comments (i.e., when parentCommentID is null)
           items:
-            $ref: '#/components/schemas/Comment'
+            $ref: "#/components/schemas/Comment"
         author:
           type: object
           properties:

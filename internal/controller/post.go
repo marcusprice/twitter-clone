@@ -20,6 +20,7 @@ type Post struct {
 	ID            int
 	UserID        int
 	Content       string
+	CommentCount  int
 	LikeCount     int
 	RetweetCount  int
 	BookmarkCount int
@@ -40,6 +41,7 @@ func (p *Post) setFromModel(postData dtypes.PostData) {
 	p.ID = postData.ID
 	p.UserID = postData.UserID
 	p.Content = postData.Content
+	p.CommentCount = postData.CommentCount
 	p.LikeCount = postData.LikeCount
 	p.RetweetCount = postData.RetweetCount
 	p.BookmarkCount = postData.BookmarkCount

@@ -19,6 +19,7 @@ type UserPayload struct {
 	FirstName   string `json:"firstName"`
 	LastName    string `json:"lastName"`
 	DisplayName string `json:"displayName"`
+	Avatar      string `json:"avatar"`
 }
 
 type AuthorPayload struct {
@@ -30,6 +31,7 @@ type AuthorPayload struct {
 type PostPayload struct {
 	ID                   int           `json:"postID"`
 	Content              string        `json:"content"`
+	CommentCount         int           `json:"commentCount"`
 	LikeCount            int           `json:"likeCount"`
 	RetweetCount         int           `json:"retweetCount"`
 	BookmarkCount        int           `json:"bookmarkCount"`
@@ -92,6 +94,10 @@ func generateBookmarkPayload(bookmarkData []dtypes.BookmarkData, bookmarksRemain
 }
 
 func generatePostPayload(post *controller.Post) PostPayload {
+	if post.Author.Avatar != "" {
+		post.Author.Avatar = getUploadPath(post.Author.Avatar)
+	}
+
 	author := AuthorPayload{
 		Username:    post.Author.Username,
 		DisplayName: post.Author.DisplayName,
@@ -105,6 +111,7 @@ func generatePostPayload(post *controller.Post) PostPayload {
 	return PostPayload{
 		ID:                   post.ID,
 		Content:              post.Content,
+		CommentCount:         post.CommentCount,
 		LikeCount:            post.LikeCount,
 		RetweetCount:         post.RetweetCount,
 		BookmarkCount:        post.BookmarkCount,
@@ -138,6 +145,13 @@ type CommentPayload struct {
 }
 
 func generateCommentPayload(comment *controller.Comment) *CommentPayload {
+	if comment.Image != "" {
+		comment.Image = getUploadPath(comment.Image)
+	}
+
+	if comment.Author.Avatar != "" {
+		comment.Author.Avatar = getUploadPath(comment.Author.Avatar)
+	}
 	author := AuthorPayload{
 		Username:    comment.Author.Username,
 		DisplayName: comment.Author.DisplayName,
@@ -182,6 +196,7 @@ type CommentFromPostPayload struct {
 type PostAndCommentsPayload struct {
 	ID            int                       `json:"postID"`
 	Content       string                    `json:"content"`
+	CommentCount  int                       `json:"commentCount"`
 	LikeCount     int                       `json:"likeCount"`
 	RetweetCount  int                       `json:"retweetCount"`
 	BookmarkCount int                       `json:"bookmarkCount"`
@@ -199,6 +214,15 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 	for _, comment := range post.Comments {
 		commentPayload := &CommentFromPostPayload{}
 		repliesPayload := []*CommentFromPostPayload{}
+
+		if comment.Image != "" {
+			comment.Image = getUploadPath(comment.Image)
+		}
+
+		if comment.Author.Avatar != "" {
+			comment.Author.Avatar = getUploadPath(comment.Author.Avatar)
+		}
+
 		for _, reply := range comment.Replies {
 			replyPayload := &CommentFromPostPayload{}
 			replyPayload.ID = reply.ID
@@ -236,8 +260,17 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 		)
 	}
 
+	if post.Author.Avatar != "" {
+		post.Author.Avatar = getUploadPath(post.Author.Avatar)
+	}
+
+	if post.Image != "" {
+		post.Image = getUploadPath(post.Image)
+	}
+
 	postAndCommentsPayload.ID = post.ID
 	postAndCommentsPayload.Content = post.Content
+	postAndCommentsPayload.CommentCount = post.CommentCount
 	postAndCommentsPayload.LikeCount = post.LikeCount
 	postAndCommentsPayload.RetweetCount = post.RetweetCount
 	postAndCommentsPayload.BookmarkCount = post.BookmarkCount

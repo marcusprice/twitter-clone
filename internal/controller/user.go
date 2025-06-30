@@ -20,6 +20,7 @@ type User struct {
 	FirstName   string
 	LastName    string
 	DisplayName string
+	Avatar      string
 	IsActive    bool
 	Role        permissions.Role
 	LastLogin   time.Time
@@ -47,6 +48,7 @@ func (u *User) setFromModel(userData dtypes.UserData) {
 	u.FirstName = userData.FirstName
 	u.LastName = userData.LastName
 	u.DisplayName = userData.DisplayName
+	u.Avatar = userData.Avatar
 	u.IsActive = userData.IsActive != 0
 	u.Role = userData.Role
 	u.LastLogin = util.ParseTime(userData.LastLogin)

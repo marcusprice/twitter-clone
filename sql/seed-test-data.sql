@@ -1,14 +1,21 @@
 -- seed_data.sql
 
 -- Users
-INSERT INTO User (email, user_name, password, first_name, last_name, display_name, is_active, role)
+INSERT INTO User (email, user_name, password, first_name, last_name, display_name, avatar, is_active, role)
 VALUES
-    ('estecat@yahoo.com', 'estecat', 'password', 'Esteban', 'Price', 'Bubba', 0, 1),
-    ('whispers_from_wallphace@gmail.com', 'wallphace', 'password', 'Marcus', 'Price', 'Whispers From Wallphace', 0, 2),
-    ('d.cooper@fbi.gov', 'dalecooper', 'password', 'Dale', 'Cooper', 'Coffee Fre@k', 0, 3),
-    ('audrey@hornesdepartmentstore.com', 'audrey', 'password', 'Audrey', 'Horne', 'Audrey', 0, 1),
-    ('bobby.briggs@twinpeakswa.gov', 'bobbybriggs', 'password', 'Bobby', 'Briggs', 'Bobby', 0, 1),
-    ('donna.hayward@twinpeaksclinic.com', 'donnahayward', 'password', 'Donna', 'Hayward', 'Donna', 0, 1);
+    ('estecat@yahoo.com', 'estecat', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Esteban', 'Price', 'Bubba', "este-profile.jpg",0, 1),
+
+    ('whispers_from_wallphace@gmail.com', 'wallphace', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Marcus', 'Price', 'Whispers From Wallphace', "wallphace-profile.jpg", 0, 2),
+
+    ('d.cooper@fbi.gov', 'dalecooper', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Dale', 'Cooper', 'Special Agent Dale Cooper', "cooper-profile.png", 0, 3),
+
+    ('audrey@hornesdepartmentstore.com', 'audrey', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Audrey', 'Horne', 'Audrey', "audrey-profile.jpg", 0, 1),
+
+    ('bobby.briggs@twinpeakswa.gov', 'bobbybriggs', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Bobby', 'Briggs', 'Bobby', "bobby-profile.jpeg", 0, 1),
+
+    ('donna.hayward@twinpeaksclinic.com', 'donnahayward', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Donna', 'Hayward', 'Donna', "donna-profile.jpg", 0, 1),
+
+    ('marcusprice88@gmail.com', 'endlesshappiness', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Marcus', 'Price', 'Eternal Freeskate', "marcus-plrofile", 0, 1);
 
 -- Posts (assumes the above inserts generate ids 1–6 in the same order)
 INSERT INTO Post (user_id, content, image, created_at, updated_at) VALUES
@@ -53,9 +60,7 @@ INSERT INTO Post (user_id, content, image, created_at, updated_at) VALUES
     (2, 'Modular synced to heartbeat today. Don’t ask how.', '', datetime(current_timestamp, '-5 days', '+22 hours', '+43 minutes'), datetime(current_timestamp, '-5 days', '+22 hours', '+43 minutes')),
     (5, '', 'locket-drawing.jpg', datetime(current_timestamp, '-29 days', '+18 hours', '+5 minutes'), datetime(current_timestamp, '-29 days', '+18 hours', '+5 minutes')),
     (4, 'Ran into James. Still has that haunted look.', '', datetime(current_timestamp, '-26 days', '+1 hours', '+15 minutes'), datetime(current_timestamp, '-26 days', '+1 hours', '+15 minutes')),
-    (3, 'Owls again. Always watching.', '', datetime(current_timestamp, '-6 days', '+7 hours', '+23 minutes'), datetime(current_timestamp, '-6 days', '+7 hours', '+105 minutes')),
     (1, 'Put a hat on Esteban. He hated it.', 'cat-hat.jpg', datetime(current_timestamp, '-28 days', '+19 hours', '+47 minutes'), datetime(current_timestamp, '-28 days', '+19 hours', '+47 minutes')),
-    (2, '', 'waveform-cave.jpg', datetime(current_timestamp, '-1 days', '+20 hours', '+38 minutes'), datetime(current_timestamp, '-1 days', '+20 hours', '+38 minutes')),
     (4, 'Ran into James. Still has that haunted look.', '', datetime(current_timestamp, '-26 days', '+1 hours', '+15 minutes'), datetime(current_timestamp, '-26 days', '+1 hours', '+15 minutes')),
     (3, 'Owls again. Always watching.', '', datetime(current_timestamp, '-6 days', '+7 hours', '+23 minutes'), datetime(current_timestamp, '-6 days', '+7 hours', '+105 minutes')),
     (1, 'Put a hat on Esteban. He hated it.', 'cat-hat.jpg', datetime(current_timestamp, '-28 days', '+19 hours', '+47 minutes'), datetime(current_timestamp, '-28 days', '+19 hours', '+47 minutes')),
@@ -116,3 +121,12 @@ INSERT INTO Post (user_id, content, image, created_at, updated_at) VALUES
     (2, '', 'dark-patch.jpg', datetime(current_timestamp, '-9 days', '+9 hours', '+1 minutes'), datetime(current_timestamp, '-9 days', '+9 hours', '+1 minutes')),
     (6, 'Clinic’s new patient says he’s from “the other place.”', '', datetime(current_timestamp, '-14 days', '+17 hours', '+52 minutes'), datetime(current_timestamp, '-14 days', '+17 hours', '+118 minutes')),
     (4, 'Bobby’s bike was upside down outside the diner.', '', datetime(current_timestamp, '-29 days', '+12 hours', '+22 minutes'), datetime(current_timestamp, '-29 days', '+12 hours', '+200 minutes'));
+
+INSERT INTO UserFollows (follower_id, followee_id)
+VALUES 
+    (7, 1),
+    (7, 2),
+    (7, 3),
+    (7, 4),
+    (7, 5),
+    (7, 6);

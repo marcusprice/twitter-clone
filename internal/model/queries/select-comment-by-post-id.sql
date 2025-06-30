@@ -18,4 +18,5 @@ SELECT
 FROM 
     Comment
     INNER JOIN User Author ON Author.id = Comment.user_id
-WHERE Comment.post_id = $1;
+WHERE Comment.post_id = $1
+ORDER BY Comment.created_at DESC;

@@ -292,6 +292,7 @@ func parseUserQueryRow(row *sql.Row) (dtypes.UserData, error) {
 	var firstName string
 	var lastName string
 	var displayName string
+	var avatar string
 	var lastLogin sql.NullString
 	var isActive int
 	var role int
@@ -300,7 +301,7 @@ func parseUserQueryRow(row *sql.Row) (dtypes.UserData, error) {
 
 	err := row.Scan(
 		&id, &email, &userName, &password, &firstName, &lastName, &displayName,
-		&lastLogin, &isActive, &role, &createdAt, &updatedAt)
+		&avatar, &lastLogin, &isActive, &role, &createdAt, &updatedAt)
 
 	if err != nil {
 		return dtypes.UserData{}, UserNotFoundError{}
@@ -318,6 +319,7 @@ func parseUserQueryRow(row *sql.Row) (dtypes.UserData, error) {
 		FirstName:   firstName,
 		LastName:    lastName,
 		DisplayName: displayName,
+		Avatar:      avatar,
 		Password:    password,
 		LastLogin:   lastLoginString,
 		IsActive:    isActive,

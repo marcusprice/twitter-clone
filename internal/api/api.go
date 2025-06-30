@@ -29,101 +29,98 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 	mux.Handle(
 		"/api/v1/timeline",
-		Logger(
-			VerifyGetMethod(
-				ValidateUser(
-					user,
-					http.HandlerFunc(timelineAPI.Get)))),
+		VerifyGetMethod(
+			ValidateUser(
+				user,
+				http.HandlerFunc(timelineAPI.Get))),
+	)
+
+	mux.Handle(
+		"/api/v1/user",
+		ValidateUser(
+			user,
+			http.HandlerFunc(userAPI.Get),
+		),
 	)
 
 	mux.Handle(
 		"/api/v1/user/create",
-		Logger(
-			VerifyPostMethod(
-				http.HandlerFunc(userAPI.Create))),
+		VerifyPostMethod(
+			http.HandlerFunc(userAPI.Create)),
 	)
 
 	mux.Handle(
 		"/api/v1/user/authenticate",
-		Logger(
-			VerifyPostMethod(
-				http.HandlerFunc(userAPI.Authenticate))),
+		VerifyPostMethod(
+			http.HandlerFunc(userAPI.Authenticate)),
 	)
 
 	mux.Handle(
 		"/api/v1/user/bookmarks",
-		Logger(
-			VerifyGetMethod(
-				ValidateUser(
-					user,
-					http.HandlerFunc(userAPI.GetBookmarks)))),
+		VerifyGetMethod(
+			ValidateUser(
+				user,
+				http.HandlerFunc(userAPI.GetBookmarks))),
 	)
 
 	mux.Handle(
 		"/api/v1/user/{username}/follow",
-		Logger(
-			AllowMethods(
-				[]string{http.MethodPut, http.MethodDelete},
-				ValidateUser(
-					user,
-					http.HandlerFunc(userAPI.Follow)))),
+		AllowMethods(
+			[]string{http.MethodPut, http.MethodDelete},
+			ValidateUser(
+				user,
+				http.HandlerFunc(userAPI.Follow))),
 	)
 
 	mux.Handle(
 		"/api/v1/post/{postID}",
-		Logger(
-			VerifyGetMethod(
-				ValidateUser(
-					user,
-					http.HandlerFunc(postAPI.Get)))),
+		VerifyGetMethod(
+			ValidateUser(
+				user,
+				http.HandlerFunc(postAPI.Get))),
 	)
 
 	mux.Handle(
 		"/api/v1/post/create",
-		Logger(
-			VerifyPostMethod(
-				ValidateUser(
-					user,
-					http.HandlerFunc(postAPI.Create)))),
+		VerifyPostMethod(
+			ValidateUser(
+				user,
+				http.HandlerFunc(postAPI.Create))),
 	)
 
 	mux.Handle(
 		"/api/v1/post/{id}/like",
-		Logger(
-			AllowMethods(
-				[]string{http.MethodPut, http.MethodDelete},
-				ValidateUser(
-					user,
-					http.HandlerFunc(postAPI.Like)))),
+		AllowMethods(
+			[]string{http.MethodPut, http.MethodDelete},
+			ValidateUser(
+				user,
+				http.HandlerFunc(postAPI.Like))),
 	)
 
 	mux.Handle(
 		"/api/v1/post/{id}/retweet",
-		Logger(
-			AllowMethods(
-				[]string{http.MethodPut, http.MethodDelete},
-				ValidateUser(
-					user,
-					http.HandlerFunc(postAPI.Retweet)))),
+		AllowMethods(
+			[]string{http.MethodPut, http.MethodDelete},
+			ValidateUser(
+				user,
+				http.HandlerFunc(postAPI.Retweet))),
 	)
 
 	mux.Handle(
 		"/api/v1/post/{id}/bookmark",
-		Logger(
-			AllowMethods(
-				[]string{http.MethodPut, http.MethodDelete},
-				ValidateUser(
-					user,
-					http.HandlerFunc(postAPI.Bookmark)))),
+		AllowMethods(
+			[]string{http.MethodPut, http.MethodDelete},
+			ValidateUser(
+				user,
+				http.HandlerFunc(postAPI.Bookmark))),
 	)
 
 	mux.Handle(
 		"/api/v1/comment/create",
-		Logger(
-			VerifyPostMethod(
-				ValidateUser(
-					user,
-					http.HandlerFunc(commentAPI.Create)))),
+		VerifyPostMethod(
+			ValidateUser(
+				user,
+				http.HandlerFunc(commentAPI.Create))),
 	)
 
 	projectRoot, err := util.ProjectRoot()
@@ -131,9 +128,8 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 	mux.Handle(
 		"/uploads/",
-		Logger(
-			VerifyGetMethod(
-				http.StripPrefix(UPLOADS_PREFIX, uploadFileServer))),
+		VerifyGetMethod(
+			http.StripPrefix(UPLOADS_PREFIX, uploadFileServer)),
 	)
 
 	if util.InDevContext() {
@@ -145,13 +141,11 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 
 		mux.Handle(
 			"/docs/",
-			Logger(
-				http.StripPrefix("/docs/", swaggerFS)))
+			http.StripPrefix("/docs/", swaggerFS))
 
 		mux.Handle(
 			"/swagger.yaml",
-			Logger(
-				http.FileServer(http.Dir("."))))
+			http.FileServer(http.Dir(".")))
 	}
 
 	return mux

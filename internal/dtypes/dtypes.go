@@ -57,6 +57,7 @@ type PostData struct {
 	ID            int
 	UserID        int
 	Content       string
+	CommentCount  int
 	LikeCount     int
 	RetweetCount  int
 	BookmarkCount int

@@ -28,7 +28,7 @@ func (w InvalidFileTypeError) Error() string {
 
 func getUploadPath(fileName string) string {
 	return fmt.Sprintf(
-		"http://%s:%s/%s/%s",
+		"http://%s:%s%s%s",
 		os.Getenv("HOST"),
 		os.Getenv("PORT"),
 		UPLOADS_PREFIX,

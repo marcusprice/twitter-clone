@@ -53,5 +53,12 @@ func main() {
 	handler := api.RegisterHandlers(conn)
 
 	logger.LogInfo(fmt.Sprintf("CORE APP LISTENING AT %s:%s", host, port))
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), handler))
+	log.Fatal(
+		http.ListenAndServe(
+			fmt.Sprintf("%s:%s", host, port),
+			api.Logger(
+				api.WithCORS(handler),
+			),
+		),
+	)
 }

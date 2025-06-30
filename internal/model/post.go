@@ -51,6 +51,7 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 	var postID int
 	var userID int
 	var content string
+	var comment_count int
 	var likeCount int
 	var retweetCount int
 	var bookmarkCount int
@@ -63,8 +64,8 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 		QueryRow(selectPostByIdQuery, id).
 		Scan(
 			&username, &displayName, &avatar, &postID, &userID, &content,
-			&likeCount, &retweetCount, &bookmarkCount, &impressions, &image,
-			&createdAt, &updatedAt)
+			&comment_count, &likeCount, &retweetCount, &bookmarkCount,
+			&impressions, &image, &createdAt, &updatedAt)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -88,6 +89,7 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 		ID:            postID,
 		UserID:        userID,
 		Content:       content,
+		CommentCount:  comment_count,
 		LikeCount:     likeCount,
 		RetweetCount:  retweetCount,
 		BookmarkCount: bookmarkCount,
@@ -119,6 +121,7 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 		var id int
 		var user_id int
 		var content string
+		var comment_count int
 		var like_count int
 		var retweet_count int
 		var bookmark_count int
@@ -133,7 +136,7 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 		var retweeter_display_name_ns sql.NullString
 
 		err := result.Scan(
-			&id, &user_id, &content, &like_count, &retweet_count,
+			&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
 			&bookmark_count, &impressions, &image, &created_at, &updated_at,
 			&author_user_name, &author_display_name, &author_avatar,
 			&retweeter_user_name_ns, &retweeter_display_name_ns)
@@ -158,6 +161,7 @@ func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []
 			ID:            id,
 			UserID:        user_id,
 			Content:       content,
+			CommentCount:  comment_count,
 			LikeCount:     like_count,
 			RetweetCount:  retweet_count,
 			BookmarkCount: bookmark_count,

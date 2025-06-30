@@ -6,6 +6,7 @@ SELECT
     first_name,
     last_name,
     display_name,
+    avatar,
     last_login,
     role,
     is_active,
