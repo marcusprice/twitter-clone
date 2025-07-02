@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
@@ -28,13 +29,21 @@ func (timelineAPI *TimelineAPI) Get(w http.ResponseWriter, r *http.Request) {
 	values := r.URL.Query()
 	limitParam := values.Get("limit")
 	offsetParam := values.Get("offset")
+	viewParam := values.Get("view")
+
 	limit, offset, err := parseLimitAndOffset(limitParam, offsetParam)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	timeline := timelineAPI.timeline.SetID(userID)
+	if !slices.Contains(controller.TIMELINE_VIEWS, controller.TimelineView(viewParam)) {
+		http.Error(w, BadRequest, http.StatusBadRequest)
+		return
+	}
+
+	view := controller.TimelineView(viewParam)
+	timeline := timelineAPI.timeline.Set(userID, view)
 	posts, postsRemaining, err := timeline.GetPosts(limit, offset)
 	if err != nil {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
@@ -69,11 +78,11 @@ func parseLimitAndOffset(limitParam, offsetParam string) (limit, offset int, err
 	}
 
 	if limit < MAX_LIMIT {
-		return -1, -1, errors.New(fmt.Sprintf("Too large of a limit, max limit: %d", MAX_LIMIT))
+		return -1, -1, fmt.Errorf("Too large of a limit, max limit: %d", MAX_LIMIT)
 	}
 
 	if limit > MIN_LIMIT {
-		return -1, -1, errors.New(fmt.Sprintf("Too small of a limit, max limit: %d", MIN_LIMIT))
+		return -1, -1, fmt.Errorf("Too small of a limit, max limit: %d", MIN_LIMIT)
 	}
 
 	return limit, offset, err

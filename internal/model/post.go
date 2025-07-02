@@ -103,107 +103,85 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 }
 
 //go:embed queries/user-timeline-query.sql
-var userTimelineBaseQuery string
+var userTimelineQuery string
 
-func (post *PostModel) QueryUserTimeline(userID, limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
+func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
 	if limit <= 0 {
 		logger.LogError("PostModel.TimelineRemainingPostsCount(): postitive limit value required")
 		return []dtypes.PostData{}, []int{}, errors.New("Positive limit value required")
 	}
 
-	result, err := post.db.Query(userTimelineBaseQuery, userID, limit, offset)
+	result, err := post.db.Query(userTimelineQuery, userID, limit, offset)
 	if err != nil {
 		logger.LogError("PostModel.QueryUserTimeline(): query error: " + err.Error())
 		return []dtypes.PostData{}, []int{}, err
 	}
 
 	for result.Next() {
-		var id int
-		var user_id int
-		var content string
-		var comment_count int
-		var like_count int
-		var retweet_count int
-		var bookmark_count int
-		var impressions int
-		var image string
-		var created_at string
-		var updated_at string
-		var author_user_name string
-		var author_display_name string
-		var author_avatar string
-		var retweeter_user_name_ns sql.NullString
-		var retweeter_display_name_ns sql.NullString
-
-		err := result.Scan(
-			&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
-			&bookmark_count, &impressions, &image, &created_at, &updated_at,
-			&author_user_name, &author_display_name, &author_avatar,
-			&retweeter_user_name_ns, &retweeter_display_name_ns)
+		postData, postID, err := parsePostRow(result)
 
 		if err != nil {
-			logger.LogError("PostModel.QueryUserTimeline(): error scanning timeline post: " + err.Error())
 			return []dtypes.PostData{}, []int{}, err
 		}
 
-		postAuthor := dtypes.Author{
-			Username:    author_user_name,
-			DisplayName: author_display_name,
-			Avatar:      author_avatar,
-		}
-
-		postRetweeter := dtypes.Retweeter{
-			Username:    retweeter_user_name_ns.String,
-			DisplayName: retweeter_display_name_ns.String,
-		}
-
-		postData := dtypes.PostData{
-			ID:            id,
-			UserID:        user_id,
-			Content:       content,
-			CommentCount:  comment_count,
-			LikeCount:     like_count,
-			RetweetCount:  retweet_count,
-			BookmarkCount: bookmark_count,
-			Impressions:   impressions,
-			Image:         image,
-			CreatedAt:     created_at,
-			UpdatedAt:     updated_at,
-			Author:        postAuthor,
-			Retweeter:     postRetweeter,
-		}
-
-		postIDs = append(postIDs, id)
+		postIDs = append(postIDs, postID)
 		postRows = append(postRows, postData)
 	}
 
 	return postRows, postIDs, nil
 }
 
-//go:embed queries/timeline-offset-count.sql
-var timelineOffsetCountQuery string
+//go:embed queries/user-timeline-query-all-posts.sql
+var selectAllPostsQuery string
 
-func (pm *PostModel) TimelineRemainingPostsCount(userID, limit, offset int) (int, error) {
-	if limit <= 0 {
-		logger.LogError("PostModel.TimelineRemainingPostsCount(): postitive limit value required")
-		return -1, errors.New("Positive limit value required")
+func (pm *PostModel) GetAllIncludingRetweets(limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
+	result, err := pm.db.Query(selectAllPostsQuery, limit, offset)
+	if err != nil {
+		// TODO handle error
+		logger.LogError("PostModel.GetAll() - error querying posts: " + err.Error())
 	}
 
+	for result.Next() {
+		postData, postID, err := parsePostRow(result)
+
+		if err != nil {
+			return []dtypes.PostData{}, []int{}, err
+		}
+
+		postIDs = append(postIDs, postID)
+		postRows = append(postRows, postData)
+	}
+
+	return postRows, postIDs, nil
+}
+
+//go:embed queries/user-timeline-all-posts-count.sql
+var userTimelineAllPostsCount string
+
+func (pm *PostModel) AllIncludingRetweetCount() (int, error) {
 	var count int
-
-	err := pm.db.
-		QueryRow(timelineOffsetCountQuery, userID, limit, offset).
-		Scan(&count)
-
+	err := pm.db.QueryRow(userTimelineAllPostsCount).Scan(&count)
 	if err != nil {
-		logger.LogError("PostModel.OffsetCount() error: " + err.Error())
+		logger.LogError("PostModel.GetAllCount() - error scanning row: " + err.Error())
 		return -1, err
 	}
 
-	remainingPosts := count - (limit + offset)
-	remainingPosts = max(remainingPosts, 0)
+	return count, nil
+}
 
-	return remainingPosts, nil
+//go:embed queries/timeline-offset-count.sql
+var timelineOffsetCountQuery string
+
+func (pm *PostModel) UserFollowingTimelineCount(userID int) (int, error) {
+	var count int
+
+	err := pm.db.QueryRow(timelineOffsetCountQuery, userID).Scan(&count)
+	if err != nil {
+		logger.LogError("PostModel.OffsetCount() - error: " + err.Error())
+		return -1, err
+	}
+
+	return count, nil
 }
 
 //go:embed queries/add-impression.sql
@@ -268,6 +246,65 @@ func (postModel *PostModel) AddImpressionBulk(postIDs []int) (rowsAffected int, 
 	}
 
 	return int(ra), nil
+}
+
+func parsePostRow(result dbutils.RowScanner) (postData dtypes.PostData, postID int, err error) {
+	var id int
+	var user_id int
+	var content string
+	var comment_count int
+	var like_count int
+	var retweet_count int
+	var bookmark_count int
+	var impressions int
+	var image string
+	var created_at string
+	var updated_at string
+	var author_user_name string
+	var author_display_name string
+	var author_avatar string
+	var retweeter_user_name_ns sql.NullString
+	var retweeter_display_name_ns sql.NullString
+
+	err = result.Scan(
+		&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
+		&bookmark_count, &impressions, &image, &created_at, &updated_at,
+		&author_user_name, &author_display_name, &author_avatar,
+		&retweeter_user_name_ns, &retweeter_display_name_ns)
+
+	if err != nil {
+		logger.LogError("PostModel.parsePostRow(): error scanning timeline post: " + err.Error())
+		return dtypes.PostData{}, -1, err
+	}
+
+	postAuthor := dtypes.Author{
+		Username:    author_user_name,
+		DisplayName: author_display_name,
+		Avatar:      author_avatar,
+	}
+
+	postRetweeter := dtypes.Retweeter{
+		Username:    retweeter_user_name_ns.String,
+		DisplayName: retweeter_display_name_ns.String,
+	}
+
+	postData = dtypes.PostData{
+		ID:            id,
+		UserID:        user_id,
+		Content:       content,
+		CommentCount:  comment_count,
+		LikeCount:     like_count,
+		RetweetCount:  retweet_count,
+		BookmarkCount: bookmark_count,
+		Impressions:   impressions,
+		Image:         image,
+		CreatedAt:     created_at,
+		UpdatedAt:     updated_at,
+		Author:        postAuthor,
+		Retweeter:     postRetweeter,
+	}
+
+	return postData, id, nil
 }
 
 func NewPostModel(db *sql.DB) *PostModel {

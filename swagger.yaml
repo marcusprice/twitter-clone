@@ -199,15 +199,21 @@ paths:
         - name: limit
           in: query
           description: maximum number of posts to return
-          required: false
+          required: true
           schema:
             type: integer
         - name: offset
           in: query
           description: number of posts to offset by
-          required: false
+          required: true
           schema:
             type: integer
+        - name: view
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: ["FOLLOWING", "FOR_YOU"]
       responses:
         "200":
           description: successfully retreived timeline posts
