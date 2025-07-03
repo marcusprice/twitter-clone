@@ -207,6 +207,7 @@ type PostAndCommentsPayload struct {
 	CreatedAt     time.Time                 `json:"createdAt"`
 	UpdatedAt     time.Time                 `json:"updatedAt"`
 	Author        AuthorPayload             `json:"author"`
+	Liked         bool                      `json:"liked"`
 	Comments      []*CommentFromPostPayload `json:"comments"`
 }
 
@@ -281,6 +282,7 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 	postAndCommentsPayload.CreatedAt = post.CreatedAt
 	postAndCommentsPayload.UpdatedAt = post.UpdatedAt
 	postAndCommentsPayload.Author = AuthorPayload(post.Author)
+	postAndCommentsPayload.Liked = post.Liked
 
 	return postAndCommentsPayload
 }

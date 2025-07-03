@@ -74,8 +74,8 @@ func (post *Post) New(postInput dtypes.PostInput) error {
 	return nil
 }
 
-func (post *Post) GetPostAndComments(postID int) (*Post, error) {
-	postData, err := post.model.GetByID(postID)
+func (post *Post) GetPostAndComments(postID, userID int) (*Post, error) {
+	postData, err := post.model.GetByIDUserContext(userID, postID)
 	if err != nil {
 		logger.LogError("Post.GetPostAndComments() error querying posts:" + err.Error())
 		return &Post{}, nil

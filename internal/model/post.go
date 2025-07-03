@@ -102,6 +102,69 @@ func (pm PostModel) GetByID(id int) (dtypes.PostData, error) {
 	return postData, nil
 }
 
+//go:embed queries/select-post-by-id-user-context.sql
+var selectByIDUserContextQuery string
+
+func (pm PostModel) GetByIDUserContext(userID, postID int) (dtypes.PostData, error) {
+	var username string
+	var displayName string
+	var avatar string
+	var id int
+	var authorID int
+	var content string
+	var comment_count int
+	var likeCount int
+	var retweetCount int
+	var bookmarkCount int
+	var impressions int
+	var image string
+	var createdAt string
+	var updatedAt string
+	var liked int
+
+	err := pm.db.
+		QueryRow(selectByIDUserContextQuery, userID, postID).
+		Scan(
+			&username, &displayName, &avatar, &id, &authorID, &content,
+			&comment_count, &likeCount, &retweetCount, &bookmarkCount,
+			&impressions, &image, &createdAt, &updatedAt, &liked)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return dtypes.PostData{}, PostNotFoundError{}
+		} else {
+			if util.InDevContext() {
+				panic(err)
+			}
+			return dtypes.PostData{}, err
+		}
+	}
+
+	postAuthor := dtypes.Author{
+		Username:    username,
+		DisplayName: displayName,
+		Avatar:      avatar,
+	}
+
+	postData := dtypes.PostData{
+		Author:        postAuthor,
+		ID:            id,
+		UserID:        authorID,
+		Content:       content,
+		CommentCount:  comment_count,
+		LikeCount:     likeCount,
+		RetweetCount:  retweetCount,
+		BookmarkCount: bookmarkCount,
+		Impressions:   impressions,
+		Image:         image,
+		CreatedAt:     createdAt,
+		UpdatedAt:     updatedAt,
+		Liked:         liked,
+	}
+
+	return postData, nil
+}
+
 //go:embed queries/user-timeline-query.sql
 var userTimelineQuery string
 

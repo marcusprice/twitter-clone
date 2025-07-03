@@ -19,6 +19,12 @@ type PostAPI struct {
 }
 
 func (postAPI PostAPI) Get(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
 	postIDPathValue := r.PathValue("postID")
 	postID, err := strconv.Atoi(postIDPathValue)
 	if err != nil {
@@ -26,7 +32,7 @@ func (postAPI PostAPI) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := postAPI.post.GetPostAndComments(postID)
+	post, err := postAPI.post.GetPostAndComments(postID, userID)
 	if err != nil {
 		// TODO: figure out error handling
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
