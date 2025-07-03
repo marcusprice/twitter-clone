@@ -48,7 +48,7 @@ func (t *Timeline) GetPosts(limit, offset int) (posts []*Post, postsRemaining in
 			return []*Post{}, -1, err
 		}
 	} else {
-		postRows, postIDs, err = t.postModel.GetAllIncludingRetweets(limit, offset)
+		postRows, postIDs, err = t.postModel.GetAllIncludingRetweets(t.userID, limit, offset)
 		if err != nil {
 			return []*Post{}, -1, err
 		}

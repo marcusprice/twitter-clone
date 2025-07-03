@@ -24,7 +24,7 @@ FROM
     INNER JOIN User Author ON Author.id = Post.user_id
     LEFT JOIN PostRetweet ON PostRetweet.post_id = Post.id
     LEFT JOIN User Retweeter ON Retweeter.id = PostRetweet.user_id
-    LEFT JOIN PostLike ON PostLike.post_id = Post.id
+    LEFT JOIN PostLike ON PostLike.post_id = Post.id AND PostLike.user_id = $1
 ORDER BY 
     COALESCE(PostRetweet.created_at, Post.created_at) DESC
-LIMIT $1 OFFSET $2;
+LIMIT $2 OFFSET $3;

@@ -134,8 +134,8 @@ func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (po
 //go:embed queries/user-timeline-query-all-posts.sql
 var selectAllPostsQuery string
 
-func (pm *PostModel) GetAllIncludingRetweets(limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
-	result, err := pm.db.Query(selectAllPostsQuery, limit, offset)
+func (pm *PostModel) GetAllIncludingRetweets(userID, limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
+	result, err := pm.db.Query(selectAllPostsQuery, userID, limit, offset)
 	if err != nil {
 		// TODO handle error
 		logger.LogError("PostModel.GetAll() - error querying posts: " + err.Error())
