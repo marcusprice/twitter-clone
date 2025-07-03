@@ -43,6 +43,7 @@ type PostPayload struct {
 	IsRetweet            bool          `json:"isRetweet"`
 	RetweeterUsername    string        `json:"retweeterUsername"`
 	RetweeterDisplayName string        `json:"retweeterDisplayName"`
+	Liked                bool          `json:"liked"`
 }
 
 type BookmarkPayload struct {
@@ -123,6 +124,7 @@ func generatePostPayload(post *controller.Post) PostPayload {
 		IsRetweet:            post.Retweeter.Username != "",
 		RetweeterUsername:    post.Retweeter.Username,
 		RetweeterDisplayName: post.Retweeter.DisplayName,
+		Liked:                post.Liked,
 	}
 }
 

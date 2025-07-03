@@ -265,12 +265,13 @@ func parsePostRow(result dbutils.RowScanner) (postData dtypes.PostData, postID i
 	var author_avatar string
 	var retweeter_user_name_ns sql.NullString
 	var retweeter_display_name_ns sql.NullString
+	var liked int
 
 	err = result.Scan(
 		&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
 		&bookmark_count, &impressions, &image, &created_at, &updated_at,
 		&author_user_name, &author_display_name, &author_avatar,
-		&retweeter_user_name_ns, &retweeter_display_name_ns)
+		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked)
 
 	if err != nil {
 		logger.LogError("PostModel.parsePostRow(): error scanning timeline post: " + err.Error())
@@ -302,6 +303,7 @@ func parsePostRow(result dbutils.RowScanner) (postData dtypes.PostData, postID i
 		UpdatedAt:     updated_at,
 		Author:        postAuthor,
 		Retweeter:     postRetweeter,
+		Liked:         liked,
 	}
 
 	return postData, id, nil

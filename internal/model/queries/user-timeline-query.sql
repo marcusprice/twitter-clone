@@ -14,7 +14,11 @@ SELECT
     Author.display_name,
     Author.avatar,
     Retweeter.user_name,
-    Retweeter.display_name
+    Retweeter.display_name,
+    CASE
+        WHEN PostLike.post_id IS NOT NULL THEN 1
+        ELSE 0
+    END AS liked
 FROM
     Post
     INNER JOIN User Author ON Author.id = Post.user_id
@@ -22,6 +26,7 @@ FROM
     LEFT JOIN User Retweeter ON Retweeter.id = PostRetweet.user_id
     LEFT JOIN UserFollows FollowedUsers ON FollowedUsers.followee_id = Author.id AND FollowedUsers.follower_id = $1
     LEFT JOIN UserFollows RetweetedUsers ON RetweetedUsers.followee_id = Retweeter.id AND RetweetedUsers.follower_id = $1
+    LEFT JOIN PostLike ON PostLike.post_id = Post.id
 WHERE
     FollowedUsers.follower_id IS NOT NULL OR RetweetedUsers.follower_id IS NOT NULL
 ORDER BY 

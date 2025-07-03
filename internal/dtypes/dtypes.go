@@ -65,6 +65,7 @@ type PostData struct {
 	Image         string
 	CreatedAt     string
 	UpdatedAt     string
+	Liked         int
 }
 
 type CommentData struct {

@@ -266,6 +266,8 @@ paths:
                               type: string
                             avatar:
                               type: string
+                        liked:
+                          type: boolean
   /post/{post-id}:
     get:
       security:

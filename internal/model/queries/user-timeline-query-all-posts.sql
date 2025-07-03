@@ -14,12 +14,17 @@ SELECT
     Author.display_name,
     Author.avatar,
     Retweeter.user_name,
-    Retweeter.display_name
+    Retweeter.display_name,
+    CASE
+        WHEN PostLike.post_id IS NOT NULL THEN 1
+        ELSE 0
+    END AS liked
 FROM 
     Post
     INNER JOIN User Author ON Author.id = Post.user_id
     LEFT JOIN PostRetweet ON PostRetweet.post_id = Post.id
     LEFT JOIN User Retweeter ON Retweeter.id = PostRetweet.user_id
+    LEFT JOIN PostLike ON PostLike.post_id = Post.id
 ORDER BY 
     COALESCE(PostRetweet.created_at, Post.created_at) DESC
 LIMIT $1 OFFSET $2;
