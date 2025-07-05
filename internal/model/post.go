@@ -181,7 +181,7 @@ func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (po
 	}
 
 	for result.Next() {
-		postData, postID, err := parsePostRow(result)
+		postData, postID, err := parseTimelineRow(result)
 
 		if err != nil {
 			return []dtypes.PostData{}, []int{}, err
@@ -205,7 +205,7 @@ func (pm *PostModel) GetAllIncludingRetweets(userID, limit, offset int) (postRow
 	}
 
 	for result.Next() {
-		postData, postID, err := parsePostRow(result)
+		postData, postID, err := parseTimelineRow(result)
 
 		if err != nil {
 			return []dtypes.PostData{}, []int{}, err
@@ -311,7 +311,7 @@ func (postModel *PostModel) AddImpressionBulk(postIDs []int) (rowsAffected int, 
 	return int(ra), nil
 }
 
-func parsePostRow(result dbutils.RowScanner) (postData dtypes.PostData, postID int, err error) {
+func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.PostData, postID int, err error) {
 	var id int
 	var user_id int
 	var content string
@@ -329,15 +329,16 @@ func parsePostRow(result dbutils.RowScanner) (postData dtypes.PostData, postID i
 	var retweeter_user_name_ns sql.NullString
 	var retweeter_display_name_ns sql.NullString
 	var liked int
+	var sort_throwaway string
 
 	err = result.Scan(
 		&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
 		&bookmark_count, &impressions, &image, &created_at, &updated_at,
 		&author_user_name, &author_display_name, &author_avatar,
-		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked)
+		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked, &sort_throwaway)
 
 	if err != nil {
-		logger.LogError("PostModel.parsePostRow(): error scanning timeline post: " + err.Error())
+		logger.LogError("PostModel.parseTimelineRow(): error scanning timeline post: " + err.Error())
 		return dtypes.PostData{}, -1, err
 	}
 
