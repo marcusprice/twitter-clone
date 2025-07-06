@@ -5,12 +5,13 @@ import (
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dtypes"
+	"github.com/marcusprice/twitter-clone/internal/util"
 )
 
 type TimelinePayload struct {
-	Posts          []PostPayload `json:"posts"`
-	HasMore        bool          `json:"hasMore"`
-	PostsRemaining int           `json:"postsRemaining"`
+	Posts          []TimelinePostPayload `json:"posts"`
+	HasMore        bool                  `json:"hasMore"`
+	PostsRemaining int                   `json:"postsRemaining"`
 }
 
 type UserPayload struct {
@@ -26,6 +27,11 @@ type AuthorPayload struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"displayName"`
 	Avatar      string `json:"avatar"`
+}
+
+type RetweeterPayload struct {
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
 }
 
 type PostPayload struct {
@@ -46,6 +52,88 @@ type PostPayload struct {
 	Liked                bool          `json:"liked"`
 	Retweeted            bool          `json:"retweeted"`
 	Bookmarked           bool          `json:"bookmarked"`
+}
+
+func generatePostPayload(post *controller.Post) PostPayload {
+	if post.Author.Avatar != "" {
+		post.Author.Avatar = getUploadPath(post.Author.Avatar)
+	}
+
+	author := AuthorPayload{
+		Username:    post.Author.Username,
+		DisplayName: post.Author.DisplayName,
+		Avatar:      post.Author.Avatar,
+	}
+
+	if post.Image != "" {
+		post.Image = getUploadPath(post.Image)
+	}
+
+	return PostPayload{
+		ID:                   post.ID,
+		Content:              post.Content,
+		CommentCount:         post.CommentCount,
+		LikeCount:            post.LikeCount,
+		RetweetCount:         post.RetweetCount,
+		BookmarkCount:        post.BookmarkCount,
+		Impressions:          post.Impressions,
+		Image:                post.Image,
+		CreatedAt:            post.CreatedAt,
+		UpdatedAt:            post.UpdatedAt,
+		Author:               author,
+		IsRetweet:            post.Retweeter.Username != "",
+		RetweeterUsername:    post.Retweeter.Username,
+		RetweeterDisplayName: post.Retweeter.DisplayName,
+		Liked:                post.Liked,
+		Retweeted:            post.Retweeted,
+		Bookmarked:           post.Bookmarked,
+	}
+}
+
+type TimelinePostPayload struct {
+	Type             string    `json:"type"`
+	ID               int       `json:"id"`
+	Content          string    `json:"content"`
+	CommentCount     int       `json:"commentCount"`
+	LikeCount        int       `json:"likeCount"`
+	RetweetCount     int       `json:"retweetCount"`
+	BookmarkCount    int       `json:"bookmarkCount"`
+	Impressions      int       `json:"impressions"`
+	Image            string    `json:"image"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
+	ViewerLiked      int       `json:"viewerLiked"`
+	ViewerRetweeted  int       `json:"viewerRetweeted"`
+	ViewerBookmarked int       `json:"viewerBookmarked"`
+
+	Author    AuthorPayload    `json:"author"`
+	Retweeter RetweeterPayload `json:"retweeter"`
+}
+
+func generateTimelinePostPayload(timelinePostData dtypes.TimelinePostData) TimelinePostPayload {
+	authorPayload := AuthorPayload(timelinePostData.Author)
+	retweeterPayload := RetweeterPayload(timelinePostData.Retweeter)
+
+	payload := TimelinePostPayload{
+		Type:             timelinePostData.Type,
+		ID:               timelinePostData.ID,
+		Content:          timelinePostData.Content,
+		CommentCount:     timelinePostData.CommentCount,
+		LikeCount:        timelinePostData.LikeCount,
+		RetweetCount:     timelinePostData.RetweetCount,
+		BookmarkCount:    timelinePostData.BookmarkCount,
+		Impressions:      timelinePostData.Impressions,
+		Image:            timelinePostData.Image,
+		CreatedAt:        util.ParseTime(timelinePostData.CreatedAt),
+		UpdatedAt:        util.ParseTime(timelinePostData.UpdatedAt),
+		ViewerLiked:      timelinePostData.ViewerLiked,
+		ViewerRetweeted:  timelinePostData.ViewerRetweeted,
+		ViewerBookmarked: timelinePostData.ViewerBookmarked,
+		Author:           authorPayload,
+		Retweeter:        retweeterPayload,
+	}
+
+	return payload
 }
 
 type BookmarkPayload struct {
@@ -93,42 +181,6 @@ func generateBookmarkPayload(bookmarkData []dtypes.BookmarkData, bookmarksRemain
 		Bookmarks:          bookmarks,
 		HasMore:            bookmarksRemaining > 0,
 		BookmarksRemaining: bookmarksRemaining,
-	}
-}
-
-func generatePostPayload(post *controller.Post) PostPayload {
-	if post.Author.Avatar != "" {
-		post.Author.Avatar = getUploadPath(post.Author.Avatar)
-	}
-
-	author := AuthorPayload{
-		Username:    post.Author.Username,
-		DisplayName: post.Author.DisplayName,
-		Avatar:      post.Author.Avatar,
-	}
-
-	if post.Image != "" {
-		post.Image = getUploadPath(post.Image)
-	}
-
-	return PostPayload{
-		ID:                   post.ID,
-		Content:              post.Content,
-		CommentCount:         post.CommentCount,
-		LikeCount:            post.LikeCount,
-		RetweetCount:         post.RetweetCount,
-		BookmarkCount:        post.BookmarkCount,
-		Impressions:          post.Impressions,
-		Image:                post.Image,
-		CreatedAt:            post.CreatedAt,
-		UpdatedAt:            post.UpdatedAt,
-		Author:               author,
-		IsRetweet:            post.Retweeter.Username != "",
-		RetweeterUsername:    post.Retweeter.Username,
-		RetweeterDisplayName: post.Retweeter.DisplayName,
-		Liked:                post.Liked,
-		Retweeted:            post.Retweeted,
-		Bookmarked:           post.Bookmarked,
 	}
 }
 

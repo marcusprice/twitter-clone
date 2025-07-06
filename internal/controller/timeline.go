@@ -29,33 +29,33 @@ func (t *Timeline) Set(userID int, view TimelineView) *Timeline {
 	return t
 }
 
-func (t *Timeline) GetPosts(limit, offset int) (posts []*Post, postsRemaining int, err error) {
+func (t *Timeline) GetPosts(limit, offset int) (posts []dtypes.TimelinePostData, postsRemaining int, err error) {
 	if t.userID == 0 {
-		return []*Post{}, -1, errors.New("userID required to fetch posts")
+		return []dtypes.TimelinePostData{}, -1, errors.New("userID required to fetch posts")
 	}
 
-	var postRows []dtypes.PostData
+	var postRows []dtypes.TimelinePostData
 	var postIDs []int
 	var totalPosts int
 	if t.view == FOLLOWING {
 		postRows, postIDs, err = t.postModel.QueryUserFollowingTimeline(t.userID, limit, offset)
 		if err != nil {
-			return []*Post{}, -1, err
+			return []dtypes.TimelinePostData{}, -1, err
 		}
 
 		totalPosts, err = t.postModel.UserFollowingTimelineCount(t.userID)
 		if err != nil {
-			return []*Post{}, -1, err
+			return []dtypes.TimelinePostData{}, -1, err
 		}
 	} else {
 		postRows, postIDs, err = t.postModel.GetAllIncludingRetweets(t.userID, limit, offset)
 		if err != nil {
-			return []*Post{}, -1, err
+			return []dtypes.TimelinePostData{}, -1, err
 		}
 
 		totalPosts, err = t.postModel.AllIncludingRetweetCount()
 		if err != nil {
-			return []*Post{}, -1, err
+			return []dtypes.TimelinePostData{}, -1, err
 		}
 	}
 
@@ -66,18 +66,14 @@ func (t *Timeline) GetPosts(limit, offset int) (posts []*Post, postsRemaining in
 	}
 
 	if err != nil {
-		return []*Post{}, -1, err
+		return []dtypes.TimelinePostData{}, -1, err
 	}
 
-	posts = []*Post{}
 	for _, row := range postRows {
-		post := &Post{}
-		post.setFromModel(row)
 		if rowsAffected == len(postRows) {
-			post.Impressions += 1
+			row.Impressions += 1
 		}
-		posts = append(posts, post)
-		postIDs = append(postIDs, post.ID)
+		posts = append(posts, row)
 	}
 
 	return posts, totalPosts - (limit + offset), nil

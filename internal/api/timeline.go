@@ -50,14 +50,14 @@ func (timelineAPI *TimelineAPI) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var postPayloads []PostPayload
+	var timelinePosts []TimelinePostPayload
 	for _, post := range posts {
-		postPayload := generatePostPayload(post)
-		postPayloads = append(postPayloads, postPayload)
+		postPayload := generateTimelinePostPayload(post)
+		timelinePosts = append(timelinePosts, postPayload)
 	}
 
 	timelinePayload := TimelinePayload{
-		Posts:          postPayloads,
+		Posts:          timelinePosts,
 		HasMore:        postsRemaining > 0,
 		PostsRemaining: postsRemaining,
 	}

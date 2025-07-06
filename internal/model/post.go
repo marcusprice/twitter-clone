@@ -168,23 +168,23 @@ func (pm PostModel) GetByIDUserContext(userID, postID int) (dtypes.PostData, err
 //go:embed queries/user-timeline-query.sql
 var userTimelineQuery string
 
-func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
+func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (postRows []dtypes.TimelinePostData, postIDs []int, err error) {
 	if limit <= 0 {
 		logger.LogError("PostModel.TimelineRemainingPostsCount(): postitive limit value required")
-		return []dtypes.PostData{}, []int{}, errors.New("Positive limit value required")
+		return []dtypes.TimelinePostData{}, []int{}, errors.New("Positive limit value required")
 	}
 
 	result, err := post.db.Query(userTimelineQuery, userID, limit, offset)
 	if err != nil {
 		logger.LogError("PostModel.QueryUserTimeline(): query error: " + err.Error())
-		return []dtypes.PostData{}, []int{}, err
+		return []dtypes.TimelinePostData{}, []int{}, err
 	}
 
 	for result.Next() {
 		postData, postID, err := parseTimelineRow(result)
 
 		if err != nil {
-			return []dtypes.PostData{}, []int{}, err
+			return []dtypes.TimelinePostData{}, []int{}, err
 		}
 
 		postIDs = append(postIDs, postID)
@@ -197,7 +197,7 @@ func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (po
 //go:embed queries/user-timeline-query-all-posts.sql
 var selectAllPostsQuery string
 
-func (pm *PostModel) GetAllIncludingRetweets(userID, limit, offset int) (postRows []dtypes.PostData, postIDs []int, err error) {
+func (pm *PostModel) GetAllIncludingRetweets(userID, limit, offset int) (postRows []dtypes.TimelinePostData, postIDs []int, err error) {
 	result, err := pm.db.Query(selectAllPostsQuery, userID, limit, offset)
 	if err != nil {
 		// TODO handle error
@@ -208,7 +208,7 @@ func (pm *PostModel) GetAllIncludingRetweets(userID, limit, offset int) (postRow
 		postData, postID, err := parseTimelineRow(result)
 
 		if err != nil {
-			return []dtypes.PostData{}, []int{}, err
+			return []dtypes.TimelinePostData{}, []int{}, err
 		}
 
 		postIDs = append(postIDs, postID)
@@ -311,7 +311,8 @@ func (postModel *PostModel) AddImpressionBulk(postIDs []int) (rowsAffected int, 
 	return int(ra), nil
 }
 
-func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.PostData, postID int, err error) {
+func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.TimelinePostData, postID int, err error) {
+	var content_type string
 	var id int
 	var user_id int
 	var content string
@@ -334,15 +335,20 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.PostData, post
 	var sort_throwaway string
 
 	err = result.Scan(
-		&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
-		&bookmark_count, &impressions, &image, &created_at, &updated_at,
-		&author_user_name, &author_display_name, &author_avatar,
+		&content_type, &id, &user_id, &content, &comment_count, &like_count,
+		&retweet_count, &bookmark_count, &impressions, &image, &created_at,
+		&updated_at, &author_user_name, &author_display_name, &author_avatar,
 		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked,
 		&retweeted, &bookmarked, &sort_throwaway)
 
 	if err != nil {
 		logger.LogError("PostModel.parseTimelineRow(): error scanning timeline post: " + err.Error())
-		return dtypes.PostData{}, -1, err
+		return dtypes.TimelinePostData{}, -1, err
+	}
+
+	postRetweeter := dtypes.Retweeter{
+		Username:    retweeter_user_name_ns.String,
+		DisplayName: retweeter_display_name_ns.String,
 	}
 
 	postAuthor := dtypes.Author{
@@ -351,28 +357,25 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.PostData, post
 		Avatar:      author_avatar,
 	}
 
-	postRetweeter := dtypes.Retweeter{
-		Username:    retweeter_user_name_ns.String,
-		DisplayName: retweeter_display_name_ns.String,
-	}
+	postData = dtypes.TimelinePostData{
+		Type:             content_type,
+		ID:               id,
+		UserID:           user_id,
+		Content:          content,
+		CommentCount:     comment_count,
+		LikeCount:        like_count,
+		RetweetCount:     retweet_count,
+		BookmarkCount:    bookmark_count,
+		Impressions:      impressions,
+		Image:            image,
+		CreatedAt:        created_at,
+		UpdatedAt:        updated_at,
+		ViewerLiked:      liked,
+		ViewerRetweeted:  retweeted,
+		ViewerBookmarked: bookmarked,
 
-	postData = dtypes.PostData{
-		ID:            id,
-		UserID:        user_id,
-		Content:       content,
-		CommentCount:  comment_count,
-		LikeCount:     like_count,
-		RetweetCount:  retweet_count,
-		BookmarkCount: bookmark_count,
-		Impressions:   impressions,
-		Image:         image,
-		CreatedAt:     created_at,
-		UpdatedAt:     updated_at,
-		Author:        postAuthor,
-		Retweeter:     postRetweeter,
-		Liked:         liked,
-		Retweeted:     retweeted,
-		Bookmarked:    bookmarked,
+		Author:    postAuthor,
+		Retweeter: postRetweeter,
 	}
 
 	return postData, id, nil

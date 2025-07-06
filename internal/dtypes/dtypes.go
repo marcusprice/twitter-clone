@@ -93,6 +93,29 @@ type Retweeter struct {
 	DisplayName string
 }
 
+type TimelinePostData struct {
+	Type                 string
+	ID                   int
+	UserID               int
+	Content              string
+	CommentCount         int
+	LikeCount            int
+	RetweetCount         int
+	BookmarkCount        int
+	Impressions          int
+	Image                string
+	CreatedAt            string
+	UpdatedAt            string
+	RetweeterUsername    string
+	RetweeterDisplayName string
+	ViewerLiked          int
+	ViewerRetweeted      int
+	ViewerBookmarked     int
+
+	Author    Author
+	Retweeter Retweeter
+}
+
 type BookmarkData struct {
 	BookmarkCreatedAt string
 	ID                int

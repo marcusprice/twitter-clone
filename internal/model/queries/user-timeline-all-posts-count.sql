@@ -4,4 +4,9 @@ SELECT (
 + 
 (
     SELECT COUNT(*) FROM PostRetweet
-) AS total_Count;
+) 
++
+(
+    SELECT COUNT(*) FROM CommentRetweet
+)
+AS total_Count;
