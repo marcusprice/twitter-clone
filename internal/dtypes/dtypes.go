@@ -66,6 +66,8 @@ type PostData struct {
 	CreatedAt     string
 	UpdatedAt     string
 	Liked         int
+	Retweeted     int
+	Bookmarked    int
 }
 
 type CommentData struct {

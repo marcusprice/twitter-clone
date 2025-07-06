@@ -27,6 +27,8 @@ type Post struct {
 	Impressions   int
 	Image         string
 	Liked         bool
+	Retweeted     bool
+	Bookmarked    bool
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Author        struct {
@@ -56,6 +58,8 @@ func (p *Post) setFromModel(postData dtypes.PostData) {
 	p.Retweeter.Username = postData.Retweeter.Username
 	p.Retweeter.DisplayName = postData.Retweeter.DisplayName
 	p.Liked = postData.Liked == 1
+	p.Retweeted = postData.Retweeted == 1
+	p.Bookmarked = postData.Bookmarked == 1
 }
 
 func (post *Post) New(postInput dtypes.PostInput) error {

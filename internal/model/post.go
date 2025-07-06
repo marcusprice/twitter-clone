@@ -232,7 +232,7 @@ func (pm *PostModel) AllIncludingRetweetCount() (int, error) {
 	return count, nil
 }
 
-//go:embed queries/timeline-offset-count.sql
+//go:embed queries/user-timeline-following-count.sql
 var timelineOffsetCountQuery string
 
 func (pm *PostModel) UserFollowingTimelineCount(userID int) (int, error) {
@@ -329,13 +329,16 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.PostData, post
 	var retweeter_user_name_ns sql.NullString
 	var retweeter_display_name_ns sql.NullString
 	var liked int
+	var retweeted int
+	var bookmarked int
 	var sort_throwaway string
 
 	err = result.Scan(
 		&id, &user_id, &content, &comment_count, &like_count, &retweet_count,
 		&bookmark_count, &impressions, &image, &created_at, &updated_at,
 		&author_user_name, &author_display_name, &author_avatar,
-		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked, &sort_throwaway)
+		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked,
+		&retweeted, &bookmarked, &sort_throwaway)
 
 	if err != nil {
 		logger.LogError("PostModel.parseTimelineRow(): error scanning timeline post: " + err.Error())
@@ -368,6 +371,8 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.PostData, post
 		Author:        postAuthor,
 		Retweeter:     postRetweeter,
 		Liked:         liked,
+		Retweeted:     retweeted,
+		Bookmarked:    bookmarked,
 	}
 
 	return postData, id, nil
