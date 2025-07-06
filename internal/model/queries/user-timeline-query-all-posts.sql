@@ -14,8 +14,12 @@ SELECT
     Author.user_name,
     Author.display_name,
     Author.avatar,
-    NULL AS retweeter_user_name,
-    NULL AS retweeter_display_name,
+    '' AS retweeter_user_name,
+    '' AS retweeter_display_name,
+    NULL AS parent_post_id,
+    NULL AS parent_post_author_username,
+    NULL AS parent_comment_id,
+    NULL AS parent_comment_author_username,
     CASE
         WHEN PostLike.post_id IS NOT NULL THEN 1
         ELSE 0
@@ -54,6 +58,10 @@ SELECT
     Author.avatar,
     Retweeter.user_name AS retweeter_user_name,
     Retweeter.display_name AS retweeter_display_name,
+    NULL AS parent_post_id,
+    NULL AS parent_post_author_username,
+    NULL AS parent_comment_id,
+    NULL AS parent_comment_author_username,
     CASE
         WHEN PostLike.post_id IS NOT NULL THEN 1
         ELSE 0
@@ -94,6 +102,10 @@ SELECT
     Author.avatar,
     Retweeter.user_name AS retweeter_user_name,
     Retweeter.display_name AS retweeter_display_name,
+    ParentPost.id AS parent_post_id,
+    ParentPostAuthor.user_name AS parent_post_author_username,
+    ParentComment.id AS parent_comment_id,
+    ParentCommentAuthor.user_name AS parent_comment_author_username,
     CASE
         WHEN CommentLike.comment_id IS NOT NULL THEN 1
         ELSE 0
@@ -112,6 +124,10 @@ FROM
 	INNER JOIN Comment ON Comment.id = CommentRetweet.comment_id
 	INNER JOIN User Retweeter ON Retweeter.id = CommentRetweet.user_id
 	INNER JOIN User Author ON Author.id = Comment.user_id
+    INNER JOIN Post ParentPost ON ParentPost.id = Comment.post_id
+    INNER JOIN User ParentPostAuthor ON ParentPostAuthor.id = ParentPost.user_id
+    LEFT JOIN Comment ParentComment ON ParentComment.id = Comment.parent_comment_id
+    LEFT JOIN User ParentCommentAuthor ON ParentCommentAuthor.id = ParentComment.user_id
 	LEFT JOIN CommentLike ON CommentLike.comment_id = Comment.id AND CommentLike.user_id = $1
 	LEFT JOIN CommentRetweet ViewerRetweet ON ViewerRetweet.comment_id = Comment.id AND ViewerRetweet.user_id = $1
 	LEFT JOIN CommentBookmark ON CommentBookmark.comment_id = Comment.id AND CommentBookmark.user_id = $1

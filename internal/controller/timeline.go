@@ -61,6 +61,7 @@ func (t *Timeline) GetPosts(limit, offset int) (posts []dtypes.TimelinePostData,
 
 	rowsAffected := 0
 	// TODO: this is a performance bottleneck
+	// TODO: addimpressionbulk for comment retweets
 	if len(postRows) > 0 {
 		rowsAffected, _ = t.postModel.AddImpressionBulk(postIDs) // okay to silently fail
 	}
@@ -70,10 +71,11 @@ func (t *Timeline) GetPosts(limit, offset int) (posts []dtypes.TimelinePostData,
 	}
 
 	for _, row := range postRows {
-		if rowsAffected == len(postRows) {
+		if rowsAffected == len(postIDs) && row.Type != "comment-reply" {
 			row.Impressions += 1
 		}
 		posts = append(posts, row)
+		postIDs = append(postIDs, row.ID)
 	}
 
 	return posts, totalPosts - (limit + offset), nil

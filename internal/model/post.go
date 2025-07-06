@@ -187,7 +187,9 @@ func (post *PostModel) QueryUserFollowingTimeline(userID, limit, offset int) (po
 			return []dtypes.TimelinePostData{}, []int{}, err
 		}
 
-		postIDs = append(postIDs, postID)
+		if postData.Type != "comment-retweet" {
+			postIDs = append(postIDs, postID)
+		}
 		postRows = append(postRows, postData)
 	}
 
@@ -211,7 +213,10 @@ func (pm *PostModel) GetAllIncludingRetweets(userID, limit, offset int) (postRow
 			return []dtypes.TimelinePostData{}, []int{}, err
 		}
 
-		postIDs = append(postIDs, postID)
+		if postData.Type != "comment-retweet" {
+			postIDs = append(postIDs, postID)
+		}
+
 		postRows = append(postRows, postData)
 	}
 
@@ -327,6 +332,10 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.TimelinePostDa
 	var author_user_name string
 	var author_display_name string
 	var author_avatar string
+	var parent_post_id sql.NullInt64
+	var parent_post_author_username sql.NullString
+	var parent_comment_id sql.NullInt64
+	var parent_comment_author_username sql.NullString
 	var retweeter_user_name_ns sql.NullString
 	var retweeter_display_name_ns sql.NullString
 	var liked int
@@ -338,8 +347,10 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.TimelinePostDa
 		&content_type, &id, &user_id, &content, &comment_count, &like_count,
 		&retweet_count, &bookmark_count, &impressions, &image, &created_at,
 		&updated_at, &author_user_name, &author_display_name, &author_avatar,
-		&retweeter_user_name_ns, &retweeter_display_name_ns, &liked,
-		&retweeted, &bookmarked, &sort_throwaway)
+		&retweeter_user_name_ns, &retweeter_display_name_ns, &parent_post_id,
+		&parent_post_author_username, &parent_comment_id,
+		&parent_comment_author_username, &liked, &retweeted, &bookmarked,
+		&sort_throwaway)
 
 	if err != nil {
 		logger.LogError("PostModel.parseTimelineRow(): error scanning timeline post: " + err.Error())
@@ -358,21 +369,25 @@ func parseTimelineRow(result dbutils.RowScanner) (postData dtypes.TimelinePostDa
 	}
 
 	postData = dtypes.TimelinePostData{
-		Type:             content_type,
-		ID:               id,
-		UserID:           user_id,
-		Content:          content,
-		CommentCount:     comment_count,
-		LikeCount:        like_count,
-		RetweetCount:     retweet_count,
-		BookmarkCount:    bookmark_count,
-		Impressions:      impressions,
-		Image:            image,
-		CreatedAt:        created_at,
-		UpdatedAt:        updated_at,
-		ViewerLiked:      liked,
-		ViewerRetweeted:  retweeted,
-		ViewerBookmarked: bookmarked,
+		Type:                        content_type,
+		ID:                          id,
+		UserID:                      user_id,
+		Content:                     content,
+		CommentCount:                comment_count,
+		LikeCount:                   like_count,
+		RetweetCount:                retweet_count,
+		BookmarkCount:               bookmark_count,
+		Impressions:                 impressions,
+		Image:                       image,
+		CreatedAt:                   created_at,
+		UpdatedAt:                   updated_at,
+		ViewerLiked:                 liked,
+		ViewerRetweeted:             retweeted,
+		ViewerBookmarked:            bookmarked,
+		ParentPostID:                int(parent_post_id.Int64),
+		ParentPostAuthorUsername:    parent_post_author_username.String,
+		ParentCommentID:             int(parent_comment_id.Int64),
+		ParentCommentAuthorUsername: parent_comment_author_username.String,
 
 		Author:    postAuthor,
 		Retweeter: postRetweeter,

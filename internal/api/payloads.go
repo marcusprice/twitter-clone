@@ -91,20 +91,25 @@ func generatePostPayload(post *controller.Post) PostPayload {
 }
 
 type TimelinePostPayload struct {
-	Type             string    `json:"type"`
-	ID               int       `json:"id"`
-	Content          string    `json:"content"`
-	CommentCount     int       `json:"commentCount"`
-	LikeCount        int       `json:"likeCount"`
-	RetweetCount     int       `json:"retweetCount"`
-	BookmarkCount    int       `json:"bookmarkCount"`
-	Impressions      int       `json:"impressions"`
-	Image            string    `json:"image"`
-	CreatedAt        time.Time `json:"createdAt"`
-	UpdatedAt        time.Time `json:"updatedAt"`
-	ViewerLiked      int       `json:"viewerLiked"`
-	ViewerRetweeted  int       `json:"viewerRetweeted"`
-	ViewerBookmarked int       `json:"viewerBookmarked"`
+	Type                        string    `json:"type"`
+	IsRetweet                   bool      `json:"isRetweet"`
+	ID                          int       `json:"id"`
+	Content                     string    `json:"content"`
+	CommentCount                int       `json:"commentCount"`
+	LikeCount                   int       `json:"likeCount"`
+	RetweetCount                int       `json:"retweetCount"`
+	BookmarkCount               int       `json:"bookmarkCount"`
+	Impressions                 int       `json:"impressions"`
+	Image                       string    `json:"image"`
+	CreatedAt                   time.Time `json:"createdAt"`
+	UpdatedAt                   time.Time `json:"updatedAt"`
+	ViewerLiked                 int       `json:"viewerLiked"`
+	ViewerRetweeted             int       `json:"viewerRetweeted"`
+	ViewerBookmarked            int       `json:"viewerBookmarked"`
+	ParentPostID                int       `json:"parentPostID"`
+	ParentPostAuthorUsername    string    `json:"parentPostAuthorUsername"`
+	ParentCommentID             int       `json:"parentCommentID"`
+	ParentCommentAuthorUsername string    `json:"parentCommentAuthorUsername"`
 
 	Author    AuthorPayload    `json:"author"`
 	Retweeter RetweeterPayload `json:"retweeter"`
@@ -114,23 +119,35 @@ func generateTimelinePostPayload(timelinePostData dtypes.TimelinePostData) Timel
 	authorPayload := AuthorPayload(timelinePostData.Author)
 	retweeterPayload := RetweeterPayload(timelinePostData.Retweeter)
 
+	if authorPayload.Avatar != "" {
+		authorPayload.Avatar = getUploadPath(authorPayload.Avatar)
+	}
+
 	payload := TimelinePostPayload{
-		Type:             timelinePostData.Type,
-		ID:               timelinePostData.ID,
-		Content:          timelinePostData.Content,
-		CommentCount:     timelinePostData.CommentCount,
-		LikeCount:        timelinePostData.LikeCount,
-		RetweetCount:     timelinePostData.RetweetCount,
-		BookmarkCount:    timelinePostData.BookmarkCount,
-		Impressions:      timelinePostData.Impressions,
-		Image:            timelinePostData.Image,
-		CreatedAt:        util.ParseTime(timelinePostData.CreatedAt),
-		UpdatedAt:        util.ParseTime(timelinePostData.UpdatedAt),
-		ViewerLiked:      timelinePostData.ViewerLiked,
-		ViewerRetweeted:  timelinePostData.ViewerRetweeted,
-		ViewerBookmarked: timelinePostData.ViewerBookmarked,
-		Author:           authorPayload,
-		Retweeter:        retweeterPayload,
+		Type:                        timelinePostData.Type,
+		ID:                          timelinePostData.ID,
+		Content:                     timelinePostData.Content,
+		CommentCount:                timelinePostData.CommentCount,
+		LikeCount:                   timelinePostData.LikeCount,
+		RetweetCount:                timelinePostData.RetweetCount,
+		BookmarkCount:               timelinePostData.BookmarkCount,
+		Impressions:                 timelinePostData.Impressions,
+		Image:                       timelinePostData.Image,
+		CreatedAt:                   util.ParseTime(timelinePostData.CreatedAt),
+		UpdatedAt:                   util.ParseTime(timelinePostData.UpdatedAt),
+		ViewerLiked:                 timelinePostData.ViewerLiked,
+		ViewerRetweeted:             timelinePostData.ViewerRetweeted,
+		ViewerBookmarked:            timelinePostData.ViewerBookmarked,
+		ParentPostID:                timelinePostData.ParentPostID,
+		ParentPostAuthorUsername:    timelinePostData.ParentPostAuthorUsername,
+		ParentCommentID:             timelinePostData.ParentCommentID,
+		ParentCommentAuthorUsername: timelinePostData.ParentCommentAuthorUsername,
+		Author:                      authorPayload,
+		Retweeter:                   retweeterPayload,
+	}
+
+	if payload.Image != "" {
+		payload.Image = getUploadPath(payload.Image)
 	}
 
 	return payload
