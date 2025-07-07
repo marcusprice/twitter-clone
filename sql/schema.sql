@@ -38,6 +38,7 @@ CREATE TABLE User (
     first_name TEXT,
     last_name TEXT,
     display_name TEXT NOT NULL CHECK (length(trim(display_name)) > 0),
+    bio TEXT NOT NULL DEFAULT '',
     avatar TEXT DEFAULT '',
     is_active INTEGER NOT NULL CHECK (is_active IN(0, 1)) DEFAULT 0,
     role INTEGER NOT NULL CHECK (role IN(1, 2, 3)) DEFAULT 1,

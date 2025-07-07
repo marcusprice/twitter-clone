@@ -119,6 +119,41 @@ func (um *UserModel) GetByID(userID int) (dtypes.UserData, error) {
 	return parseUserQueryRow(row)
 }
 
+//go:embed queries/select-author-by-post-id.sql
+var selectAuthorByPostID string
+
+func (um *UserModel) GetByPostID(postID, userID int) (dtypes.Author, error) {
+	var username string
+	var display_name string
+	var avatar string
+	var bio string
+	var follower_count int
+	var following_count int
+	var viewer_following int
+
+	err := um.db.
+		QueryRow(selectAuthorByPostID, userID, postID).
+		Scan(
+			&username, &display_name, &avatar, &bio, &follower_count,
+			&following_count, &viewer_following)
+	if err != nil {
+		logger.LogError("UserModel.GetByPostID() - errors scanning row: " + err.Error())
+		return dtypes.Author{}, err
+	}
+
+	ret := dtypes.Author{
+		Username:        username,
+		DisplayName:     display_name,
+		Avatar:          avatar,
+		Bio:             bio,
+		FollowerCount:   follower_count,
+		FollowingCount:  following_count,
+		ViewerFollowing: viewer_following == 1,
+	}
+
+	return ret, nil
+}
+
 //go:embed queries/select-user-bookmark-count.sql
 var selectUserBookmarkCountQuery string
 

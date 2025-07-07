@@ -31,12 +31,8 @@ type Post struct {
 	Bookmarked    bool
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
-	Author        struct {
-		Username    string
-		DisplayName string
-		Avatar      string
-	}
-	Comments []*Comment
+	Author        dtypes.Author
+	Comments      []*Comment
 	dtypes.Retweeter
 }
 

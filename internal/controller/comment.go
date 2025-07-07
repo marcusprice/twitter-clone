@@ -21,27 +21,23 @@ func (d DepthLimitError) Error() string {
 const DEPTH_LIMIT = 1
 
 type Comment struct {
-	model           *model.CommentModel
-	post            *Post
-	replyGuy        client.ReplyGuyRequester
-	ID              int
-	PostID          int
-	UserID          int
-	Depth           int
-	ParentCommentID int
-	Content         string
-	LikeCount       int
-	RetweetCount    int
-	BookmarkCount   int
-	Impressions     int
-	Image           string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	Author          struct {
-		Username    string
-		DisplayName string
-		Avatar      string
-	}
+	model                *model.CommentModel
+	post                 *Post
+	replyGuy             client.ReplyGuyRequester
+	ID                   int
+	PostID               int
+	UserID               int
+	Depth                int
+	ParentCommentID      int
+	Content              string
+	LikeCount            int
+	RetweetCount         int
+	BookmarkCount        int
+	Impressions          int
+	Image                string
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	Author               dtypes.Author
 	IsRetweet            bool
 	RetweeterUsername    string
 	RetweeterDisplayName string

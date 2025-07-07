@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/marcusprice/twitter-clone/internal/controller"
 	"github.com/marcusprice/twitter-clone/internal/dbutils"
@@ -31,6 +32,31 @@ func (userAPI UserAPI) Get(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(generateUserPayload(user))
+}
+
+func (userAPI UserAPI) GetPostAuthor(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	postIDPathValue := r.PathValue("postID")
+	postID, err := strconv.Atoi(postIDPathValue)
+	if err != nil {
+		http.Error(w, BadRequest, http.StatusBadRequest)
+	}
+
+	user := userAPI.user.SetID(userID)
+	author, err := user.ByPostID(postID)
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(generateAuthorPayload(author))
 }
 
 func (userAPI UserAPI) Create(w http.ResponseWriter, r *http.Request) {

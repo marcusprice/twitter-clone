@@ -24,9 +24,32 @@ type UserPayload struct {
 }
 
 type AuthorPayload struct {
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
-	Avatar      string `json:"avatar"`
+	Username        string           `json:"username"`
+	DisplayName     string           `json:"displayName"`
+	Avatar          string           `json:"avatar"`
+	Bio             string           `json:"bio"`
+	FollowerCount   int              `json:"followerCount"`
+	FollowingCount  int              `json:"followingCount"`
+	ViewerFollowing bool             `json:"viewerFollowing"`
+	MutalFollowers  []*AuthorPayload `json:"mutualFollowers"`
+}
+
+func generateAuthorPayload(author dtypes.Author) AuthorPayload {
+	authorPayload := AuthorPayload{
+		Username:        author.Username,
+		DisplayName:     author.DisplayName,
+		Avatar:          author.Avatar,
+		Bio:             author.Bio,
+		FollowerCount:   author.FollowerCount,
+		FollowingCount:  author.FollowingCount,
+		ViewerFollowing: author.ViewerFollowing,
+	}
+
+	if authorPayload.Avatar != "" {
+		authorPayload.Avatar = getUploadPath(authorPayload.Avatar)
+	}
+
+	return authorPayload
 }
 
 type RetweeterPayload struct {
@@ -116,7 +139,14 @@ type TimelinePostPayload struct {
 }
 
 func generateTimelinePostPayload(timelinePostData dtypes.TimelinePostData) TimelinePostPayload {
-	authorPayload := AuthorPayload(timelinePostData.Author)
+	authorPayload := AuthorPayload{
+		Username:       timelinePostData.Author.Username,
+		DisplayName:    timelinePostData.Author.DisplayName,
+		Avatar:         timelinePostData.Author.Avatar,
+		Bio:            timelinePostData.Author.Bio,
+		FollowerCount:  timelinePostData.Author.FollowerCount,
+		FollowingCount: timelinePostData.Author.FollowingCount,
+	}
 	retweeterPayload := RetweeterPayload(timelinePostData.Retweeter)
 
 	if authorPayload.Avatar != "" {
@@ -144,6 +174,7 @@ func generateTimelinePostPayload(timelinePostData dtypes.TimelinePostData) Timel
 		ParentCommentAuthorUsername: timelinePostData.ParentCommentAuthorUsername,
 		Author:                      authorPayload,
 		Retweeter:                   retweeterPayload,
+		IsRetweet:                   retweeterPayload.Username != "",
 	}
 
 	if payload.Image != "" {
@@ -177,6 +208,15 @@ type BookmarkResponsePayload struct {
 func generateBookmarkPayload(bookmarkData []dtypes.BookmarkData, bookmarksRemaining int) BookmarkResponsePayload {
 	var bookmarks []BookmarkPayload
 	for _, bookmark := range bookmarkData {
+		authorPayload := AuthorPayload{
+			Username:       bookmark.Author.Username,
+			DisplayName:    bookmark.Author.DisplayName,
+			Avatar:         bookmark.Author.Avatar,
+			Bio:            bookmark.Author.Bio,
+			FollowerCount:  bookmark.Author.FollowerCount,
+			FollowingCount: bookmark.Author.FollowingCount,
+		}
+
 		bp := BookmarkPayload{
 			BookmarkCreatedAt: bookmark.BookmarkCreatedAt,
 			ID:                bookmark.ID,
@@ -188,7 +228,7 @@ func generateBookmarkPayload(bookmarkData []dtypes.BookmarkData, bookmarksRemain
 			Impressions:       bookmark.Impressions,
 			CreatedAt:         bookmark.CreatedAt,
 			UpdatedAt:         bookmark.UpdatedAt,
-			Author:            AuthorPayload(bookmark.Author),
+			Author:            authorPayload,
 			Type:              bookmark.Type,
 		}
 		bookmarks = append(bookmarks, bp)
@@ -300,6 +340,14 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 		}
 
 		for _, reply := range comment.Replies {
+			authorPayload := AuthorPayload{
+				Username:       reply.Author.Username,
+				DisplayName:    reply.Author.DisplayName,
+				Avatar:         reply.Author.Avatar,
+				Bio:            reply.Author.Bio,
+				FollowerCount:  reply.Author.FollowerCount,
+				FollowingCount: reply.Author.FollowingCount,
+			}
 			replyPayload := &CommentFromPostPayload{}
 			replyPayload.ID = reply.ID
 			replyPayload.PostID = reply.PostID
@@ -312,8 +360,17 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 			replyPayload.Image = reply.Image
 			replyPayload.CreatedAt = reply.CreatedAt
 			replyPayload.UpdatedAt = reply.UpdatedAt
-			replyPayload.Author = AuthorPayload(reply.Author)
+			replyPayload.Author = authorPayload
 			repliesPayload = append(repliesPayload, replyPayload)
+		}
+
+		authorPayload := AuthorPayload{
+			Username:       comment.Author.Username,
+			DisplayName:    comment.Author.DisplayName,
+			Avatar:         comment.Author.Avatar,
+			Bio:            comment.Author.Bio,
+			FollowerCount:  comment.Author.FollowerCount,
+			FollowingCount: comment.Author.FollowingCount,
 		}
 
 		commentPayload.ID = comment.ID
@@ -327,7 +384,7 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 		commentPayload.Image = comment.Image
 		commentPayload.CreatedAt = comment.CreatedAt
 		commentPayload.UpdatedAt = comment.UpdatedAt
-		commentPayload.Author = AuthorPayload(comment.Author)
+		commentPayload.Author = authorPayload
 		commentPayload.Replies = repliesPayload
 
 		postAndCommentsPayload.Comments = append(
@@ -344,6 +401,15 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 		post.Image = getUploadPath(post.Image)
 	}
 
+	authorPayload := AuthorPayload{
+		Username:       post.Author.Username,
+		DisplayName:    post.Author.DisplayName,
+		Avatar:         post.Author.Avatar,
+		Bio:            post.Author.Bio,
+		FollowerCount:  post.Author.FollowerCount,
+		FollowingCount: post.Author.FollowingCount,
+	}
+
 	postAndCommentsPayload.ID = post.ID
 	postAndCommentsPayload.Content = post.Content
 	postAndCommentsPayload.CommentCount = post.CommentCount
@@ -354,7 +420,7 @@ func generatePostAndCommentsPayload(post *controller.Post) PostAndCommentsPayloa
 	postAndCommentsPayload.Image = post.Image
 	postAndCommentsPayload.CreatedAt = post.CreatedAt
 	postAndCommentsPayload.UpdatedAt = post.UpdatedAt
-	postAndCommentsPayload.Author = AuthorPayload(post.Author)
+	postAndCommentsPayload.Author = authorPayload
 	postAndCommentsPayload.Liked = post.Liked
 
 	return postAndCommentsPayload

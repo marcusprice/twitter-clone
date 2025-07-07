@@ -46,9 +46,14 @@ type UserData struct {
 }
 
 type Author struct {
-	Username    string
-	DisplayName string
-	Avatar      string
+	Username        string
+	DisplayName     string
+	Avatar          string
+	Bio             string
+	FollowerCount   int
+	FollowingCount  int
+	ViewerFollowing bool
+	MutalFollowers  []*Author
 }
 
 type PostData struct {

@@ -1,21 +1,29 @@
 -- seed_data.sql
 
 -- Users
-INSERT INTO User (email, user_name, password, first_name, last_name, display_name, avatar, is_active, role)
+INSERT INTO User (email, user_name, password, first_name, last_name, display_name, avatar, is_active, role, bio)
 VALUES
-    ('estecat@yahoo.com', 'estecat', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Esteban', 'Price', 'Bubba', "este-profile.jpg",0, 1),
+    ('estecat@yahoo.com', 'estecat', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Esteban', 'Price', 'Bubba', 'este-profile.jpg', 0, 1, 
+     '🐈‍⬛ dad Im hungry wheres dinner'),
 
-    ('whispers_from_wallphace@gmail.com', 'wallphace', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Marcus', 'Price', 'Whispers From Wallphace', "wallphace-profile.jpg", 0, 2),
+    ('whispers_from_wallphace@gmail.com', 'wallphace', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Marcus', 'Price', 'Whispers From Wallphace', 'wallphace-profile.jpg', 0, 2, 
+     'A dad shotgunning a blunt in his son’s mouth before school'),
 
-    ('d.cooper@fbi.gov', 'dalecooper', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Dale', 'Cooper', 'Special Agent Dale Cooper', "cooper-profile.png", 0, 3),
+    ('d.cooper@fbi.gov', 'dalecooper', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Dale', 'Cooper', 'Special Agent Dale Cooper', 'cooper-profile.png', 0, 3,
+     'FBI Special Agent investigating the mysteries of Twin Peaks. I follow intuition, trust dreams, and never start a day without a damn fine cup of coffee.'),
 
-    ('audrey@hornesdepartmentstore.com', 'audrey', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Audrey', 'Horne', 'Audrey', "audrey-profile.jpg", 0, 1),
+    ('audrey@hornesdepartmentstore.com', 'audrey', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Audrey', 'Horne', 'Audrey', 'audrey-profile.jpg', 0, 1,
+     'People underestimate me, but I always find my way in. Curious, clever, and not afraid to stir up trouble—especially when something doesn’t add up.'),
 
-    ('bobby.briggs@twinpeakswa.gov', 'bobbybriggs', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Bobby', 'Briggs', 'Bobby', "bobby-profile.jpeg", 0, 1),
+    ('bobby.briggs@twinpeakswa.gov', 'bobbybriggs', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Bobby', 'Briggs', 'Bobby', 'bobby-profile.jpeg', 0, 1,
+     'Used to be the golden boy, now I''m trying to figure out who I really am. Life''s messy, love’s messier, and Twin Peaks doesn’t make it any easier.'),
 
-    ('donna.hayward@twinpeaksclinic.com', 'donnahayward', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Donna', 'Hayward', 'Donna', "donna-profile.jpg", 0, 1),
+    ('donna.hayward@twinpeaksclinic.com', 'donnahayward', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Donna', 'Hayward', 'Donna', 'donna-profile.jpg', 0, 1,
+     'I just want the truth. About Laura, about this town, about everything. I’ll keep asking questions, even if I don’t like the answers.'),
 
-    ('marcusprice88@gmail.com', 'endlesshappiness', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Marcus', 'Price', 'Eternal Freeskate', "marcus-plrofile", 0, 1);
+    ('marcusprice88@gmail.com', 'endlesshappiness', '$2a$10$/M7/19bq2SR7G9Dqf2/1t.vVEM22y86TDUci71FO/3O1wLi2/p7Ty', 'Marcus', 'Price', 'Eternal Freeskate', 'marcus-profile.jpg', 0, 1, 
+     '👽');
+
 
 -- Posts (assumes the above inserts generate ids 1–6 in the same order)
 INSERT INTO Post (user_id, content, image, created_at, updated_at) VALUES

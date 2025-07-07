@@ -41,6 +41,12 @@ func (u *User) Set(userID *int, userInput dtypes.UserInput) {
 	u.DisplayName = userInput.DisplayName
 }
 
+func (u *User) SetID(id int) *User {
+	newUser := &User{model: u.model}
+	newUser.id = &id
+	return newUser
+}
+
 func (u *User) setFromModel(userData dtypes.UserData) {
 	u.id = &userData.ID
 	u.Email = userData.Email
@@ -172,6 +178,14 @@ func (user *User) Login() error {
 	user.LastLogin = util.ParseTime(lastLoginTime)
 	user.IsActive = isActive != 0
 	return err
+}
+
+func (u *User) ByPostID(postID int) (dtypes.Author, error) {
+	author, err := u.model.GetByPostID(postID, u.ID())
+	if err != nil {
+		return dtypes.Author{}, err
+	}
+	return author, nil
 }
 
 func (u *User) ByID(userID int) error {
