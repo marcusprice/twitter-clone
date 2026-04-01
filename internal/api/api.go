@@ -44,6 +44,14 @@ func RegisterHandlers(db *sql.DB) http.Handler {
 	)
 
 	mux.Handle(
+		"/api/v1/user/recommendations",
+		VerifyGetMethod(
+			ValidateUser(
+				user,
+				http.HandlerFunc(userAPI.GetRecommendations))),
+	)
+
+	mux.Handle(
 		"/api/v1/user/by-post/{postID}",
 		VerifyGetMethod(
 			ValidateUser(

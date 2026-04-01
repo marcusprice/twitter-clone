@@ -154,6 +154,39 @@ func (um *UserModel) GetByPostID(postID, userID int) (dtypes.Author, error) {
 	return ret, nil
 }
 
+//go:embed queries/select-recommended-users.sql
+var selectRecommendedUsersQuery string
+
+func (um *UserModel) GetRecommendedUsers(userID int) ([]dtypes.UserData, error) {
+	result, err := um.db.Query(selectRecommendedUsersQuery, userID)
+	if err != nil {
+		logger.LogError("UserModel.GetRecommendedUsers() - db query error: " + err.Error())
+		return []dtypes.UserData{}, err
+	}
+
+	var users []dtypes.UserData
+	for result.Next() {
+		var username string
+		var display_name string
+		var avatar string
+		err := result.Scan(&username, &display_name, &avatar)
+		if err != nil {
+			logger.LogError("UserModel.GetRecommendedUsers() - error scannign db row: " + err.Error())
+			return []dtypes.UserData{}, err
+		}
+
+		userData := dtypes.UserData{
+			DisplayName: display_name,
+			Username:    username,
+			Avatar:      avatar,
+		}
+
+		users = append(users, userData)
+	}
+
+	return users, nil
+}
+
 //go:embed queries/select-user-bookmark-count.sql
 var selectUserBookmarkCountQuery string
 

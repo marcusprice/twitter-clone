@@ -199,6 +199,10 @@ func (u *User) ByID(userID int) error {
 	return nil
 }
 
+func (user *User) GetRecommendedUsers() ([]dtypes.UserData, error) {
+	return user.model.GetRecommendedUsers(user.ID())
+}
+
 func (user *User) GetBookmarks(limit, offset int) (bookmarkData []dtypes.BookmarkData, postsRemaining int, err error) {
 	bookmarks, err := user.model.GetBookmarks(user.ID(), limit, offset)
 	if err != nil {

@@ -34,6 +34,30 @@ func (userAPI UserAPI) Get(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(generateUserPayload(user))
 }
 
+func (userAPI UserAPI) GetRecommendations(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+	user := userAPI.user
+	err := user.ByID(userID)
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	users, err := user.GetRecommendedUsers()
+	if err != nil {
+		http.Error(w, InternalServerError, http.StatusInternalServerError)
+		return
+	}
+
+	payload := generateSuggestedFollowsPayload(users)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(payload)
+}
+
 func (userAPI UserAPI) GetPostAuthor(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("userID").(int)
 	if !ok {

@@ -23,6 +23,29 @@ type UserPayload struct {
 	Avatar      string `json:"avatar"`
 }
 
+type SuggestedFollows struct {
+	Users []UserPayload `json:"users"`
+}
+
+func generateSuggestedFollowsPayload(userData []dtypes.UserData) SuggestedFollows {
+	var users []UserPayload
+	for _, user := range userData {
+		var userPayload UserPayload
+		if user.Avatar != "" {
+			user.Avatar = getUploadPath(user.Avatar)
+		}
+		userPayload.Avatar = user.Avatar
+		userPayload.Username = user.Username
+		userPayload.DisplayName = user.DisplayName
+
+		users = append(users, userPayload)
+	}
+
+	return SuggestedFollows{
+		Users: users,
+	}
+}
+
 type AuthorPayload struct {
 	Username        string           `json:"username"`
 	DisplayName     string           `json:"displayName"`
